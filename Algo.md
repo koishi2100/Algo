@@ -21,6 +21,7 @@
 
 
 [文档云共享&实时同步 https://www.kdocs.cn/l/ckEPD8m0XBwB](https://www.kdocs.cn/l/ckEPD8m0XBwB)
+[GitHub 项目地址 https://github.com/koishi2100/Algo](https://github.com/koishi2100/Algo)
 
 2025.10.16 update：DFS序求LCA、分拆数、莫队、链剖(对边操作，求LCA)、二维树状数组、二维ST表、随机化、整数域三分、KM最小权匹配、线段树上二分、可持久化线段树、线性基、Min25筛、范德蒙卷积公式、
 
@@ -1102,14 +1103,11 @@ std::vector<long long> get_div(long long x) {
 
 $O(N)$ 预处理，$O(p(x))$ 查询，$p(x)$为$x$的因数个数
 
-`primes`存1~N的所有素数,0_idx
+`primes[]`存1~N的所有素数,0_idx
 `minp[x]`为x的最小质因子
 `maxp[x]`为x的最大质因子，诺` maxp[x] == x`则x为质数
 
 ```cpp
-#include <bits/stdc++.h>
-using namespace std;
-
 std::vector<int> primes, minp, maxp;
 void sieve(int n = 1e6) {
     minp.resize(n + 1);
@@ -1143,11 +1141,10 @@ std::vector<std::pair<int,int>> factorize(int n) {//pair{质因数,次方}
 int main(){
     sieve(1000000);
     int x; std::cin >> x;
-    for(auto [p,k]:factorize(1234)){
+    for(auto [p,k]:factorize(x)){
         std::cout << p << '^' << k << '\n';
     }
 }
-
 ```
 
 
@@ -2544,7 +2541,7 @@ void get_mu(int n){
 				mu[i*primes[j]] = 0;
 				break;
 			}
-			else mu[i*primes[j]] = -mu[i]
+			else mu[i*primes[j]] = -mu[i];
 		}
 	}
 	for(int i = 1;i <= cnt;i++){
@@ -14815,9 +14812,7 @@ int main(){
 
 
 
-## 二叉搜索树/平衡树
-
-
+## 平衡树
 
 ### Splay树
 
@@ -17459,7 +17454,7 @@ int Dijkstra() {
 		if (st[ver])continue;
 		st[ver] = 1;
 		//如果距离已经确定,则跳过该点(st数组非必要,加上可以略微优化)
-		//或者不用st数组,替换为 if (distance > dist[ver]) continue; //说明当前数据过时
+		//或者st数组去掉,优化为 if (distance > dist[ver]) continue; //说明当前数据过时
 		
 		for (int i = h[ver]; i != -1;i = ne[i]) {//拓展t
 			int k = e[i];
@@ -23849,7 +23844,7 @@ int main(){
 
 ```cpp
 //01背包求最优选的方案数  https://www.acwing.com/problem/content/11/
-//即总价值最大的最优方案数  O(nm)
+//使总价值最大的最优方案数  O(nm)
 #include <iostream>
 using namespace std;
 const int N = 1003,mod = 1e9+7;
