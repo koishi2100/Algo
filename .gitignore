@@ -1,0 +1,7 @@
+.vscode
+*.swp
+*.un
+*.swp
+*.log
+node_modules
+__pycache__
