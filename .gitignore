@@ -5,4 +5,4 @@
 *.log
 node_modules
 __pycache__
-released/pdf/*
+released/pdf/*.pdf
