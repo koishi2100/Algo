@@ -76,6 +76,10 @@ def build_one(src: Path) -> None:
     cover.close()
     body.close()
     back.close()
+    try:
+        result.subset_fonts()
+    except Exception as e:
+        print(f'  [warn] 字体子集化失败: {e}')
     result.save(str(out), garbage=4, deflate=True)
     result.close()
     print(f'{src.name} -> print/{out.name}')
