@@ -6,10 +6,12 @@
 ## how to print
 
 1. 合并 Algo.md 文档并解决冲突
-2. 运行 `python split_md.py`，将文件切分成多个小文件，放在 released/raw/ 目录下
-3. 使用 `Typora` 等编辑器将 released/raw/ 目录下的文件转换为 pdf 文件，放在 released/pdf/ 目录下，保留数学公式、代码高亮、md 语法等
+2. 运行 `python split_md.py`，将文件切分成多个小文件，自动放在 released/raw/ 目录下
+3. 使用 `Typora` 等编辑器将 released/raw/ 目录下的文件转换为 pdf 文件，自动放在 released/pdf/ 目录下，保留数学公式、代码高亮、md 语法等
 4. 打开 WPS 手动为 released/pdf/*.pdf 文件添加插入目录
-5. 运行 `python released/print_assmble.py`, 为 pdf 文件添加封面封底以及页码，导出到 released/print/ 目录下作为可打印的发行版本
+5. 运行 `python released/print_assmble.py`, 为 pdf 文件添加封面封底以及页码, 自动导出到 released/print/ 目录下作为可打印的发行版本
+
+> 用过一些文档转换插件, 但是个人感觉效果都不太理想, `Typora` 的导出效果更好, 数学公式、代码高亮、md 语法都能很好地保留。这里使用 `Typora` + `WPS` 的组合来处理文档。
 
 
 ## how to contribute
