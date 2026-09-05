@@ -211,18 +211,20 @@ vector<int>mul(vector<int>& A, int b) {
 
 ```cpp
 //A*B   O(N*M)
-vector<int> mul(vector<int> &A,vector<int> &B)
-    vector<int> C(A.size()+B.size());
-    for(int i=0;i<A.size();i++)
-        for(int j=0;j<B.size();j++)
-            C[i+j]+=A[i]*B[j];
-    for(int i=0,t=0;i<res.size();i++){
-        t+=C[i];
-        C[i]=t%10;
-        t/=10;
-    }
-    while(C.size() >= 2 && C.back()==0) C.pop_back();
-    return C;
+vector<int> mul(vector<int>& A,vector<int>& B) {
+	vector<int> C(A.size() + B.size());
+	for(int i = 0;i < A.size(); i++) {
+		for(int j=0;j<B.size();j++) {
+			C[i + j] += A[i] * B[j];
+		}
+	}
+	for(int i = 0, t = 0; i < C.size(); i++) {
+		t += C[i];
+		C[i] = t % 10;
+		t /= 10;
+	}
+	while(C.size() >= 2 && C.back()==0) C.pop_back();
+	return C;
 }
 ```
 
@@ -404,7 +406,7 @@ int main(){
 **幂**
 
 ```cpp
-//中精度 2^n   2*n <= 30000        //n可以为负数
+//中精度 2^n   n <= 16383        //n可以为负数
 //仅适用于计算2^n的精确值
 #include <iostream>
 #include <sstream>
@@ -670,7 +672,7 @@ struct Frac {// num/den
 > ```
 >
 > ```cpp
-> string s = 123;
+> string s = "123";
 > Bigint A = s;
 > ```
 >
@@ -921,8 +923,8 @@ __gcd(a,b);	//#include <algorithm> 返回a,b的最大公约数
 ```cpp
 //二进制优化,快个两三倍
 int gcd(int a,int b){
-	int az = __builtin_ctz(a),bz = __builtin_ctz(b);//末尾元素0的个数,对于LL类型,需要使用__builtin_ctzll
 	if (b == 0) return a;
+	int az = __builtin_ctz(a),bz = __builtin_ctz(b);//末尾元素0的个数,对于LL类型,需要使用__builtin_ctzll
 	int z = std::min(az,bz);
 	b >>= bz;
 	while(a) {
@@ -1498,7 +1500,7 @@ $O(N)$ 预处理， $O(1)$ 查询
 using namespace std;
 const int N = 1e8 + 5;
 bool st[N];//i >= 2且st[i] == 0 则i是素数
-int primes[N],cnt;//primes存质数
+int primes[N],cnt;//primes存质数, 素数个数比较小, 未用到的空间一般会被优化掉
 
 void initi(int n){
     //st[0] = st[1] = 1;
@@ -4617,10 +4619,6 @@ void sol(){
 	}
 	uuz(n);
 	cout << fixed << setprecision(2) << ans[1];
-}
-
-int main() {
-	while(T--){ sol(); }
 }
 ```
 
@@ -7938,13 +7936,13 @@ int lowbit(int n)  { return n & -n; }
 int main() {
 	int n,res = 0; cin >> n;
 	while (n) {
-        n -= lowbit(n)；
+        n -= lowbit(n);
         res++;
     }
 	cout << res << endl;
 }
 //gnu编译器实现,性能最快,接近硬件极限
-int res = __builtin_popcount(x);
+int res = __builtin_popcount(x); // 诺 x 为 64 位, 则应用 __buildtin_popcountll(x)
 ```
 
 
@@ -11706,7 +11704,7 @@ void down(int u) {
 
 ```cpp
 void up(int u) {
-	if (u / 2 && h[u / 2] > h[u]) {//诺比父节点小，则二者交换
+	while (u / 2 && h[u / 2] > h[u]) {//诺比父节点小，则二者交换
 		swap(h[u / 2], h[u]);
 		u /= 2;
 	}
@@ -12798,7 +12796,7 @@ void ins(int l,int x){
 	v[cnt].insert(v[cnt].begin()+ l-1,x);
 	all++;
 
-	if(v[id[l]].size() > 2*m){//如果插入后，块的长度>2*m,则清空v[]还原到a[],重新初始化分块
+	if(v[cnt].size() > 2*m){//如果插入后，块的长度>2*m,则清空v[]还原到a[],重新初始化分块
 		reint();
 		initi();
 	}
@@ -16519,6 +16517,9 @@ O(N)求得对于每个i的最长回文长度，这里下标从0开始
 ```cpp
 //https://www.luogu.com.cn/problem/P3805
 //模版题,给定字符串,求最长的回文子串长度
+#include <bits/stdc++.h>
+using namespace std;
+
 template<typename T>
 struct Manacher{ //1_idx
 	int n,ans;
@@ -16545,22 +16546,21 @@ struct Manacher{ //1_idx
 			else d[i] = std::min(d[l*2-i],r-i+1);
 			while(i-d[i] >= 1 && i+d[i] <= n && s[i-d[i]] == s[i+d[i]]) d[i]++;
 			if(i+d[i]-1 > r) l = i,r = i+d[i]-1;
-			ans = std::max(ans,d[i]-1); //减去加入的'#'
+			ans = std::max(ans,d[i]-1);
 		}
 	}
 
-	bool query(int l,int r){ //查询区间是否为回文串
+	bool query(int l,int r){
 		l <<= 1,r <<= 1;
 		int mid = l + r >> 1;
 		return d[mid]-1 >= r-mid;
 	}
 };
 
-int main(){
-	std::string s;
-	std::cin >> s;
-
-	Manacher t(s);
+int main() {
+	std::string s; std::cin >> s;
+	s = ' ' + s;
+	Manacher<std::string> t(s);
 	std::cout << t.ans;
 }
 ```
@@ -17985,7 +17985,7 @@ int main() {
 还有一种方法是多开一维记录决策信息。`dist[i][j]`表示到达`i`用了`j`次机会的最小花费，`vis[i][j]`标记该状态是否出现过。类似于dp，在最短路模版更新时
 
 - 不使用机会 `dist[y][j] = min(dist[y][j], dist[x][j] + w[i])`
-- 使用机会 `dist[y][j] = min(dist[y][j], dist[y][j - 1] + val)`
+- 使用机会 `dist[y][j] = min(dist[y][j], dist[x][j - 1] + val)`
 
 
 
@@ -21959,7 +21959,7 @@ bool bellman(){
 			dist[b] = min(dist[b],dist[a] + c);
 		}
 	}
-	for(int i = 0;i <= m;i++){//如果在n-1次循环之后仍然存在边可以被松弛，那么就存在负环
+	for(int i = 1;i <= m;i++){//如果在n-1次循环之后仍然存在边可以被松弛，那么就存在负环
 		auto &[a,b,c] = e[i];
 		if(dist[b] > dist[a] + c) return 1;
 	}
@@ -22259,6 +22259,7 @@ e-DCC的求法比较简单，先求出**无向图**中的所有割边，把割�
 using namespace std;
 const int N = 500005,M = 4000006;
 vector<int>v[N];
+int cnt = 0;
 
 int h[N],e[M],ne[M],idx;
 void add(int a,int b){
@@ -22305,7 +22306,6 @@ int main(){
 		if(!dfn[i]) tarjan(i,0);
 	}
     
-	int cnt = 0;
 	for(int i = 1;i <= n;i++){
 		if(!st[i]) {
 			cnt++;
@@ -26486,7 +26486,7 @@ cout << *mp[1] << ' ' << *mp[2] << endl;
 | a.**clear**();                                               | 清空元素                                                     |
 | a.**replace**(pos,len,"abc");                                | 元素替换                                                     |
 | a.**find**("abc"[,pos][从下标pos位置开始查找,不填默认为0]);  | 返回第一次出现目标字符串的位置,没有则返回string::npos(通常定义为-1或无穷大) |
-| a.**find_last_of**("abc"[,pos][从下标pos位置开始,不填默认为0]); | 返回最后一次出现目标字符串的位置,没有则返回string::npos(通常定义为-1或无穷大) |
+| a.**find_last_of**("abc"[,pos][从下标pos位置开始,不填默认为0]); | 返回最后一次出现目标字符串中任意字符的位置,没有则返回string::npos(通常定义为-1或无穷大) |
 | **getline**(cin,str,c);                                      | 输入字符串str,包括空格和回车，遇到c(不写默认为‘\n’)停止      |
 | str1.**compare**(str2);                                      | 比较两个字符串的字典序                                       |
 | **memset**(arr,'c',sizeof arr);                              | 初始化char[]型字符串为字符‘c’，或将数组元素按字节初始化为0/-1/0x3f |
@@ -26581,7 +26581,7 @@ int main() {
     
     string target = "oi";
 	int index = arr.find(target);//返回第一次出现目标字符串的位置
-    if(index == -1)) cout << "不存在子串" << endl;
+    if(index == -1) cout << "不存在子串" << endl;
 	else cout << index << endl;
     
 	int index2 = arr.find("i", 5);	//从下标为5的位置开始查找
@@ -27049,16 +27049,16 @@ erase(unique(v.begin(),v.end()),v.end());
 
 在序列中统计某个值出现的次数
 
-> cout<<count(arr.begin() , arr.end() , searchValue) << endl;
+> cout<< count(arr.begin(), arr.end(), searchValue) << endl;
 
 ```cpp
 #include <iostream>
 using namespace std;
 int main() {
-	int n,x，arr[100]; cin >> n>>x;
-	for (int i = 0;i < n;i++)
+	int n, x, arr[100]; cin >> n >> x;
+	for (int i = 0; i < n; i++)
 		cin >> arr[i];
-	cout << count(arr,arr+n,x);
+	cout << count(arr, arr+n, x);
 }
 ```
 
@@ -27126,7 +27126,7 @@ int main() {
 	else cout << it1 << "   ";
 
 	if (it2 == size(v))  cout << -1 << endl;
-	else cout << it << endl;
+	else cout << it2 << endl;
 	
 	return 0;
 }
@@ -27540,7 +27540,6 @@ unordered_map<int,int,hh>mp;
 | v.size()                     | 返回容器内元素个数              |
 | v.empty()                    | 返回容器是否为空                |
 | v.clear()                    | 清空容器                        |
-| v1.compare(v2)               | 按字典序比较容器v1和v2          |
 | v1.swap(v2)                  | 交换两个容器,vector特化版的swap |
 
 
@@ -27988,7 +27987,7 @@ deque<int> d4(d1);
 | clear()            | 清空容器                                                     |
 | front()/back()     | 返回队首/末尾元素                                            |
 | begin()            | 返回指向容器开始的迭代器                                     |
-| end()              | 返回指向容器末尾的迭代器,解引用后为容器大小,next(end())又循环为begin() |
+| end()              | 返回指向容器末尾的迭代器                                     |
 
 
 
@@ -28110,7 +28109,7 @@ set是以rb_tree为底层机构，因此有元素自动排序的特性。元素�
 | size()             | 返回当前容器元素个数                                         |
 | clear()            | 删除容器中所有元素                                           |
 | begin()            | 返回指向容器第一个元素的迭代器                               |
-| end()              | 返回指向容器末尾元素的迭代器，解引用后为容器元素个数         |
+| end()              | 返回指向容器末尾元素的迭代器                                 |
 | q.lower_bound(x)   | 返回第一个大于等于x的迭代器O(logn),不要使用lower_bound(last,end,x)会退化为O(N) |
 | q.upper_bound(x)   | 返回第一个大于x的迭代器                                      |
 | equal_range()      | 返回元素值为n的区间(pair类型) //*a.equal_range().first和 *a.equal_range()second之间 |
@@ -29572,11 +29571,6 @@ void sol(){
 		}
 	}
 	cout << mp.size() << '\n';
-}
-
-int main() {
-	cin >> T;
-	while(T--){ sol(); }
 }
 ```
 
