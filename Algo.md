@@ -8,7 +8,7 @@
 
 **数学**：计算几何、博弈论、多项式、Min25、Polya计数、
 
-**基础算法**：倍增、整体二分、树上莫队、
+**基础算法**：倍增、整体二分、树上莫队、CDQ分治、反悔贪心、
 
 **字符串**：后缀自动机、回文树、
 
@@ -27,7 +27,7 @@
 
 2025.10.20 update：退役归档，不再更新、
 
-2026.06.07：分层图最短路、对拍、KMP修正、01Trie修正、调和级数、线性递推求逆元、添加了一些好van的网站、平面几何（多边形面积、求凸包）、笛卡尔树、类欧几里得算法、最小瓶颈路、子集枚举、并查集（可撤销，可删点、可持久化）、k-Dyck路、
+2026.09.07：分层图最短路、对拍、KMP修正、01Trie修正、调和级数、线性递推求逆元、添加了一些好van的网站、平面几何（多边形面积、求凸包）、笛卡尔树、类欧几里得算法、最小瓶颈路、子集枚举、并查集（可撤销，可删点、可持久化）、k-Dyck路、HLPP、极角排序、
 
 # 数学
 
@@ -211,18 +211,20 @@ vector<int>mul(vector<int>& A, int b) {
 
 ```cpp
 //A*B   O(N*M)
-vector<int> mul(vector<int> &A,vector<int> &B)
-    vector<int> C(A.size()+B.size());
-    for(int i=0;i<A.size();i++)
-        for(int j=0;j<B.size();j++)
-            C[i+j]+=A[i]*B[j];
-    for(int i=0,t=0;i<res.size();i++){
-        t+=C[i];
-        C[i]=t%10;
-        t/=10;
-    }
-    while(C.size() >= 2 && C.back()==0) C.pop_back();
-    return C;
+vector<int> mul(vector<int>& A,vector<int>& B) {
+	vector<int> C(A.size() + B.size());
+	for(int i = 0;i < A.size(); i++) {
+		for(int j=0;j<B.size();j++) {
+			C[i + j] += A[i] * B[j];
+		}
+	}
+	for(int i = 0, t = 0; i < C.size(); i++) {
+		t += C[i];
+		C[i] = t % 10;
+		t /= 10;
+	}
+	while(C.size() >= 2 && C.back()==0) C.pop_back();
+	return C;
 }
 ```
 
@@ -404,7 +406,7 @@ int main(){
 **幂**
 
 ```cpp
-//中精度 2^n   2*n <= 30000        //n可以为负数
+//中精度 2^n   n <= 16383        //n可以为负数
 //仅适用于计算2^n的精确值
 #include <iostream>
 #include <sstream>
@@ -670,7 +672,7 @@ struct Frac {// num/den
 > ```
 >
 > ```cpp
-> string s = 123;
+> string s = "123";
 > Bigint A = s;
 > ```
 >
@@ -921,8 +923,8 @@ __gcd(a,b);	//#include <algorithm> 返回a,b的最大公约数
 ```cpp
 //二进制优化,快个两三倍
 int gcd(int a,int b){
-	int az = __builtin_ctz(a),bz = __builtin_ctz(b);//末尾元素0的个数,对于LL类型,需要使用__builtin_ctzll
 	if (b == 0) return a;
+	int az = __builtin_ctz(a),bz = __builtin_ctz(b);//末尾元素0的个数,对于LL类型,需要使用__builtin_ctzll
 	int z = std::min(az,bz);
 	b >>= bz;
 	while(a) {
@@ -1498,7 +1500,7 @@ $O(N)$ 预处理， $O(1)$ 查询
 using namespace std;
 const int N = 1e8 + 5;
 bool st[N];//i >= 2且st[i] == 0 则i是素数
-int primes[N],cnt;//primes存质数
+int primes[N],cnt;//primes存质数, 素数个数比较小, 未用到的空间一般会被优化掉
 
 void initi(int n){
     //st[0] = st[1] = 1;
@@ -4618,10 +4620,6 @@ void sol(){
 	uuz(n);
 	cout << fixed << setprecision(2) << ans[1];
 }
-
-int main() {
-	while(T--){ sol(); }
-}
 ```
 
 
@@ -4846,7 +4844,9 @@ $$
 $$
 P(x) = \sum_{i+j=x}S(i)^3B(j) + \sum_{i+j=x}S(i)B(j)^3 - 2\sum_{i+j=x}S(i)^2B(j)^2
 $$
-诺 $P(x)$ 为0，则 $s_2[x-m+1,x]$ 与 $s_1$ 匹配
+诺 $P(x)$ 为0，则 $s_2[x-m+1,x]$ 与 $s_1$ 匹配。
+
+本题也可以使用 NTT 来写，快个两三倍。
 
 ```cpp
 #include <bits/stdc++.h>
@@ -4911,7 +4911,7 @@ int main(){
 	std::reverse(s1.begin(),s1.end());
 
 	std::vector<long long> a(m),b(n);
-	for(int i = 0;i < m;i++) a[i] = (s1[i] == '*' ? 0 : s1[i]-'a'+1);
+	for(int i = 0;i < m;i++) a[i] = (s1[i] == '*' ? 0 : s1[i]-'a'+1);//有极小概率冲突, 可以将a~z映射为随机打乱的 1~26
 	for(int i = 0;i < n;i++) b[i] = (s2[i] == '*' ? 0 : s2[i]-'a'+1);
 
 	auto A = a,B = b;
@@ -4982,7 +4982,7 @@ void NTT(std::vector<long long>& a, bool invert) {
 	}
 
 	for(int len = 2;len <= n;len <<= 1) {
-		long long wlen = qmi(invert ? G : GI,(mod-1)/len,mod);
+		long long wlen = qmi(invert ? GI : G,(mod-1)/len,mod);
 		for (int i = 0;i < n;i += len) {
 			long long w = 1;
 			for (int j = 0;j < len/2;j++) {
@@ -5429,14 +5429,14 @@ int main(){
 
 ### Nim游戏
 
-n堆物品，每堆有$a_i$个，两个玩家轮流取走任意一堆的任意一个物品(不能不取)，取走最后一个物品的人获胜
+n堆物品，每堆有$a_i$个，两个玩家轮流取走任意一堆的任意任意数量物品(不能不取)，取走最后一个物品的人获胜
 
 **博弈图和状态**
 
 如果将每个状态视为一个节点，再从每个状态向它的后继状态连边，我们就可以得到一个博弈状态图。
 例如，如果节点 $(i, j, k)$ 表示局面为 $i, j, k$ 时的状态，则我们可以画出下面的博弈图
 
-<img src="https://oi-wiki.org/math/game-theory/images/game1.png" alt="博弈图的例子" style="zoom:50%;" /> 
+![博弈图的例子](https://oi-wiki.org/math/game-theory/images/nim.svg)
 
 定义 必胜状态 为 先手必胜的状态，必败状态 为 先手必败的状态。
 通过推理，我们可以得出下面三条定理：
@@ -6554,6 +6554,77 @@ std::vector<Point<T>> hp(std::vector<Line<T>> lines) {
     return std::vector(ps.begin(), ps.end());
 }
 ```
+
+
+
+
+
+
+
+#### 极角排序
+
+[极角排序 - Problem - QOJ-P10259](https://qoj.ac/contest/3936/problem/10259)
+
+> 给定平面上面 $n$ 个整点，第 $i (1 \le i \le n)$ 个点的坐标为 $(x_i, y_i)$。你需要将所有点按照 $atan2(y_i, x_i)$ 进行排序，也即从 $x$ 负半轴（不含）开始进行逆时针排序，即 $(-\pi , \pi]$。数据范围：$-10^{18} \le x_i, y_i \le 10^{18}$
+>
+> 注意：
+>
+> - $atan2(0, 0) = 0$
+> - $atan2(0, x)$ = $\pi (\forall x < 0)$
+>
+> 如果两个点的极角相同，你可以将极角相同的点按任意顺序排序。
+
+不直接用函数 $atan2$，会有精度损失。
+
+<img src="C:\Users\21003\AppData\Roaming\Typora\typora-user-images\image-20260907015200061.png" alt="image-20260907015200061" style="zoom:50%;" /> 排名示例。题目中原点与x正轴上的点其极角都为0。
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+struct Point {
+	long long x, y;
+	int id;
+
+	// 按 极角(atan2升序, 从 -π 到 π) 划分段号
+	// -1: x 轴以下: y < 0
+	//  1: 一、二象限、-x轴: y > 0 || (y == 0 && x < 0)
+	//  0: +x轴 + 原点(0, 0): (y == 0 && x >= 0)
+	int sgn() {
+		return y < 0 ? -1 : (y > 0 || x < 0 ? 1 : 0);
+	}
+
+	friend bool operator < (Point& e1, Point& e2) {
+		// 先比段号, 同段再比叉积
+		if (e1.sgn() != e2.sgn() || e1.sgn() == 0) return e1.sgn() < e2.sgn();
+		// 叉积 cross(e1, e2) > 0
+		return (__int128)e1.x * e2.y > (__int128)e1.y * e2.x;
+	}
+};
+
+void soviet() {
+	int n; std::cin >> n;
+	std::vector<Point> e(n + 1);
+	for (int i = 1; i <= n; i++) {
+		auto& [x, y, id] = e[i];
+		std::cin >> x >> y;
+		id = i;
+	}
+	std::sort(e.begin() + 1, e.end());
+	for (int i = 1; i <= n; i++) {
+		std::cout << e[i].id << ' ';
+	}
+}
+
+int main() {
+	int M_T = 1; std::ios::sync_with_stdio(false); std::cin.tie(nullptr);
+//	std::cin >> M_T;
+	while (M_T--) { soviet(); }
+	return 0;
+}
+```
+
+
 
 
 
@@ -7894,30 +7965,60 @@ int main(){
 
 ## 二进制
 
+**求 n 的二进制第 k 位**
+
 ```cpp
-//求n的二进制第k位  从0开始数
+// 从0开始数
 #include <iostream>
 using namespace std;
 //10 = (1010)2
 int main() {
 	int n, k;
 	cin >> n >> k;
-	cout << (n >> k & 1); //右k移位，再&1，k的值不会改变
+	cout << (n >> k & 1); // 右移k位, 再 &1
 	return 0;
 }
 ```
 
 
 
+
+
+**查询区间 [l, r] 内所有整数二进制第 k 位为 1 的个数**
+
+```cpp
+// 计算 0 到 n（包含 n）之间所有整数中，二进制第 k 位为 1 的个数
+long long count_ones_up_to(long long n, int k) {
+    if (n < 0) return 0;
+    long long period = 1LL << (k + 1);   // 周期 = 2^(k+1)
+    long long half = 1LL << k;           // 半个周期中 1 的个数
+    long long full = (n + 1) / period;   // 完整周期数
+    long long rem = (n + 1) % period;    // 剩余部分长度
+    return full * half + std::max(0LL, rem - half);
+}
+
+// 查询区间 [l, r] 内所有整数二进制第 k 位为 1 的个数
+long long query_one(long long l, long long r, int k) {
+	return count_ones_up_to(r, k) - count_ones_up_to(l - 1, k);
+}
+```
+
+第 k 位的值是按照周期 $2^{k+1}$ 变化的：
+
+- 每个周期前 $2^k$ 个数的第 $k$ 位是 0，后 $2^k$ 个数的第 $k$ 位是 1。
+- 因此在区间 $[0,n]$ 中，完整周期贡献 $2^k$ 个 1，剩余不足一个周期的部分再单独计算多出来的 1。
+
+通过前缀相减即可得到任意区间 $[l,r]$ 的结果。
+
+
+
+
+
+
+
 ### lowbit
 
 求n的二进制 第一次出现的1对应的值：
-
-368：
- n      = 1011==1==0000
--n     = 010001111
--n+1 = 0100==1==0000	//以补码形式储存
-n&-n =        10000 = 16
 
 ```cpp
 int lowbit(int x) {return x&-x;}
@@ -7938,13 +8039,13 @@ int lowbit(int n)  { return n & -n; }
 int main() {
 	int n,res = 0; cin >> n;
 	while (n) {
-        n -= lowbit(n)；
+        n -= lowbit(n);
         res++;
     }
 	cout << res << endl;
 }
 //gnu编译器实现,性能最快,接近硬件极限
-int res = __builtin_popcount(x);
+int res = __builtin_popcount(x); // 诺 x 为 64 位, 则应用 __buildtin_popcountll(x)
 ```
 
 
@@ -7971,7 +8072,7 @@ int len = log2(x)+1;
 
 
 
-求正整数n的二进制第k位代表的十进制数（$2^k$或0）
+求正整数 n 的二进制第 k 位代表的十进制数（$2^k$ 或 0）
 
 ```cpp
 long long deg(long long num, int deg) { return num & (1LL << deg); }
@@ -7986,7 +8087,7 @@ long long deg(long long num, int deg) { return num & (1LL << deg); }
 > 例如，a[ ] = {1,2,3,4,5,6,7,8};
 > 则v[22]表示10110 = a[5]+a[3]+a[2]
 
-二进制枚举子集，时间复杂度$O(n \times 2^n)$，空间复杂度$O(1)$
+二进制枚举子集，时间复杂度 $O(n \times 2^n)$，空间复杂度 $O(1)$
 
 ```cpp
 //二进制枚举子集
@@ -8002,7 +8103,7 @@ for (int i = 0; i < (1 << n); i++) {
 
 
 
-dfs枚举子集，时间复杂更低$O(2^n)$，需要额外$O(n)$的栈空间，剪枝能力更强
+dfs枚举子集，时间复杂更低 $O(2^n)$，需要额外 $O(n)$ 的栈空间，剪枝能力更强
 
 ```cpp
 //dfs枚举子集
@@ -8015,8 +8116,6 @@ void dfs(int idx, int sum) {
     dfs(idx + 1, sum + a[idx]);        // 选
 }
 ```
-
-
 
 
 
@@ -11706,7 +11805,7 @@ void down(int u) {
 
 ```cpp
 void up(int u) {
-	if (u / 2 && h[u / 2] > h[u]) {//诺比父节点小，则二者交换
+	while (u / 2 && h[u / 2] > h[u]) {//诺比父节点小，则二者交换
 		swap(h[u / 2], h[u]);
 		u /= 2;
 	}
@@ -12798,7 +12897,7 @@ void ins(int l,int x){
 	v[cnt].insert(v[cnt].begin()+ l-1,x);
 	all++;
 
-	if(v[id[l]].size() > 2*m){//如果插入后，块的长度>2*m,则清空v[]还原到a[],重新初始化分块
+	if(v[cnt].size() > 2*m){//如果插入后，块的长度>2*m,则清空v[]还原到a[],重新初始化分块
 		reint();
 		initi();
 	}
@@ -16519,6 +16618,9 @@ O(N)求得对于每个i的最长回文长度，这里下标从0开始
 ```cpp
 //https://www.luogu.com.cn/problem/P3805
 //模版题,给定字符串,求最长的回文子串长度
+#include <bits/stdc++.h>
+using namespace std;
+
 template<typename T>
 struct Manacher{ //1_idx
 	int n,ans;
@@ -16545,22 +16647,21 @@ struct Manacher{ //1_idx
 			else d[i] = std::min(d[l*2-i],r-i+1);
 			while(i-d[i] >= 1 && i+d[i] <= n && s[i-d[i]] == s[i+d[i]]) d[i]++;
 			if(i+d[i]-1 > r) l = i,r = i+d[i]-1;
-			ans = std::max(ans,d[i]-1); //减去加入的'#'
+			ans = std::max(ans,d[i]-1);
 		}
 	}
 
-	bool query(int l,int r){ //查询区间是否为回文串
+	bool query(int l,int r){ // 查询区间是否为回文串
 		l <<= 1,r <<= 1;
 		int mid = l + r >> 1;
 		return d[mid]-1 >= r-mid;
 	}
 };
 
-int main(){
-	std::string s;
-	std::cin >> s;
-
-	Manacher t(s);
+int main() {
+	std::string s; std::cin >> s;
+	s = ' ' + s;
+	Manacher<std::string> t(s);
 	std::cout << t.ans;
 }
 ```
@@ -17985,7 +18086,7 @@ int main() {
 还有一种方法是多开一维记录决策信息。`dist[i][j]`表示到达`i`用了`j`次机会的最小花费，`vis[i][j]`标记该状态是否出现过。类似于dp，在最短路模版更新时
 
 - 不使用机会 `dist[y][j] = min(dist[y][j], dist[x][j] + w[i])`
-- 使用机会 `dist[y][j] = min(dist[y][j], dist[y][j - 1] + val)`
+- 使用机会 `dist[y][j] = min(dist[y][j], dist[x][j - 1] + val)`
 
 
 
@@ -19981,10 +20082,10 @@ int main(){
 
 ### 最小树形图
 
-**有向图**上的最小生成树（Directed Minimum Spanning Tree）称为最小树形图。
-所有从图中生成一颗 `根节点能到达其它节点`的树，边权和最小的一颗树
+> **有向图**上的最小生成树（Directed Minimum Spanning Tree）称为最小树形图。
+> 所有从图中生成一颗 `根节点能到达其它节点`的树，边权和最小的一颗树
 
-常用的算法是**朱刘算法**（也称 Edmonds 算法），可以在 $O(nm)$ 时间内解决最小树形图问题
+常用的算法是**朱刘算法**（也称 Edmonds 算法），可以在 $O(nm)$ 时间内解决最小树形图问题。
 
 <img src="https://cdn.luogu.com.cn/upload/pic/22858.png" alt="img" style="zoom:50%;" /> 
 
@@ -21959,7 +22060,7 @@ bool bellman(){
 			dist[b] = min(dist[b],dist[a] + c);
 		}
 	}
-	for(int i = 0;i <= m;i++){//如果在n-1次循环之后仍然存在边可以被松弛，那么就存在负环
+	for(int i = 1;i <= m;i++){//如果在n-1次循环之后仍然存在边可以被松弛，那么就存在负环
 		auto &[a,b,c] = e[i];
 		if(dist[b] > dist[a] + c) return 1;
 	}
@@ -22259,6 +22360,7 @@ e-DCC的求法比较简单，先求出**无向图**中的所有割边，把割�
 using namespace std;
 const int N = 500005,M = 4000006;
 vector<int>v[N];
+int cnt = 0;
 
 int h[N],e[M],ne[M],idx;
 void add(int a,int b){
@@ -22305,7 +22407,6 @@ int main(){
 		if(!dfn[i]) tarjan(i,0);
 	}
     
-	int cnt = 0;
 	for(int i = 1;i <= n;i++){
 		if(!st[i]) {
 			cnt++;
@@ -22800,6 +22901,180 @@ int main(){
 	cout << maxflow;
 }
 ```
+
+
+
+
+
+#### HLPP
+
+[QOJ-p457   Luogu-p4722](https://qoj.ac/contest/3936/problem/457)
+
+> 数据范围 $1 \le n \le 2000, 1 \le m \le 3.2*10^5, 1 \le c \le 10^9$
+
+时间复杂度 $O(n^2\sqrt{m})$
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+template<typename T = long long>
+struct HLPP {
+	int n, s1, s2, idx, max_h, work;
+	T maxflow;
+	const T INF = numeric_limits<T>::max() / 4;
+
+	std::vector<int> h, e, ne, ht, gap, arc;
+	std::vector<T> w, ex;
+	std::vector<std::deque<int>> bucket;
+
+	HLPP(int _n, int _s1, int _s2) {
+		n = _n + 2; s1 = _s1; s2 = _s2; idx = 0;
+		h = arc = std::vector<int>(n, -1);
+		e.clear(); ne.clear(); w.clear();
+		ex = std::vector<T>(n);
+		ht = std::vector<int>(n);
+		gap = std::vector<int>(n + 2);
+		bucket = std::vector<std::deque<int>>(n + 2);
+	}
+
+	void add(int a, int b, T c) {
+		w.emplace_back(c), e.emplace_back(b), ne.emplace_back(h[a]), h[a] = idx++;
+		w.emplace_back(0), e.emplace_back(a), ne.emplace_back(h[b]), h[b] = idx++;
+	}
+
+	// 全局重标号：从汇点反向 BFS，得到每个点的高度
+	void bfs() {
+		work = 0;
+		max_h = 0;
+		std::fill(ht.begin(), ht.end(), n);
+		std::fill(gap.begin(), gap.end(), 0);
+		arc = h;
+		for (int i = 0; i <= n; i++) bucket[i].clear();
+
+		std::queue<int> q;
+		q.push(s2);
+		ht[s2] = 0; gap[0] = 1;
+		while (q.size()) {
+			int x = q.front();
+			q.pop();
+			for (int i = h[x]; ~i; i = ne[i]) {
+				int y = e[i];
+				if (w[i ^ 1] > 0 && ht[y] == n) {
+					ht[y] = ht[x] + 1;
+					gap[ht[y]]++;
+					q.push(y);
+				}
+			}
+		}
+		ht[s1] = n; gap[n]++;
+
+		for (int i = 0; i < n; i++) {
+			if (i != s1 && i != s2 && ex[i] > 0 && ht[i] < n) {
+				bucket[ht[i]].push_back(i);
+				max_h = std::max(max_h, ht[i]);
+			}
+		}
+	}
+
+	void push(int v, int ie) {
+		int y = e[ie];
+		T df = std::min(ex[v], w[ie]);
+		if (df <= 0) return;
+		w[ie] -= df, w[ie ^ 1] += df;
+		ex[v] -= df, ex[y] += df;
+		if (y != s1 && y != s2 && ex[y] == df && ht[y] < n) {
+			bucket[ht[y]].push_back(y);
+			max_h = std::max(max_h, ht[y]);
+		}
+	}
+
+	// 重标记（+gap 优化）
+	void relabel(int v, int nh) {
+		work++;
+		if (ht[v] >= n) return;
+		if (gap[ht[v]] == 1) { // 该高度只剩 v，把更高层的点全部抬到 n+1
+			for (int u = 0; u < n; u++) {
+				if (u != s1 && u != s2 && ht[u] > ht[v] && ht[u] < n) {
+					gap[ht[u]]--;
+					ht[u] = n + 1;
+				}
+			}
+		}
+		gap[ht[v]]--;
+		if (nh <= ht[v]) nh = ht[v] + 1;
+		if (nh >= n + 1) nh = n + 1;
+		ht[v] = nh;
+		if (ht[v] <= n) gap[ht[v]]++;
+		arc[v] = h[v];
+		if (ex[v] > 0 && ht[v] <= n) {
+			bucket[ht[v]].push_back(v);
+			max_h = std::max(max_h, ht[v]);
+		}
+	}
+
+	// 排空 v 的盈余（当前弧优化）
+	void discharge(int v) {
+		int nh = n;
+		for (int i = arc[v]; ~i; i = ne[i]) {
+			int y = e[i];
+			if (w[i] > 0) {
+				if (ht[v] == ht[y] + 1) {
+					push(v, i);
+					if (ex[v] == 0) { arc[v] = i; return; }
+				} else nh = std::min(nh, ht[y] + 1);
+			}
+		}
+		for (int i = h[v]; i != arc[v]; i = ne[i]) {
+			int y = e[i];
+			if (w[i] > 0) {
+				if (ht[v] == ht[y] + 1) {
+					push(v, i);
+					if (ex[v] == 0) { arc[v] = i; return; }
+				} else nh = std::min(nh, ht[y] + 1);
+			}
+		}
+		relabel(v, nh);
+	}
+
+	T sol() {
+		maxflow = 0;
+		bfs();
+		ex[s1] = INF;
+		for (int i = h[s1]; ~i; i = ne[i]) push(s1, i);
+		while (max_h > 0) {
+			while (max_h > 0 && bucket[max_h].empty()) max_h--;
+			if (max_h == 0) break;
+			int v = bucket[max_h].front();
+			bucket[max_h].pop_front();
+			if (v == s1 || v == s2 || ex[v] == 0) continue;
+			discharge(v);
+			if (work > 4 * n) bfs();
+		}
+		maxflow = ex[s2];
+		return maxflow;
+	}
+};
+
+void soviet() {
+	int n, m, s1, s2; std::cin >> n >> m >> s1 >> s2;
+	HLPP<long long> d(n, s1, s2);
+	while (m--) {
+		int u, v, c; std::cin >> u >> v >> c;
+		d.add(u, v, c);
+	}
+	std::cout << d.sol();
+}
+
+int main() {
+	int M_T = 1; std::ios::sync_with_stdio(false); std::cin.tie(nullptr);
+//	std::cin >> M_T;
+	while (M_T--) { soviet(); }
+	return 0;
+}
+```
+
+
 
 
 
@@ -26486,7 +26761,7 @@ cout << *mp[1] << ' ' << *mp[2] << endl;
 | a.**clear**();                                               | 清空元素                                                     |
 | a.**replace**(pos,len,"abc");                                | 元素替换                                                     |
 | a.**find**("abc"[,pos][从下标pos位置开始查找,不填默认为0]);  | 返回第一次出现目标字符串的位置,没有则返回string::npos(通常定义为-1或无穷大) |
-| a.**find_last_of**("abc"[,pos][从下标pos位置开始,不填默认为0]); | 返回最后一次出现目标字符串的位置,没有则返回string::npos(通常定义为-1或无穷大) |
+| a.**find_last_of**("abc"[,pos][从下标pos位置开始,不填默认为0]); | 返回最后一次出现目标字符串中任意字符的位置,没有则返回string::npos(通常定义为-1或无穷大) |
 | **getline**(cin,str,c);                                      | 输入字符串str,包括空格和回车，遇到c(不写默认为‘\n’)停止      |
 | str1.**compare**(str2);                                      | 比较两个字符串的字典序                                       |
 | **memset**(arr,'c',sizeof arr);                              | 初始化char[]型字符串为字符‘c’，或将数组元素按字节初始化为0/-1/0x3f |
@@ -26581,7 +26856,7 @@ int main() {
     
     string target = "oi";
 	int index = arr.find(target);//返回第一次出现目标字符串的位置
-    if(index == -1)) cout << "不存在子串" << endl;
+    if(index == -1) cout << "不存在子串" << endl;
 	else cout << index << endl;
     
 	int index2 = arr.find("i", 5);	//从下标为5的位置开始查找
@@ -27049,16 +27324,16 @@ erase(unique(v.begin(),v.end()),v.end());
 
 在序列中统计某个值出现的次数
 
-> cout<<count(arr.begin() , arr.end() , searchValue) << endl;
+> cout<< count(arr.begin(), arr.end(), searchValue) << endl;
 
 ```cpp
 #include <iostream>
 using namespace std;
 int main() {
-	int n,x，arr[100]; cin >> n>>x;
-	for (int i = 0;i < n;i++)
+	int n, x, arr[100]; cin >> n >> x;
+	for (int i = 0; i < n; i++)
 		cin >> arr[i];
-	cout << count(arr,arr+n,x);
+	cout << count(arr, arr+n, x);
 }
 ```
 
@@ -27126,7 +27401,7 @@ int main() {
 	else cout << it1 << "   ";
 
 	if (it2 == size(v))  cout << -1 << endl;
-	else cout << it << endl;
+	else cout << it2 << endl;
 	
 	return 0;
 }
@@ -27390,7 +27665,7 @@ mapStudent[2] = "student_second";
 
 ### 访问元素
 
-诺不确定一个元素是否存在，避免使用`[ ]`查找，而是要用 `find()` 函数。因为用 `[]` 如果不存在会新建一个元素反复使用会造成 TLE。
+诺不确定一个元素是否存在，避免使用`[]`查找，而是要用 `find()` 函数。因为用 `[]` 如果不存在会新建一个元素反复使用会造成 TLE。
 
 ```cpp
 //通过键值
@@ -27540,7 +27815,6 @@ unordered_map<int,int,hh>mp;
 | v.size()                     | 返回容器内元素个数              |
 | v.empty()                    | 返回容器是否为空                |
 | v.clear()                    | 清空容器                        |
-| v1.compare(v2)               | 按字典序比较容器v1和v2          |
 | v1.swap(v2)                  | 交换两个容器,vector特化版的swap |
 
 
@@ -27988,7 +28262,7 @@ deque<int> d4(d1);
 | clear()            | 清空容器                                                     |
 | front()/back()     | 返回队首/末尾元素                                            |
 | begin()            | 返回指向容器开始的迭代器                                     |
-| end()              | 返回指向容器末尾的迭代器,解引用后为容器大小,next(end())又循环为begin() |
+| end()              | 返回指向容器末尾的迭代器                                     |
 
 
 
@@ -28110,7 +28384,7 @@ set是以rb_tree为底层机构，因此有元素自动排序的特性。元素�
 | size()             | 返回当前容器元素个数                                         |
 | clear()            | 删除容器中所有元素                                           |
 | begin()            | 返回指向容器第一个元素的迭代器                               |
-| end()              | 返回指向容器末尾元素的迭代器，解引用后为容器元素个数         |
+| end()              | 返回指向容器末尾元素的迭代器                                 |
 | q.lower_bound(x)   | 返回第一个大于等于x的迭代器O(logn),不要使用lower_bound(last,end,x)会退化为O(N) |
 | q.upper_bound(x)   | 返回第一个大于x的迭代器                                      |
 | equal_range()      | 返回元素值为n的区间(pair类型) //*a.equal_range().first和 *a.equal_range()second之间 |
@@ -29572,11 +29846,6 @@ void sol(){
 		}
 	}
 	cout << mp.size() << '\n';
-}
-
-int main() {
-	cin >> T;
-	while(T--){ sol(); }
 }
 ```
 
