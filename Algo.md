@@ -27,829 +27,9 @@
 
 2025.10.20 update：退役归档，不再更新、
 
-2026.09.07：分层图最短路、对拍、KMP修正、01Trie修正、调和级数、线性递推求逆元、添加了一些好van的网站、平面几何（多边形面积、求凸包）、笛卡尔树、类欧几里得算法、最小瓶颈路、子集枚举、并查集（可撤销，可删点、可持久化）、k-Dyck路、HLPP、极角排序、
+2026.09.19：分层图最短路、对拍、KMP修正、01Trie修正、调和级数、线性递推求逆元、添加了一些好van的网站、平面几何（多边形面积、求凸包）、笛卡尔树、类欧几里得算法、最小瓶颈路、子集枚举、并查集（可撤销，可删点、可持久化）、k-Dyck路、HLPP、极角排序、幂次哈希、
 
 # 数学
-
-
-
-## 基础运算
-
-### 快速冥/乘
-
-```cpp
-//求a^b对p取模的值
-long long qmi(long long a, long long b,long long p) {
-	long long ans = 1;
-	while (b) {
-		if (b & 1) {//如果指数为奇数
-			ans = ans * a % p;//收集好指数为奇数时分离出来的一次方,(不可写为ans*=a%p)
-		}
-		b >>= 1;	//指数折半
-		a = a * a % p;	//底数变平分
-	}
-	return ans % p;
-}
-```
-
-```cpp
-//龟速乘
-//求a*b对p取模的值  性能较差 O(log)
-long long qmx(long long a, long long b, long long p) {
-	long long ans = 0;
-	while (b) {
-		if (b & 1) ans = (ans + a) % p;
-        b >>= 1;
-        a = (a + a) % p;		
-	}
-	return ans;
-}
-
-//转为浮点运算  性能最好 O(1)
-long long qmx(long long a, long long b, long long p) {
-	a %= p; b %= p;
-    long long r = a * b - p*(long long)(1.0L / p * a * b);
-    return r - p * (r >= p) + p * (r < 0);
-}
-
-//__int128  O(2)  需要64位GCC编译器
-long long qmx(long long a, long long b, long long p) {
-	return __int128(a) * b % p;
-}
-```
-
-
-
-求$n^k$的前三位数
-
-$n^k = 10^{k\lg n} = 10^{\lfloor k\lg n\rfloor} \times 10^{k\lg n - \lfloor k\lg n\rfloor}$
-前半部分为整数次幂，后半部分为小数次幂。$n^k = 小数次幂 \times 10^{整数次幂}$ ，例如$2^{20} = 1.048576\times 10^6$
-我们只需要取小数次幂的三位(乘100再取整即可)
-
-```cpp
-//https://vjudge.net/problem/LightOJ-1282
-int p = pow(10,k*log10(n) - floor(k*log10(n))) * 100;
-```
-
-
-
-
-
-### 高精度
-
-[大整数在线计算工具 (gptkong.com)](https://www.gptkong.com/tools/big_integer_calculator)
-
-
-**加**
-
-```cpp
-//  A+B  
-#include<iostream>
-#include<vector>
-using namespace std;
-string a, b;
-vector<int> A, B;
-vector<int> add(vector<int>&A, vector<int>&B) {
-    vector<int>C;
-	int t = 0;
-	for (int i = 0; i < A.size() || i < B.size(); i++) {
-		if (i < A.size()) t += A[i];
-		if (i < B.size()) t += B[i];
-		C.push_back(t % 10);	//无论是否有进位，都取 %10的余数
-		t /= 10;	//判断是否有进位
-	}
-	if (t) C.push_back(1);	//如果有最高位还有进位则在C数组最后加元素1
-	return C;
-}
-int main() {
-	cin >> a >> b;	//a = 123456
-	for (int i = a.size() - 1; i >= 0; i--) {
-		A.push_back(a[i] - '0');	//A = {6,5,4,3,2,1}
-	}
-	for (int i = b.size() - 1; i >= 0; i--) {
-		B.push_back(b[i] - '0');
-	}
-
-	A = add(A, B);	//auto 进行类型自动转换 在此相当于vector<int>;
-
-	for (int i = A.size() - 1; i >= 0; i--) {
-		printf("%d", A[i]);
-	}
-}
-```
-
-
-
-**减**
-
-```cpp
-//  A-B
-#include <iostream>
-#include <vector>
-using namespace std;
-string a, b;
-vector<int>A, B, C;	//判断a与b的大小
-bool cmp(vector<int>& A, vector<int>& B) {
-	if (A.size() != B.size()) return A.size() > B.size();//先比较位数
-	for (int i = A.size() - 1; i >= 0; i--) {	//位数相同则从高位依次比下来
-		if (A[i] != B[i]) return A[i] > B[i];
-	}
-	return 1;
-}
-
-vector<int>sub(vector<int>& A, vector<int>& B) {//A >= B
-    vector<int>C;
-    int t = 0;
-	for (int i = 0;i < A.size();i++){
-		t+=A[i];
-		if (i < B.size()) t -= B[i];
-		C.push_back((t + 10) % 10);	//保证相减后取正数
-		if (t < 0) t = -1;	//判断是否要借位
-		else t = 0;
-	}
-	while (C.size() > 1 && C.back() == 0)	C.pop_back();//去除前导0，pop_back删除容器中最后一个元素
-	return C;
-}
-
-int main() {
-	cin >> a >> b;
-	for (int i = a.size() - 1; i >= 0; i--) {
-		A.push_back(a[i] - '0');
-	}
-	for (int i = b.size() - 1;i >= 0;i--){
-		B.push_back(b[i] - '0');
-	}
-
-	if (cmp(A, B)) A = sub(A, B);
-	else A = sub(B, A);
-	
-	for (int i = A.size() - 1; i >= 0; i--) printf("%d", A[i]);
-}
-```
-
-
-
-**乘**
-
-<img src="C:\Users\21003\AppData\Roaming\Typora\typora-user-images\image-20231118143232446.png" alt="image-20231118143232446" style="zoom: 25%;" />   
-
-```cpp
-//A*b   O(N)
-vector<int>mul(vector<int>& A, int b) {
-	int t = 0;
-    vector<int>C;
-	for (int i = 0; i < A.size() || t; i++) {	//注意加上||t;
-		if (i < A.size()) t += A[i] * b;	//将b当做一个整体分别与a的每一位相乘，再加上进位
-		C.push_back(t % 10);	//C的每一位取其%10
-		t /= 10;	//计算进位
-	}
-	return C;
-}
-```
-
-
-
-```cpp
-//A*B   O(N*M)
-vector<int> mul(vector<int>& A,vector<int>& B) {
-	vector<int> C(A.size() + B.size());
-	for(int i = 0;i < A.size(); i++) {
-		for(int j=0;j<B.size();j++) {
-			C[i + j] += A[i] * B[j];
-		}
-	}
-	for(int i = 0, t = 0; i < C.size(); i++) {
-		t += C[i];
-		C[i] = t % 10;
-		t /= 10;
-	}
-	while(C.size() >= 2 && C.back()==0) C.pop_back();
-	return C;
-}
-```
-
-
-
-```cpp
-//A*B   FFT实现 O(NlogN)
-//https://www.luogu.com.cn/problem/P1919
-const long double PI = std::acos(-1.0);
-void FFT(std::vector<std::complex<long double>>& a, bool invert) {
-    int n = a.size();
-
-    for(int i = 1, j = 0; i < n; i++) {
-        int bit = n >> 1;
-        for (; j & bit; bit >>= 1) j ^= bit;
-        j ^= bit;
-        if (i < j) std::swap(a[i], a[j]);
-    }
-
-    for(int len = 2; len <= n; len <<= 1) {
-        long double ang = 2 * PI / len * (invert ? -1 : 1);
-        std::complex<long double> wlen(cosl(ang), sinl(ang));
-        for (int i = 0; i < n; i += len) {
-            std::complex<long double> w(1.0);
-            for (int j = 0; j < len / 2; j++) {
-                std::complex<long double> u = a[i + j];
-                std::complex<long double> v = a[i + j + len / 2] * w;
-                a[i + j] = u + v;
-                a[i + j + len / 2] = u - v;
-                w *= wlen;
-            }
-        }
-    }
-    if(invert) {
-        for (std::complex<long double>& x : a) x /= n;
-    }
-}
-
-std::vector<long long> operator*(const std::vector<long long>&A,const std::vector<long long>&B){
-	std::vector<long long>C;
-    int n = A.size(), m = B.size();
-
-    int MAX_N = 1;
-    while (MAX_N < n + m) MAX_N <<= 1;
-
-    std::vector<std::complex<long double>> a(MAX_N, 0.0), b(MAX_N, 0.0);
-    for(int i = 0; i < n; i++) a[i] = std::complex<long double>(A[i], 0);
-    for(int i = 0; i < m; i++) b[i] = std::complex<long double>(B[i], 0);
-
-    FFT(a, false);
-    FFT(b, false);
-    for(int i = 0; i < MAX_N; i++) a[i] *= b[i];
-    FFT(a, true);
-
-    long long t = 0;
-    for(int i = 0; i < n + m; i++) {
-		long long val = (long long)(a[i].real()+0.5);
-		t += val;
-		C.emplace_back(t%10);
-		t/=10;
-    }
-	if(t) C.emplace_back(t);
-	while(C.size() >= 2 && C.back() == 0) C.pop_back();
-	return C;
-}
-```
-
-
-
-
-
-**除**
-
-<img src="C:\Users\21003\AppData\Roaming\Typora\typora-user-images\image-20231118151225445.png" alt="image-20231118151225445" style="zoom: 33%;" /> 
-
-```cpp
-//A/b及其余数 
-#include <iostream>
-#include <vector>
-#include <algorithm>
-using namespace std;
-vector<int>A;//C为商
-
-vector<int>div(vector<int>&A,int b,int&r){  //r是引用
-    vector<int>C;
-	for (int i = A.size() - 1;i >= 0;i--){	//除法此处倒序，然后再翻转
-		r = r * 10 + A[i];	//上一位的余数*10再加上本位
-		C.push_back(r / b);	//将其对b的商记录进C数组
-		r %= b;	//然后变为其对b的余数供下一位使用
-	}
-	reverse(C.begin(), C.end());
-	while (C.size() > 1 && C.back() == 0) C.pop_back();
-	return C;	
-}
-
-int main() {
-	string a; int b, r = 0;	//r为余数
-	cin >> a >> b;
-	for (int i = a.size() - 1; i >= 0; i--) {
-		A.push_back(a[i] - '0');
-	}
-
-	A = div(A, b, r);
-
-	for (int i = A.size() - 1;i >= 0;i--){
-		printf("%d", A[i]);
-	}
-	cout << endl << r << endl;
-
-	return 0;
-}
-```
-
-
-
-```cpp
-//a/b 保留k位小数
-long long a,b,k;cin >> a >> b >> k;
-cout << a/b << '.';
-a = a%b*10;
-while(k--){
-    cout << a/b;
-    a = a%b*10;
-}
-```
-
-```cpp
-//求a/b的第k位小数   相当于a*10^k/b%10
-long long a,b,k;cin >> a >> b >> k;
-cout << a*qmi(10,k-1,b)*10/b%10;
-```
-
-
-
-
-
-**模**
-
-给两个正整数a,b，输出他们的最大公约数 a<=1e10^6,b <= 1e9
-
-> 首先有以下性质
-> 1.(a+b)%mod等价于a%mod+b%mod
-> 2.a * b%mod 等价于 a%mod*b%mod(仅当a * b没有溢出时)
-> 该题求解gcd(a,b)a是大数
-> 根据辗转相除法
-> gcd(a,b)=gcd(b,a%b)
-> 因此我们可以先求a%b把a限制在1e9的范围内，然后做gcd
-> 因为a很大，又可以表示为$\sum_{i=1}^n{a_i*10^{n-i}}$(其中n为字符串的长度，ai为第i个字符)
-> 又由性质1和2，我们就可以对每个ai求mod,同时通过乘和累加求出 
-
-```cpp
-//A%b
-//https://ac.nowcoder.com/acm/contest/86034/D
-#include <iostream>
-using namespace std;
-using ll = long long;
-
-ll gcd(ll a,ll b){return b?gcd(b,a%b):a;}
-
-ll qmod(string& a,ll b){//高精度A % 低精度b
-    ll t = 0;
-    for(int i = 0;i < a.size();i++)  {
-		t=(t*10+a[i]-'0')%b;
-	}
-    return t;
-}
-
-int main(){
-	string a;cin >> a;
-	ll b;cin >> b;
-	cout << gcd(b,qmod(a,b));
-}
-```
-
-
-
-
-
-**幂**
-
-```cpp
-//中精度 2^n   n <= 16383        //n可以为负数
-//仅适用于计算2^n的精确值
-#include <iostream>
-#include <sstream>
-#include <iomanip>
-#include <cmath>
-using namespace std;
-
-int main(){
-    int n; cin>>n;
-    stringstream ss;
-    ss << fixed << setprecision(n>0?0:-n) << pow(2.0L,n);
-    //string s = ss.str();  //字符串流,也可以用sprintf
-	string s; ss >> s;
-
-	cout << s;
-}
-```
-
-
-
-```cpp
-//高精度快速幂 A^b   一般b取不了太大
-Bigint qmi(Bigint &a,int b){
-	Bigint ans = 1;
-	while(b){
-		if(b&1) ans = ans*a;
-		b >>= 1;
-		a = a*a;
-	}
-	return ans;
-}
-```
-
-
-
-#### python高精
-
-```python
-import sys
-sys.set_int_max_str_digits(100005)	#修改最大位数 默认值4300
-a = int(input())
-b = int(input())
-print(a+b)	#加
-print(a-b)	#减
-print(a*b)	#乘
-print(a//b)	#除
-print(a%b)	#模
-print(a**b)	#幂
-```
-
-
-
-
-
-### 数学运算
-
-
-
-#### sqrt
-
-
-
-```cpp
-//向下取整
-long long qsqrt(long long n) { 
-    long long s = std::sqrt(n);
-    while (s*s > n) { s--; }
-    while ((s+1)*(s+1) <= n) { s++; }
-    return s;
-}
-```
-
-
-
-#### log
-
-```cpp
-//向上取整
-long long logi(long long a, long long b) {//log(a,b)  a^t ≥ b
-    long long t = 0;
-    long long v = 1;
-    while (v < b) {
-        v *= a;
-        t++;
-    }
-    return t;
-}
-
-long long llog(long long a, long long b) {//loglog(a,b)  a^(a^t) ≥ b
-    if (a <= b) {
-        int l = logi(a, b);
-        return (l == 0 ? 0 : std::__lg(2 * l - 1));
-    }
-	assert(b != 1);
-    long long l = logi(b, a + 1) - 1;
-    assert(l > 0);
-    return -std::__lg(l);
-}
-```
-
-
-
-```cpp
-//预处理log2,  (向下取整)
-lg2[0] = -1;
-for(int i = 1;i < N;i++){
-    lg2[i] = lg2[i>>1]+1;
-}
-```
-
-
-
-#### 除法取整
-
-```cpp
-long long ceilDiv(long long n, long long m) {//上取整
-    if (n >= 0) return (n + m - 1) / m;
-    else return n / m;
-}
- 
-long long floorDiv(long long n, long long m) {//向下取整
-    if (n >= 0) return n / m;
-    else return (n - m + 1) / m;
-}
-```
-
-
-
-#### 分式运算
-
-源自[jiangly分数四则运算 博客园 (cnblogs.com)](https://www.cnblogs.com/WIDA/p/17633758.html#分数四则运算frac)
-
-Frac a(1,3);  表示$\frac{1}{3}$  ，支持分式之间 `+` `-` `*` `/`  和比较大小
-
-```cpp
-template<class T>
-struct Frac {// num/den
-    T num;
-    T den;
-    Frac(T num_, T den_) : num(num_), den(den_) {
-        if (den < 0) {
-            den = -den;
-            num = -num;
-        }
-    }
-    Frac() : Frac(0, 1) {}
-    Frac(T num_) : Frac(num_, 1) {}
-    explicit operator double() const {
-        return 1. * num / den;
-    }
-    explicit operator long long() const{
-		return num / den;
-	}
-	friend long long floor(const Frac &x){
-		if(x.num >= 0) return x.num / x.den;
-		else return (x.num - x.den + 1) / x.den;
-	}
-	friend long long ceil(const Frac &x){
-		if(x.num >= 0) return (x.num + x.den - 1) / x.den;
-		else return x.num / x.den;
-	}
-    Frac &operator+=(const Frac &rhs) {
-        num = num * rhs.den + rhs.num * den;
-        den *= rhs.den;
-        return *this;
-    }
-    Frac &operator-=(const Frac &rhs) {
-        num = num * rhs.den - rhs.num * den;
-        den *= rhs.den;
-        return *this;
-    }
-    Frac &operator*=(const Frac &rhs) {
-        num *= rhs.num;
-        den *= rhs.den;
-        return *this;
-    }
-    Frac &operator/=(const Frac &rhs) {
-        num *= rhs.den;
-        den *= rhs.num;
-        if (den < 0) {
-            num = -num;
-            den = -den;
-        }
-        return *this;
-    }
-    friend Frac operator+(Frac lhs, const Frac &rhs) {
-        return lhs += rhs;
-    }
-    friend Frac operator-(Frac lhs, const Frac &rhs) {
-        return lhs -= rhs;
-    }
-    friend Frac operator*(Frac lhs, const Frac &rhs) {
-        return lhs *= rhs;
-    }
-    friend Frac operator/(Frac lhs, const Frac &rhs) {
-        return lhs /= rhs;
-    }
-    friend Frac operator-(const Frac &a) {
-        return Frac(-a.num, a.den);
-    }
-    friend bool operator==(const Frac &lhs, const Frac &rhs) {
-        return lhs.num * rhs.den == rhs.num * lhs.den;
-    }
-    friend bool operator!=(const Frac &lhs, const Frac &rhs) {
-        return lhs.num * rhs.den != rhs.num * lhs.den;
-    }
-    friend bool operator<(const Frac &lhs, const Frac &rhs) {
-        return lhs.num * rhs.den < rhs.num * lhs.den;
-    }
-    friend bool operator>(const Frac &lhs, const Frac &rhs) {
-        return lhs.num * rhs.den > rhs.num * lhs.den;
-    }
-    friend bool operator<=(const Frac &lhs, const Frac &rhs) {
-        return lhs.num * rhs.den <= rhs.num * lhs.den;
-    }
-    friend bool operator>=(const Frac &lhs, const Frac &rhs) {
-        return lhs.num * rhs.den >= rhs.num * lhs.den;
-    }
-    friend std::ostream &operator << (std::ostream &os, Frac x) {
-        T g = std::gcd(x.num, x.den);
-        if (x.den == g) { return os << x.num / g; } //
-        else { return os << x.num / g << "/" << x.den / g; }
-    }
-};
-```
-
-
-
-
-
-
-
-#### BigInt
-
-
-
-高精度整数运算，**不支持负数运算**(~~待完善~~)，写得一坨，勉强能用只能说是==
-
-| 操作                   | A op b    （高精度op低精度） | A op B    （高精度op高精度） |
-| ---------------------- | ---------------------------- | ---------------------------- |
-| 加法                   | `+` 、`+=`                   |`+` 、`+=`                               |
-| 减法(仅限大`-`小) | `-`、 `-=`                   | `-`、 `-=`                          |
-| 乘法      | `*`、 `*=`                   | `*`、 `*=`    (O(N*M)模拟)，不推荐，建议换FFT) |
-| 除法(下取整)              | `/`、 `/=`                  |  |
-| 取模                   | `%` 、`%=`                   |                              |
-| 比较大小               | `>` `<` `==` `!=` `>=` `<=`  | `>` `<` `==` `!=` `>=` `<=`  |
-
-允许直接A/B、A%B 但需要保证B在整型范围内（B  <= 9.2e17）
-
-> 初始化
->
-> ```cpp
-> Bigint A(123);
-> ```
->
-> ```cpp
-> Bigint A("123");
-> ```
->
-> ```cpp
-> int n = 123;
-> Bigint A = n;
-> ```
->
-> ```cpp
-> string s = "123";
-> Bigint A = s;
-> ```
->
-> ```cpp
-> cin >> A;
-> ```
-
-
-
-```cpp
-struct Bigint{
-	std::vector<long long> a;
-
-	Bigint (){ }
-
-	Bigint(const std::string &s){
-		for(int i = s.size()-1;i >= 0;i--){
-			if(s[i] >= '0' && s[i] <= '9') a.emplace_back(s[i] - '0');
-		}
-		while(a.size() >= 2 && a.back() == 0) a.pop_back();
-	}
-
-	Bigint(long long x){
-		if(x == 0) {a.emplace_back(0); return;}
-		if(x < 0) x = ~x + 1;
-		while(x) a.emplace_back(x%10),x/=10;
-	}
-
-	friend long long Bigint_to_int(const Bigint &B){
-		long long b = 0;
-		for(int i = B.a.size()-1;i >= 0;i--){
-			b = b*10 + B.a[i];
-		}
-		return b;
-	}
-
-	Bigint operator + (const Bigint &B){
-		Bigint C;
-		std::vector<long long>&c = C.a;
-		const std::vector<long long>&b = B.a;
-		long long t = 0;
-		for(int i = 0;i < a.size() || i < b.size() || t;i++){
-			if(i < a.size()) t += a[i];
-			if(i < b.size()) t += b[i];
-			c.emplace_back(t%10);
-			t/=10;
-		}
-		return C;
-	}
-
-	Bigint operator + (long long b){
-		return *this + Bigint(b);
-	}
-
-	Bigint operator * (long long b){
-		long long t = 0;
-		Bigint C;
-		std::vector<long long>&c = C.a;
-		for(int i = 0;i < a.size() || t;i++){
-			if(i < a.size()) t += a[i]*b;
-			c.emplace_back(t%10);
-			t/=10;
-		}
-		while(c.size() >= 2 && c.back() == 0) c.pop_back();
-		return C;
-	}
-
-	Bigint operator * (const Bigint &B){
-		const auto &A = this->a;
-		Bigint C;
-		C.a = std::vector<long long>(A.size()+B.a.size());
-		for(int i = 0;i < A.size();i++){
-			for(int j = 0;j < B.a.size();j++){
-				C.a[i+j] += A[i]*B.a[j];
-			}
-		}
-		long long t = 0;
-		for(int i = 0;i < C.a.size();i++){
-			t += C.a[i];
-			C.a[i] = t%10;
-			t /= 10;
-		}
-		while(C.a.size() >= 2 && C.a.back() == 0) C.a.pop_back();
-		return C;
-	}
-
-	Bigint operator - (const Bigint &B){
-		Bigint C;
-		std::vector<long long>&c = C.a;
-		const std::vector<long long>&b = B.a;
-		long long t = 0;
-		for(int i = 0;i < a.size();i++){
-			t += a[i];
-			if(i < b.size()) t -= b[i];
-			c.emplace_back((t+10)%10);
-			if(t < 0) t = -1;
-			else t = 0;
-		}
-		while(c.size() >= 2 && c.back() == 0) c.pop_back();
-		return C;
-	}
-
-	Bigint operator - (long long b){
-		return *this - Bigint(b);
-	}
-
-	Bigint operator / (long long b){
-		Bigint C;
-		std::vector<long long>&c = C.a;
-		long long t = 0;
-		for(int i = a.size()-1;i >= 0;i--){
-			t = t*10 + a[i];
-			c.emplace_back(t/b);
-			t %= b;
-		}//t as the remainder == A%b
-		reverse(c.begin(),c.end());
-		while(c.size() >= 2 && c.back() == 0) c.pop_back();
-		return C;
-	}
-
-	Bigint operator / (const Bigint &B){
-		return (*this)/Bigint_to_int(B);
-	}
-
-	Bigint operator % (long long b){
-		long long t = 0;
-		for(int i = a.size()-1;i >= 0;i--){
-			t = (t*10 + a[i]) %b;
-		}
-		return Bigint(t);
-	}
-
-	Bigint operator % (const Bigint &B){
-		return (*this)%Bigint_to_int(B);
-	}
-
-	int cmp (const Bigint &B){
-		const std::vector<long long>&b = B.a;
-		if(a.size() != b.size()) {
-			return a.size() > b.size() ? 1 : -1;
-		}
-		for(int i = a.size()-1;i >= 0;i--){
-			if(a[i] != b[i]){
-				return a[i] > b[i] ? 1 : -1;
-			}
-		}
-		return 0;
-	};
-
-	void operator += (const auto &b){*this = *this + b;}
-	void operator -= (const auto &b){*this = *this - b;}
-	void operator *= (const auto &b){*this = *this * b;}
-	void operator /= (const auto &b){*this = *this / b;}
-	void operator %= (const auto &b){*this = *this % b;}
-	bool operator > (const auto &b){return cmp(b) == 1;}
-	bool operator < (const auto &b){return cmp(b) == -1;}
-	bool operator == (const auto &b){return cmp(b) == 0;}
-	bool operator != (const auto &b){return cmp(b) != 0;}
-	bool operator >= (const auto &b){return cmp(b) != -1;}
-	bool operator <= (const auto &b){return cmp(b) != 1;}
-
-	friend std::ostream &operator << (std::ostream &o,const Bigint &t){
-		for(int i = t.a.size()-1;i >= 0;i--){
-			o << t.a[i];
-		}
-		return o;
-	}
-
-	friend std::istream &operator >> (std::istream &o,Bigint &t){
-		std::string s;o >> s;
-		t = s;
-		return o;
-	}
-};
-```
-
-
 
 
 
@@ -1004,7 +184,7 @@ int exgcd(int a,int b,int& x,int& y){//x,y引用传递
 
 
 
-类似的，多元线性丢番图$a_1x_1+a_2x_2+\dots +a_nx_n = c$有整数解，当且仅当$d = gcd(a_1,a_2\dots a_n)$整除c。
+类似的，多元线性丢番图 $a_1x_1+a_2x_2+\dots +a_nx_n = c$ 有整数解，当且仅当 $d = gcd(a_1,a_2\dots a_n)$ 整除 $c$。
 
 
 
@@ -2827,6 +2007,837 @@ int main() {
 相差为2的素数对
 
 $10^7$ 以内不重合的孪生素数对 > $10^5$ 个
+
+
+
+
+
+
+
+## 基础运算
+
+### 快速冥/乘
+
+```cpp
+//求a^b对p取模的值
+long long qmi(long long a, long long b,long long p) {
+	long long ans = 1;
+	while (b) {
+		if (b & 1) {//如果指数为奇数
+			ans = ans * a % p;//收集好指数为奇数时分离出来的一次方,(不可写为ans*=a%p)
+		}
+		b >>= 1;	//指数折半
+		a = a * a % p;	//底数变平分
+	}
+	return ans % p;
+}
+```
+
+```cpp
+//龟速乘
+//求a*b对p取模的值  性能较差 O(log)
+long long qmx(long long a, long long b, long long p) {
+	long long ans = 0;
+	while (b) {
+		if (b & 1) ans = (ans + a) % p;
+        b >>= 1;
+        a = (a + a) % p;		
+	}
+	return ans;
+}
+
+//转为浮点运算  性能最好 O(1)
+long long qmx(long long a, long long b, long long p) {
+	a %= p; b %= p;
+    long long r = a * b - p*(long long)(1.0L / p * a * b);
+    return r - p * (r >= p) + p * (r < 0);
+}
+
+//__int128  O(2)  需要64位GCC编译器
+long long qmx(long long a, long long b, long long p) {
+	return __int128(a) * b % p;
+}
+```
+
+
+
+求$n^k$的前三位数
+
+$n^k = 10^{k\lg n} = 10^{\lfloor k\lg n\rfloor} \times 10^{k\lg n - \lfloor k\lg n\rfloor}$
+前半部分为整数次幂，后半部分为小数次幂。$n^k = 小数次幂 \times 10^{整数次幂}$ ，例如$2^{20} = 1.048576\times 10^6$
+我们只需要取小数次幂的三位(乘100再取整即可)
+
+```cpp
+//https://vjudge.net/problem/LightOJ-1282
+int p = pow(10,k*log10(n) - floor(k*log10(n))) * 100;
+```
+
+
+
+### 数学运算
+
+
+
+#### sqrt
+
+避免函数库中的 sqrt 导致的精度问题
+
+```cpp
+//向下取整
+long long qsqrt(long long n) { 
+    long long s = std::sqrt(n);
+    while (s*s > n) { s--; }
+    while ((s+1)*(s+1) <= n) { s++; }
+    return s;
+}
+```
+
+
+
+#### log
+
+```cpp
+//向上取整
+long long logi(long long a, long long b) {//log(a,b)  a^t ≥ b
+    long long t = 0;
+    long long v = 1;
+    while (v < b) {
+        v *= a;
+        t++;
+    }
+    return t;
+}
+
+long long llog(long long a, long long b) {//loglog(a,b)  a^(a^t) ≥ b
+    if (a <= b) {
+        int l = logi(a, b);
+        return (l == 0 ? 0 : std::__lg(2 * l - 1));
+    }
+	assert(b != 1);
+    long long l = logi(b, a + 1) - 1;
+    assert(l > 0);
+    return -std::__lg(l);
+}
+```
+
+
+
+```cpp
+//预处理log2,  (向下取整)
+lg2[0] = -1;
+for(int i = 1;i < N;i++){
+    lg2[i] = lg2[i>>1]+1;
+}
+```
+
+
+
+#### 除法取整
+
+```cpp
+long long ceil_div(long long x, long long y) { // 上取整
+	long long q = x / y;
+	if (x % y && (x ^ y) > 0) ++q;
+	return q;
+}
+
+long long floor_div(long long x, long long y) { // 向下取整
+	long long q = x / y;
+	if (x % y && (x ^ y) < 0) --q;
+	return q;
+}
+```
+
+
+
+#### 分式运算
+
+源自[jiangly分数四则运算 博客园 (cnblogs.com)](https://www.cnblogs.com/WIDA/p/17633758.html#分数四则运算frac)
+
+Frac a(1,3);  表示$\frac{1}{3}$  ，支持分式之间 `+` `-` `*` `/`  和比较大小
+
+```cpp
+template<class T>
+struct Frac {// num / den
+    T num;
+    T den;
+    Frac(T num_, T den_) : num(num_), den(den_) {
+        if (den < 0) {
+            den = -den;
+            num = -num;
+        }
+    }
+    Frac() : Frac(0, 1) {}
+    Frac(T num_) : Frac(num_, 1) {}
+    explicit operator double() const {
+        return 1. * num / den;
+    }
+    explicit operator long long() const{
+		return num / den;
+	}
+	friend long long floor(const Frac &x){
+		if(x.num >= 0) return x.num / x.den;
+		else return (x.num - x.den + 1) / x.den;
+	}
+	friend long long ceil(const Frac &x){
+		if(x.num >= 0) return (x.num + x.den - 1) / x.den;
+		else return x.num / x.den;
+	}
+    Frac &operator+=(const Frac &rhs) {
+        num = num * rhs.den + rhs.num * den;
+        den *= rhs.den;
+        return *this;
+    }
+    Frac &operator-=(const Frac &rhs) {
+        num = num * rhs.den - rhs.num * den;
+        den *= rhs.den;
+        return *this;
+    }
+    Frac &operator*=(const Frac &rhs) {
+        num *= rhs.num;
+        den *= rhs.den;
+        return *this;
+    }
+    Frac &operator/=(const Frac &rhs) {
+        num *= rhs.den;
+        den *= rhs.num;
+        if (den < 0) {
+            num = -num;
+            den = -den;
+        }
+        return *this;
+    }
+    friend Frac operator+(Frac lhs, const Frac &rhs) {
+        return lhs += rhs;
+    }
+    friend Frac operator-(Frac lhs, const Frac &rhs) {
+        return lhs -= rhs;
+    }
+    friend Frac operator*(Frac lhs, const Frac &rhs) {
+        return lhs *= rhs;
+    }
+    friend Frac operator/(Frac lhs, const Frac &rhs) {
+        return lhs /= rhs;
+    }
+    friend Frac operator-(const Frac &a) {
+        return Frac(-a.num, a.den);
+    }
+    friend bool operator==(const Frac &lhs, const Frac &rhs) {
+        return lhs.num * rhs.den == rhs.num * lhs.den;
+    }
+    friend bool operator!=(const Frac &lhs, const Frac &rhs) {
+        return lhs.num * rhs.den != rhs.num * lhs.den;
+    }
+    friend bool operator<(const Frac &lhs, const Frac &rhs) {
+        return lhs.num * rhs.den < rhs.num * lhs.den;
+    }
+    friend bool operator>(const Frac &lhs, const Frac &rhs) {
+        return lhs.num * rhs.den > rhs.num * lhs.den;
+    }
+    friend bool operator<=(const Frac &lhs, const Frac &rhs) {
+        return lhs.num * rhs.den <= rhs.num * lhs.den;
+    }
+    friend bool operator>=(const Frac &lhs, const Frac &rhs) {
+        return lhs.num * rhs.den >= rhs.num * lhs.den;
+    }
+    friend std::ostream &operator << (std::ostream &os, Frac x) {
+        T g = std::gcd(x.num, x.den);
+        if (x.den == g) { return os << x.num / g; } //
+        else { return os << x.num / g << "/" << x.den / g; }
+    }
+};
+```
+
+
+
+
+
+
+
+#### BigInt
+
+
+
+高精度整数运算，**不支持负数运算**(~~待完善~~)，写得一坨，勉强能用只能说是==
+
+| 操作                   | A op b    （高精度op低精度） | A op B    （高精度op高精度） |
+| ---------------------- | ---------------------------- | ---------------------------- |
+| 加法                   | `+` 、`+=`                   |`+` 、`+=`                               |
+| 减法(仅限大`-`小) | `-`、 `-=`                   | `-`、 `-=`                          |
+| 乘法      | `*`、 `*=`                   | `*`、 `*=`    (O(N*M)模拟)，不推荐，建议换FFT) |
+| 除法(下取整)              | `/`、 `/=`                  |  |
+| 取模                   | `%` 、`%=`                   |                              |
+| 比较大小               | `>` `<` `==` `!=` `>=` `<=`  | `>` `<` `==` `!=` `>=` `<=`  |
+
+允许直接A/B、A%B 但需要保证B在整型范围内（B  <= 9.2e17）
+
+> 初始化
+>
+> ```cpp
+> Bigint A(123);
+> ```
+>
+> ```cpp
+> Bigint A("123");
+> ```
+>
+> ```cpp
+> int n = 123;
+> Bigint A = n;
+> ```
+>
+> ```cpp
+> string s = "123";
+> Bigint A = s;
+> ```
+>
+> ```cpp
+> cin >> A;
+> ```
+
+
+
+```cpp
+struct Bigint{
+	std::vector<long long> a;
+
+	Bigint (){ }
+
+	Bigint(const std::string &s){
+		for(int i = s.size()-1;i >= 0;i--){
+			if(s[i] >= '0' && s[i] <= '9') a.emplace_back(s[i] - '0');
+		}
+		while(a.size() >= 2 && a.back() == 0) a.pop_back();
+	}
+
+	Bigint(long long x){
+		if(x == 0) {a.emplace_back(0); return;}
+		if(x < 0) x = ~x + 1;
+		while(x) a.emplace_back(x%10),x/=10;
+	}
+
+	friend long long Bigint_to_int(const Bigint &B){
+		long long b = 0;
+		for(int i = B.a.size()-1;i >= 0;i--){
+			b = b*10 + B.a[i];
+		}
+		return b;
+	}
+
+	Bigint operator + (const Bigint &B){
+		Bigint C;
+		std::vector<long long>&c = C.a;
+		const std::vector<long long>&b = B.a;
+		long long t = 0;
+		for(int i = 0;i < a.size() || i < b.size() || t;i++){
+			if(i < a.size()) t += a[i];
+			if(i < b.size()) t += b[i];
+			c.emplace_back(t%10);
+			t/=10;
+		}
+		return C;
+	}
+
+	Bigint operator + (long long b){
+		return *this + Bigint(b);
+	}
+
+	Bigint operator * (long long b){
+		long long t = 0;
+		Bigint C;
+		std::vector<long long>&c = C.a;
+		for(int i = 0;i < a.size() || t;i++){
+			if(i < a.size()) t += a[i]*b;
+			c.emplace_back(t%10);
+			t/=10;
+		}
+		while(c.size() >= 2 && c.back() == 0) c.pop_back();
+		return C;
+	}
+
+	Bigint operator * (const Bigint &B){
+		const auto &A = this->a;
+		Bigint C;
+		C.a = std::vector<long long>(A.size()+B.a.size());
+		for(int i = 0;i < A.size();i++){
+			for(int j = 0;j < B.a.size();j++){
+				C.a[i+j] += A[i]*B.a[j];
+			}
+		}
+		long long t = 0;
+		for(int i = 0;i < C.a.size();i++){
+			t += C.a[i];
+			C.a[i] = t%10;
+			t /= 10;
+		}
+		while(C.a.size() >= 2 && C.a.back() == 0) C.a.pop_back();
+		return C;
+	}
+
+	Bigint operator - (const Bigint &B){
+		Bigint C;
+		std::vector<long long>&c = C.a;
+		const std::vector<long long>&b = B.a;
+		long long t = 0;
+		for(int i = 0;i < a.size();i++){
+			t += a[i];
+			if(i < b.size()) t -= b[i];
+			c.emplace_back((t+10)%10);
+			if(t < 0) t = -1;
+			else t = 0;
+		}
+		while(c.size() >= 2 && c.back() == 0) c.pop_back();
+		return C;
+	}
+
+	Bigint operator - (long long b){
+		return *this - Bigint(b);
+	}
+
+	Bigint operator / (long long b){
+		Bigint C;
+		std::vector<long long>&c = C.a;
+		long long t = 0;
+		for(int i = a.size()-1;i >= 0;i--){
+			t = t*10 + a[i];
+			c.emplace_back(t/b);
+			t %= b;
+		}//t as the remainder == A%b
+		reverse(c.begin(),c.end());
+		while(c.size() >= 2 && c.back() == 0) c.pop_back();
+		return C;
+	}
+
+	Bigint operator / (const Bigint &B){
+		return (*this)/Bigint_to_int(B);
+	}
+
+	Bigint operator % (long long b){
+		long long t = 0;
+		for(int i = a.size()-1;i >= 0;i--){
+			t = (t*10 + a[i]) %b;
+		}
+		return Bigint(t);
+	}
+
+	Bigint operator % (const Bigint &B){
+		return (*this)%Bigint_to_int(B);
+	}
+
+	int cmp (const Bigint &B){
+		const std::vector<long long>&b = B.a;
+		if(a.size() != b.size()) {
+			return a.size() > b.size() ? 1 : -1;
+		}
+		for(int i = a.size()-1;i >= 0;i--){
+			if(a[i] != b[i]){
+				return a[i] > b[i] ? 1 : -1;
+			}
+		}
+		return 0;
+	};
+
+	void operator += (const auto &b){*this = *this + b;}
+	void operator -= (const auto &b){*this = *this - b;}
+	void operator *= (const auto &b){*this = *this * b;}
+	void operator /= (const auto &b){*this = *this / b;}
+	void operator %= (const auto &b){*this = *this % b;}
+	bool operator > (const auto &b){return cmp(b) == 1;}
+	bool operator < (const auto &b){return cmp(b) == -1;}
+	bool operator == (const auto &b){return cmp(b) == 0;}
+	bool operator != (const auto &b){return cmp(b) != 0;}
+	bool operator >= (const auto &b){return cmp(b) != -1;}
+	bool operator <= (const auto &b){return cmp(b) != 1;}
+
+	friend std::ostream &operator << (std::ostream &o,const Bigint &t){
+		for(int i = t.a.size()-1;i >= 0;i--){
+			o << t.a[i];
+		}
+		return o;
+	}
+
+	friend std::istream &operator >> (std::istream &o,Bigint &t){
+		std::string s;o >> s;
+		t = s;
+		return o;
+	}
+};
+```
+
+
+
+
+
+
+### 高精度
+
+[大整数在线计算工具 (gptkong.com)](https://www.gptkong.com/tools/big_integer_calculator)
+
+
+
+#### 加 减 乘 除 模 幂
+
+
+
+
+**加**
+
+```cpp
+//  A+B  
+#include<iostream>
+#include<vector>
+using namespace std;
+string a, b;
+vector<int> A, B;
+vector<int> add(vector<int>&A, vector<int>&B) {
+    vector<int>C;
+	int t = 0;
+	for (int i = 0; i < A.size() || i < B.size(); i++) {
+		if (i < A.size()) t += A[i];
+		if (i < B.size()) t += B[i];
+		C.push_back(t % 10);	//无论是否有进位，都取 %10的余数
+		t /= 10;	//判断是否有进位
+	}
+	if (t) C.push_back(1);	//如果有最高位还有进位则在C数组最后加元素1
+	return C;
+}
+int main() {
+	cin >> a >> b;	//a = 123456
+	for (int i = a.size() - 1; i >= 0; i--) {
+		A.push_back(a[i] - '0');	//A = {6,5,4,3,2,1}
+	}
+	for (int i = b.size() - 1; i >= 0; i--) {
+		B.push_back(b[i] - '0');
+	}
+
+	A = add(A, B);	//auto 进行类型自动转换 在此相当于vector<int>;
+
+	for (int i = A.size() - 1; i >= 0; i--) {
+		printf("%d", A[i]);
+	}
+}
+```
+
+
+
+**减**
+
+```cpp
+//  A-B
+#include <iostream>
+#include <vector>
+using namespace std;
+string a, b;
+vector<int>A, B, C;	//判断a与b的大小
+bool cmp(vector<int>& A, vector<int>& B) {
+	if (A.size() != B.size()) return A.size() > B.size();//先比较位数
+	for (int i = A.size() - 1; i >= 0; i--) {	//位数相同则从高位依次比下来
+		if (A[i] != B[i]) return A[i] > B[i];
+	}
+	return 1;
+}
+
+vector<int>sub(vector<int>& A, vector<int>& B) {//A >= B
+    vector<int>C;
+    int t = 0;
+	for (int i = 0;i < A.size();i++){
+		t+=A[i];
+		if (i < B.size()) t -= B[i];
+		C.push_back((t + 10) % 10);	//保证相减后取正数
+		if (t < 0) t = -1;	//判断是否要借位
+		else t = 0;
+	}
+	while (C.size() > 1 && C.back() == 0)	C.pop_back();//去除前导0，pop_back删除容器中最后一个元素
+	return C;
+}
+
+int main() {
+	cin >> a >> b;
+	for (int i = a.size() - 1; i >= 0; i--) {
+		A.push_back(a[i] - '0');
+	}
+	for (int i = b.size() - 1;i >= 0;i--){
+		B.push_back(b[i] - '0');
+	}
+
+	if (cmp(A, B)) A = sub(A, B);
+	else A = sub(B, A);
+	
+	for (int i = A.size() - 1; i >= 0; i--) printf("%d", A[i]);
+}
+```
+
+
+
+**乘**
+
+<img src="C:\Users\21003\AppData\Roaming\Typora\typora-user-images\image-20231118143232446.png" alt="image-20231118143232446" style="zoom: 25%;" />   
+
+```cpp
+//A*b   O(N)
+vector<int>mul(vector<int>& A, int b) {
+	int t = 0;
+    vector<int>C;
+	for (int i = 0; i < A.size() || t; i++) {	//注意加上||t;
+		if (i < A.size()) t += A[i] * b;	//将b当做一个整体分别与a的每一位相乘，再加上进位
+		C.push_back(t % 10);	//C的每一位取其%10
+		t /= 10;	//计算进位
+	}
+	return C;
+}
+```
+
+
+
+```cpp
+//A*B   O(N*M)
+vector<int> mul(vector<int>& A,vector<int>& B) {
+	vector<int> C(A.size() + B.size());
+	for(int i = 0;i < A.size(); i++) {
+		for(int j=0;j<B.size();j++) {
+			C[i + j] += A[i] * B[j];
+		}
+	}
+	for(int i = 0, t = 0; i < C.size(); i++) {
+		t += C[i];
+		C[i] = t % 10;
+		t /= 10;
+	}
+	while(C.size() >= 2 && C.back()==0) C.pop_back();
+	return C;
+}
+```
+
+
+
+```cpp
+//A*B   FFT实现 O(NlogN)
+//https://www.luogu.com.cn/problem/P1919
+const long double PI = std::acos(-1.0);
+void FFT(std::vector<std::complex<long double>>& a, bool invert) {
+    int n = a.size();
+
+    for(int i = 1, j = 0; i < n; i++) {
+        int bit = n >> 1;
+        for (; j & bit; bit >>= 1) j ^= bit;
+        j ^= bit;
+        if (i < j) std::swap(a[i], a[j]);
+    }
+
+    for(int len = 2; len <= n; len <<= 1) {
+        long double ang = 2 * PI / len * (invert ? -1 : 1);
+        std::complex<long double> wlen(cosl(ang), sinl(ang));
+        for (int i = 0; i < n; i += len) {
+            std::complex<long double> w(1.0);
+            for (int j = 0; j < len / 2; j++) {
+                std::complex<long double> u = a[i + j];
+                std::complex<long double> v = a[i + j + len / 2] * w;
+                a[i + j] = u + v;
+                a[i + j + len / 2] = u - v;
+                w *= wlen;
+            }
+        }
+    }
+    if(invert) {
+        for (std::complex<long double>& x : a) x /= n;
+    }
+}
+
+std::vector<long long> operator*(const std::vector<long long>&A,const std::vector<long long>&B){
+	std::vector<long long>C;
+    int n = A.size(), m = B.size();
+
+    int MAX_N = 1;
+    while (MAX_N < n + m) MAX_N <<= 1;
+
+    std::vector<std::complex<long double>> a(MAX_N, 0.0), b(MAX_N, 0.0);
+    for(int i = 0; i < n; i++) a[i] = std::complex<long double>(A[i], 0);
+    for(int i = 0; i < m; i++) b[i] = std::complex<long double>(B[i], 0);
+
+    FFT(a, false);
+    FFT(b, false);
+    for(int i = 0; i < MAX_N; i++) a[i] *= b[i];
+    FFT(a, true);
+
+    long long t = 0;
+    for(int i = 0; i < n + m; i++) {
+		long long val = (long long)(a[i].real()+0.5);
+		t += val;
+		C.emplace_back(t%10);
+		t/=10;
+    }
+	if(t) C.emplace_back(t);
+	while(C.size() >= 2 && C.back() == 0) C.pop_back();
+	return C;
+}
+```
+
+
+
+
+
+**除**
+
+<img src="C:\Users\21003\AppData\Roaming\Typora\typora-user-images\image-20231118151225445.png" alt="image-20231118151225445" style="zoom: 33%;" /> 
+
+```cpp
+//A/b及其余数 
+#include <iostream>
+#include <vector>
+#include <algorithm>
+using namespace std;
+vector<int>A;//C为商
+
+vector<int>div(vector<int>&A,int b,int&r){  //r是引用
+    vector<int>C;
+	for (int i = A.size() - 1;i >= 0;i--){	//除法此处倒序，然后再翻转
+		r = r * 10 + A[i];	//上一位的余数*10再加上本位
+		C.push_back(r / b);	//将其对b的商记录进C数组
+		r %= b;	//然后变为其对b的余数供下一位使用
+	}
+	reverse(C.begin(), C.end());
+	while (C.size() > 1 && C.back() == 0) C.pop_back();
+	return C;	
+}
+
+int main() {
+	string a; int b, r = 0;	//r为余数
+	cin >> a >> b;
+	for (int i = a.size() - 1; i >= 0; i--) {
+		A.push_back(a[i] - '0');
+	}
+
+	A = div(A, b, r);
+
+	for (int i = A.size() - 1;i >= 0;i--){
+		printf("%d", A[i]);
+	}
+	cout << endl << r << endl;
+
+	return 0;
+}
+```
+
+
+
+```cpp
+//a/b 保留k位小数
+long long a,b,k;cin >> a >> b >> k;
+cout << a/b << '.';
+a = a%b*10;
+while(k--){
+    cout << a/b;
+    a = a%b*10;
+}
+```
+
+```cpp
+//求a/b的第k位小数   相当于a*10^k/b%10
+long long a,b,k;cin >> a >> b >> k;
+cout << a*qmi(10,k-1,b)*10/b%10;
+```
+
+
+
+
+
+**模**
+
+给两个正整数a,b，输出他们的最大公约数 a<=1e10^6,b <= 1e9
+
+> 首先有以下性质
+> 1.(a+b)%mod等价于a%mod+b%mod
+> 2.a * b%mod 等价于 a%mod*b%mod(仅当a * b没有溢出时)
+> 该题求解gcd(a,b)a是大数
+> 根据辗转相除法
+> gcd(a,b)=gcd(b,a%b)
+> 因此我们可以先求a%b把a限制在1e9的范围内，然后做gcd
+> 因为a很大，又可以表示为$\sum_{i=1}^n{a_i*10^{n-i}}$(其中n为字符串的长度，ai为第i个字符)
+> 又由性质1和2，我们就可以对每个ai求mod,同时通过乘和累加求出 
+
+```cpp
+//A%b
+//https://ac.nowcoder.com/acm/contest/86034/D
+#include <iostream>
+using namespace std;
+using ll = long long;
+
+ll gcd(ll a,ll b){return b?gcd(b,a%b):a;}
+
+ll qmod(string& a,ll b){//高精度A % 低精度b
+    ll t = 0;
+    for(int i = 0;i < a.size();i++)  {
+		t=(t*10+a[i]-'0')%b;
+	}
+    return t;
+}
+
+int main(){
+	string a;cin >> a;
+	ll b;cin >> b;
+	cout << gcd(b,qmod(a,b));
+}
+```
+
+
+
+
+
+**幂**
+
+```cpp
+//中精度 2^n   n <= 16383        //n可以为负数
+//仅适用于计算2^n的精确值
+#include <iostream>
+#include <sstream>
+#include <iomanip>
+#include <cmath>
+using namespace std;
+
+int main(){
+    int n; cin>>n;
+    stringstream ss;
+    ss << fixed << setprecision(n>0?0:-n) << pow(2.0L,n);
+    //string s = ss.str();  //字符串流,也可以用sprintf
+	string s; ss >> s;
+
+	cout << s;
+}
+```
+
+
+
+```cpp
+//高精度快速幂 A^b   一般b取不了太大
+Bigint qmi(Bigint &a,int b){
+	Bigint ans = 1;
+	while(b){
+		if(b&1) ans = ans*a;
+		b >>= 1;
+		a = a*a;
+	}
+	return ans;
+}
+```
+
+
+
+#### python高精
+
+```python
+import sys
+sys.set_int_max_str_digits(100005)	#修改最大位数 默认值4300
+a = int(input())
+b = int(input())
+print(a+b)	#加
+print(a-b)	#减
+print(a*b)	#乘
+print(a//b)	#除
+print(a%b)	#模
+print(a**b)	#幂
+```
+
+
 
 
 
@@ -5118,7 +5129,7 @@ int main(){
 求定积分$\int_{l}^{r}f(x)dx$ ，即为f(x)在区间[l,r]上与x轴围成的面积 (其中x轴上方为正值，下方为负值)
 
 ```cpp
-double f(double x){//f(x)
+double f(double x){ // f(x)
 	
 }
 
@@ -5135,7 +5146,7 @@ double asr(double l, double r, double eps, double ans, int step) {
 	return asr(l, mid, eps / 2, fl, step - 1) + asr(mid, r, eps / 2, fr, step - 1);  // 否则分割成两段递归求解
 }
 
-double calc(double l, double r, double eps) {// calc(l,r,eps)
+double calc(double l, double r, double eps) { // calc(l,r,eps)
 	return asr(l, r, eps, simpson(l, r), 12);
 }
 ```
@@ -7610,6 +7621,16 @@ while (l < r) { //单峰函数求最小
     else l = mid1 + 1;
 }
 std::cout << f(l) << '\n';
+
+
+// 或者
+while (r - l > 2) {
+    int mid1 = l + (r - l) / 3;
+    int mid2 = r - (r - l) / 3;
+    if (f(mid1) < f(mid2)) r = mid2;
+    else l = mid1;
+}
+// 最后暴力检查 [l, r] 内的所有点
 ```
 
 
@@ -8195,21 +8216,21 @@ int main(){
 
 ### 枚举子掩码
 
-枚举单个掩码m的所有子掩码时间复杂度 $O(2^k)$ ，其中k为掩码m中1的位数
+枚举单个掩码 m 的所有子掩码时间复杂度 $O(2^k)$ ，其中k为掩码 m 中 1 的位数
 
 ```cpp
 int m = 0b1101; // 降序枚举状态m的子掩码
 for (int s = m; s; s = (s - 1) & m) { // s也可以从m的任意一个子掩码开始
     //cout << bitset<4>(s) << '\n';
 }
+// 1101: 1101 1100 1001 1000 0101 0100 0001 
 ```
 
 
 
-枚举所有掩码的子掩码的时间复杂度$O(3^n)$，其中n为全集位数。常用于子集DP
+枚举所有掩码的子掩码的时间复杂度 $O(3^n)$，其中 n 为全集位数。常用于子集DP
 
 ```cpp
-int cnt = 0;
 int n = 15;
 for (int m = 0; m < 1 << n; m++) {
     for (int s = m; s; s = (s - 1) & m) {
@@ -8222,14 +8243,16 @@ for (int m = 0; m < 1 << n; m++) {
 
 **枚举超集**
 
-时间复杂度 $O(2^{n-k})$，其中n为全集位数，k为固定掩码中1的个数
+时间复杂度 $O(2^{n-k})$，其中 n 为全集位数，k 为固定掩码中1的个数
 
 ```cpp
 int max_state = 0b11111;
 int t = 0b101; // 升序枚举状态t的超集
-for (int s = t; s < max_state; s = (s + 1) | t) {
+for (int s = t; s <= max_state; s = (s + 1) | t) {
     cout << bitset<5>(s) << '\n';
 }
+
+// 00101: 00101 00111 01101 01111 10101 10111 11101 11111
 ```
 
 
@@ -10617,6 +10640,10 @@ int main() {
 
 
 
+[P3834 【模板】静态区间第 k 小 - 洛谷](https://www.luogu.com.cn/problem/P3834)
+
+这题也可以用 莫队 + 值域分块 解决。改多查少，值域数组使用 $\sqrt{V}$ 的分块维护。
+
 
 
 
@@ -11062,6 +11089,150 @@ int main() {
 	}
 }
 ```
+
+
+
+
+
+
+
+### CDQ 分治
+
+
+
+#### 三维偏序
+
+[P3810 【模板】三维偏序 / 陌上花开 - 洛谷](https://www.luogu.com.cn/problem/P3810)
+
+> 给定 $n$ 个元素，第 $i$ 个元素有 $a_i, b_i, c_i$ 三个属性，设 $f(i)$ 表示满足 $a_j \le a_i$ 且 $b_j \le b_i$ 且 $c_j \le c_i$ 且 $j \neq i$ 的 $j$ 的数量。对于所有 $d \in [0, n)$ ，求 $f(i) = d$ 的数量。 数据范围：$1 \le n \le 10^5, 1 \le a_i, b_i, c_i \le k \le 2 \times 10^5$ 。
+
+我们将序列按 $a$ 排序。此时右边的点中 $a$ 一定大于左边的点。
+
+分成两半然后递归处理。对这两半 $[l, mid]$ 和 $[mid + 1, r]$ 按 $b$ 进行排序。
+
+双指针 $i, j$ 分别从 $l$ 和 $mid+1$ 开始，枚举 $j$ ，维护 $b_i \le b_j$ 的所有点 $i$。将其 $c_i$ 插入到权值树状数组中。查询树状数组中有多少个值小于 $c_j$，即可求得对于当前点 $j$ 中， $a_i \le a_j$ 且 $b_i \le b_j$ 且 $c_i \le c_j$ 的点的 $i$ 的数量。
+
+时间复杂度 $O(N \log^2N)$
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+const int N = 100005, K = 200005;
+
+template<typename T>
+struct Fenwick { // 1_idx
+	int n;
+	std::vector<T> t;
+
+	explicit Fenwick(int _n = 0) : n(_n) {
+		t.assign(_n + 1, T{});
+	}
+
+	void add(int i, const T& x) {
+		while (i <= n) {
+			t[i] += x;
+			i += i & -i;
+		}
+	}
+
+	T sum(int i) {
+		T ans = 0;
+		while (i) {
+			ans += t[i];
+			i -= i & -i;
+		}
+		return ans;
+	}
+
+	T sum(int l, int r) { return sum(r) - sum(l - 1); }
+	T query(int i) { return sum(i); }
+	T query(int l, int r) { return sum(l, r); }
+};
+
+Fenwick<int> fw(K);
+
+struct node {
+	int a, b, c;
+	int cnt = 0, res = 0;
+
+	bool operator < (const node& e2) const {
+		return std::tie(a, b, c) < std::tie(e2.a, e2.b, e2.c);
+	}
+
+	bool operator != (const node& e2) const {
+		return std::tie(a, b, c) != std::tie(e2.a, e2.b, e2.c);
+	}
+} ue[N], e[N];
+
+
+void cdq(int l, int r) {
+	if (l == r) return;
+
+	int mid = l + r >> 1;
+	cdq(l, mid);
+	cdq(mid + 1, r);
+
+	std::sort(e + l, e + mid + 1, [&](auto& e1, auto& e2) { return std::tie(e1.b, e1.c) < std::tie(e2.b, e2.c); });
+	std::sort(e + mid + 1, e + r + 1, [&](auto& e1, auto& e2) { return std::tie(e1.b, e1.c) < std::tie(e2.b, e2.c); });
+
+	int i = l, j = mid + 1;
+	for (; j <= r; j++) {
+		while (i <= mid && e[i].b <= e[j].b) {
+			fw.add(e[i].c, e[i].cnt);
+			i++;
+		}
+		e[j].res += fw.query(1, e[j].c);
+	}
+
+	for (int t = l; t < i; t++) {
+		fw.add(e[t].c, -e[t].cnt);
+	}
+}
+
+void soviet() {
+	int n, k; std::cin >> n >> k;
+	for (int i = 1; i <= n; i++) {
+		std::cin >> ue[i].a >> ue[i].b >> ue[i].c;
+	}
+
+	std::sort(ue + 1, ue + n + 1);
+	int idx = 0;
+	for (int i = 1, t = 0; i <= n; i++) { // 合并一模一样的点
+		++t;
+		if (i == n || ue[i] != ue[i + 1]) {
+			++idx;
+			e[idx] = ue[i];
+			e[idx].cnt = t;
+			e[idx].res = t - 1;
+			t = 0;
+		}
+	}
+
+	cdq(1, idx);
+
+	std::vector<int> ans(n + 1);
+	for (int i = 1; i <= idx; i++) {
+		ans[e[i].res] += e[i].cnt;
+	}
+	for (int i = 0; i < n; i++) {
+		std::cout << ans[i] << '\n';
+	}
+}
+
+int main() {
+	int M_T = 1; std::ios::sync_with_stdio(false); std::cin.tie(nullptr);
+//	std::cin >> M_T;
+	while (M_T--) { soviet(); }
+	return 0;
+}
+```
+
+
+
+
+
+
 
 
 
@@ -12131,6 +12302,162 @@ int main(){
 
 
 
+
+
+
+### 幂次哈希
+
+[P6688 可重集 - 洛谷](https://www.luogu.com.cn/problem/P6688)
+
+> 给出一个长度为 $n$ 的非负整数序列 $a_1,a_2,a_3,\ldots, a_n$，给出 $q$ 次操作，每次先给出一个参数 $op$：
+>
+> - $op=0$，接下来给出 $2$ 个参数 $x,y$，把 $a_x$ 修改为 $y$。
+> - $op=1$，接下来给出 $4$ 个参数 $ l_1,r_1,l_2,r_2$（保证 $r_1-l_1=r_2-l_2$），你需要判断区间 $[l_1,r_1]$ 整体加上某一个数后与区间 $[l_2,r_2]$ 的可重元素集合是否相同。
+>
+> 数据范围： $1\leq n,q \leq 10^6$，$1\leq x \leq n$，$0\leq a_i,y \leq  10^6$
+
+思路：诺区间 A 排序后整体加 k 得到区间 B，因此只需要比较最小值（或者平均值）的差值 d，并验证两个区间的“分布”是否满足整体平移。
+
+用哈希维护区间特征。对于每个元素 x 贡献 $base^x\ mod\ p$，区间哈希为：
+$$
+H = \sum_{i}{base^{a_{i}}}\ (mod\ p)
+$$
+诺区间 A 整体加 d 得到 B，则：
+$$
+H_B \equiv base^d \cdot H_A \ (mod\ p)
+$$
+所以判断条件为：
+$$
+H_2 \equiv H_1\cdot base^d \ (mod\ p)
+$$
+可以使用线段树或树状数组维护。
+
+注意：
+
+- 哈希底数可取固定底数如2、131等，或随机生成（必须与 mod 互质）。
+- 模数可用双哈希防止冲突
+- 本题仅涉及单点修改，可换用树状数组减小常数。（区间 min 的差值 d，改成区间 $\frac{sum}{len}$ 的差值）
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+const int N = 1000006;
+int a[N];
+const int mod = 1e9 + 7;
+const long long base = 2;
+// const long long base = mt19937(time(0))() % mod;
+
+long long qmi(long long a, long long b, long long p) {
+	long long ans = 1;
+	while (b) {
+		if (b & 1) ans = ans * a % p;
+		b >>= 1;
+		a = a * a % p;
+	}
+	return ans % p;
+}
+
+struct ST {
+	int l, r;
+	long long mn; // 区间最小值
+	long long sum; // 区间sum{base^a[i]}
+} t[N << 2];
+
+void pushup(ST& p, ST& pl, ST& pr) {
+	p.sum = (pl.sum + pr.sum) % mod;
+	p.mn = std::min(pl.mn, pr.mn);
+}
+
+void build(int p, int l, int r) {
+	t[p] = {l, r};
+	if (l == r) {
+		 t[p].mn = a[l];
+		t[p].sum = qmi(base, a[l], mod);
+		return;
+	}
+	int mid = l + r >> 1;
+	build(p << 1, l, mid);
+	build(p << 1 | 1, mid + 1, r);
+	pushup(t[p], t[p << 1], t[p << 1 | 1]);
+}
+
+void modify(int p, int l, int r, long long x) { // 单点修改
+	if (l <= t[p].l && r >= t[p].r) {
+		t[p].mn = x;
+		t[p].sum = qmi(base, x, mod);
+		return;
+	}
+	int mid = t[p].l + t[p].r >> 1;
+	if (l <= mid) modify(p << 1, l, r, x);
+	if (r > mid) modify(p << 1 | 1, l, r, x);
+	pushup(t[p], t[p << 1], t[p << 1 | 1]);
+}
+
+ST query(int p, int l, int r) {
+	if (l <= t[p].l && r >= t[p].r) {
+		return t[p];
+	}
+	int mid = t[p].l + t[p].r >> 1;
+	if (r <= mid) return query(p << 1, l, r);
+	if (l > mid) return query(p << 1 | 1, l, r);
+	ST pl = query(p << 1, l, r), pr = query(p << 1 | 1, l, r), ans;
+	pushup(ans, pl, pr);
+	return ans;
+}
+
+int main() {
+	std::ios::sync_with_stdio(false); std::cin.tie(0);
+	int n, q; std::cin >> n >> q;
+
+	for (int i = 1; i <= n; i++) {
+		std::cin >> a[i];
+	}
+
+	build(1, 1, n);
+
+	while (q--) {
+		int op; std::cin >> op;
+		if (op == 0) {
+			int x, y; std::cin >> x >> y;
+			modify(1, x, x, y);
+		} else {
+			int l1, r1, l2, r2; std::cin >> l1 >> r1 >> l2 >> r2;
+			auto q1 = query(1, l1, r1), q2 = query(1, l2, r2);
+			long long d = q2.mn - q1.mn;
+            // 欧拉降幂, d 对 phi(mod) 取模
+			if (q1.sum * qmi(base, (d % (mod - 1) + mod - 1) % (mod - 1), mod) % mod == q2.sum) {
+				std::cout << "YES\n";
+			} else {
+				std::cout << "NO\n";
+			}
+		}
+	}
+}
+```
+
+
+
+
+
+[2024 CCPC 郑州 G.相同和 - Problem - QOJ.ac](https://qoj.ac/contest/1873/problem/9774/statement/zh_cn)
+
+> 给定一个长度为 `n` 的非负整数序列 `a[]`，处理以下 `q` 次操作。
+>
+> - 区间 `l, r` 加上值 `w`
+> - 给定偶数区间 `l, r`，问能否将区间内的数两两配对，使得每一对的和都相等
+>
+> 数据范围：$1\le n, q, w \le 2\times 10^5$， $0\le a_i \le 2\times 10^5$。
+
+维护以下区间信息：
+
+- $H_+(l, r) = \sum_{i\in [l, r]}{base^{a_i}}$ 
+- $H_{-}(l, r) = \sum_{i\in [l, r]}{base^{-a_i}}$
+- 区间平均值：$m = avg(l, r)$
+
+满足条件当且仅当 $H_{+} = base^{2m}H_{-}$   ，即是否关于平均值对称 $\sum{f(a_i)} = \sum{f(2m-a_i)}$。使用线段树维护，时间复杂度 $O(N\log N)$。
+
+如果使用双哈希（两个模数 + 两个随机底数），正确率可达 $1 - 10^{-12}$ 以上。
 
 
 
