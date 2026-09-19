@@ -27,7 +27,7 @@
 
 2025.10.20 update：退役归档，不再更新、
 
-2026.09.07：分层图最短路、对拍、KMP修正、01Trie修正、调和级数、线性递推求逆元、添加了一些好van的网站、平面几何（多边形面积、求凸包）、笛卡尔树、类欧几里得算法、最小瓶颈路、子集枚举、并查集（可撤销，可删点、可持久化）、k-Dyck路、HLPP、极角排序、
+2026.09.19：分层图最短路、对拍、KMP修正、01Trie修正、调和级数、线性递推求逆元、添加了一些好van的网站、平面几何（多边形面积、求凸包）、笛卡尔树、类欧几里得算法、最小瓶颈路、子集枚举、并查集（可撤销，可删点、可持久化）、k-Dyck路、HLPP、极角排序、幂次哈希、
 
 # 数学
 
@@ -184,7 +184,7 @@ int exgcd(int a,int b,int& x,int& y){//x,y引用传递
 
 
 
-类似的，多元线性丢番图$a_1x_1+a_2x_2+\dots +a_nx_n = c$有整数解，当且仅当$d = gcd(a_1,a_2\dots a_n)$整除c。
+类似的，多元线性丢番图 $a_1x_1+a_2x_2+\dots +a_nx_n = c$ 有整数解，当且仅当 $d = gcd(a_1,a_2\dots a_n)$ 整除 $c$。
 
 
 
@@ -12302,6 +12302,162 @@ int main(){
 
 
 
+
+
+
+### 幂次哈希
+
+[P6688 可重集 - 洛谷](https://www.luogu.com.cn/problem/P6688)
+
+> 给出一个长度为 $n$ 的非负整数序列 $a_1,a_2,a_3,\ldots, a_n$，给出 $q$ 次操作，每次先给出一个参数 $op$：
+>
+> - $op=0$，接下来给出 $2$ 个参数 $x,y$，把 $a_x$ 修改为 $y$。
+> - $op=1$，接下来给出 $4$ 个参数 $ l_1,r_1,l_2,r_2$（保证 $r_1-l_1=r_2-l_2$），你需要判断区间 $[l_1,r_1]$ 整体加上某一个数后与区间 $[l_2,r_2]$ 的可重元素集合是否相同。
+>
+> 数据范围： $1\leq n,q \leq 10^6$，$1\leq x \leq n$，$0\leq a_i,y \leq  10^6$
+
+思路：诺区间 A 排序后整体加 k 得到区间 B，因此只需要比较最小值（或者平均值）的差值 d，并验证两个区间的“分布”是否满足整体平移。
+
+用哈希维护区间特征。对于每个元素 x 贡献 $base^x\ mod\ p$，区间哈希为：
+$$
+H = \sum_{i}{base^{a_{i}}}\ (mod\ p)
+$$
+诺区间 A 整体加 d 得到 B，则：
+$$
+H_B \equiv base^d \cdot H_A \ (mod\ p)
+$$
+所以判断条件为：
+$$
+H_2 \equiv H_1\cdot base^d \ (mod\ p)
+$$
+可以使用线段树或树状数组维护。
+
+注意：
+
+- 哈希底数可取固定底数如2、131等，或随机生成（必须与 mod 互质）。
+- 模数可用双哈希防止冲突
+- 本题仅涉及单点修改，可换用树状数组减小常数。（区间 min 的差值 d，改成区间 $\frac{sum}{len}$ 的差值）
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+const int N = 1000006;
+int a[N];
+const int mod = 1e9 + 7;
+const long long base = 2;
+// const long long base = mt19937(time(0))() % mod;
+
+long long qmi(long long a, long long b, long long p) {
+	long long ans = 1;
+	while (b) {
+		if (b & 1) ans = ans * a % p;
+		b >>= 1;
+		a = a * a % p;
+	}
+	return ans % p;
+}
+
+struct ST {
+	int l, r;
+	long long mn; // 区间最小值
+	long long sum; // 区间sum{base^a[i]}
+} t[N << 2];
+
+void pushup(ST& p, ST& pl, ST& pr) {
+	p.sum = (pl.sum + pr.sum) % mod;
+	p.mn = std::min(pl.mn, pr.mn);
+}
+
+void build(int p, int l, int r) {
+	t[p] = {l, r};
+	if (l == r) {
+		 t[p].mn = a[l];
+		t[p].sum = qmi(base, a[l], mod);
+		return;
+	}
+	int mid = l + r >> 1;
+	build(p << 1, l, mid);
+	build(p << 1 | 1, mid + 1, r);
+	pushup(t[p], t[p << 1], t[p << 1 | 1]);
+}
+
+void modify(int p, int l, int r, long long x) { // 单点修改
+	if (l <= t[p].l && r >= t[p].r) {
+		t[p].mn = x;
+		t[p].sum = qmi(base, x, mod);
+		return;
+	}
+	int mid = t[p].l + t[p].r >> 1;
+	if (l <= mid) modify(p << 1, l, r, x);
+	if (r > mid) modify(p << 1 | 1, l, r, x);
+	pushup(t[p], t[p << 1], t[p << 1 | 1]);
+}
+
+ST query(int p, int l, int r) {
+	if (l <= t[p].l && r >= t[p].r) {
+		return t[p];
+	}
+	int mid = t[p].l + t[p].r >> 1;
+	if (r <= mid) return query(p << 1, l, r);
+	if (l > mid) return query(p << 1 | 1, l, r);
+	ST pl = query(p << 1, l, r), pr = query(p << 1 | 1, l, r), ans;
+	pushup(ans, pl, pr);
+	return ans;
+}
+
+int main() {
+	std::ios::sync_with_stdio(false); std::cin.tie(0);
+	int n, q; std::cin >> n >> q;
+
+	for (int i = 1; i <= n; i++) {
+		std::cin >> a[i];
+	}
+
+	build(1, 1, n);
+
+	while (q--) {
+		int op; std::cin >> op;
+		if (op == 0) {
+			int x, y; std::cin >> x >> y;
+			modify(1, x, x, y);
+		} else {
+			int l1, r1, l2, r2; std::cin >> l1 >> r1 >> l2 >> r2;
+			auto q1 = query(1, l1, r1), q2 = query(1, l2, r2);
+			long long d = q2.mn - q1.mn;
+            // 欧拉降幂, d 对 phi(mod) 取模
+			if (q1.sum * qmi(base, (d % (mod - 1) + mod - 1) % (mod - 1), mod) % mod == q2.sum) {
+				std::cout << "YES\n";
+			} else {
+				std::cout << "NO\n";
+			}
+		}
+	}
+}
+```
+
+
+
+
+
+[2024 CCPC 郑州 G.相同和 - Problem - QOJ.ac](https://qoj.ac/contest/1873/problem/9774/statement/zh_cn)
+
+> 给定一个长度为 `n` 的非负整数序列 `a[]`，处理以下 `q` 次操作。
+>
+> - 区间 `l, r` 加上值 `w`
+> - 给定偶数区间 `l, r`，问能否将区间内的数两两配对，使得每一对的和都相等
+>
+> 数据范围：$1\le n, q, w \le 2\times 10^5$， $0\le a_i \le 2\times 10^5$。
+
+维护以下区间信息：
+
+- $H_+(l, r) = \sum_{i\in [l, r]}{base^{a_i}}$ 
+- $H_{-}(l, r) = \sum_{i\in [l, r]}{base^{-a_i}}$
+- 区间平均值：$m = avg(l, r)$
+
+满足条件当且仅当 $H_{+} = base^{2m}H_{-}$   ，即是否关于平均值对称 $\sum{f(a_i)} = \sum{f(2m-a_i)}$。使用线段树维护，时间复杂度 $O(N\log N)$。
+
+如果使用双哈希（两个模数 + 两个随机底数），正确率可达 $1 - 10^{-12}$ 以上。
 
 
 
