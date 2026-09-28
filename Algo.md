@@ -27,7 +27,7 @@
 
 2025.10.20 update：退役归档，不再更新、
 
-2026.09.19：分层图最短路、对拍、KMP修正、01Trie修正、调和级数、线性递推求逆元、添加了一些好van的网站、平面几何（多边形面积、求凸包）、笛卡尔树、类欧几里得算法、最小瓶颈路、子集枚举、并查集（可撤销，可删点、可持久化）、k-Dyck路、HLPP、极角排序、幂次哈希、
+2026.09.25：分层图最短路、对拍、KMP修正、01Trie修正、调和级数、线性递推求逆元、添加了一些好van的网站、平面几何（多边形面积、求凸包）、笛卡尔树、类欧几里得算法、最小瓶颈路、子集枚举、并查集（可撤销，可删点、可持久化）、k-Dyck路、HLPP、极角排序、幂次哈希、三维偏序、回文树、
 
 # 数学
 
@@ -1596,7 +1596,7 @@ $$
 $$
 
 
-莫比乌斯函数不仅是积性函数，还有如下**性质**
+莫比乌斯函数不仅是**积性函数**，还有如下**性质**
 $$
 \sum_{d\mid n}\mu(d)=
 \begin{cases}
@@ -1909,6 +1909,8 @@ long long sol(long long a, long long b, long long c, long long n) {
 	return m * n - sol(c, c - b - 1, a, m - 1);
 }
 ```
+
+
 
 [P5170 【模板】类欧几里德算法 - 洛谷](https://www.luogu.com.cn/problem/P5170)
 
@@ -3960,8 +3962,9 @@ a[ ]->s[ ]，s[ ]+rk->a[ ] [U72177 火星人plus - 洛谷 (luogu.com.cn)](https:
 
 在数量为 $n+m$ 的堆中选 $k$ 个元素，和分别在数量为 $n、m$ 的堆中选 $i、k-i$ 个元素的方案数是相同的，即$\displaystyle{\sum_{i=0}^k\binom{n}{i}\binom{m}{k-i}=\binom{n+m}{k}}$ 
 
-变体：
+变体及推论：
 
+- $\sum_{i = 1}^{n}{C_{n}^{i}C_{n}^{i - 1}} = C_{2n}^{n - 1}$
 - $\sum_{i=0}^k C_{i+n}^{i}=C_{k+n+1}^{k}$ 
 - $\sum_{i=0}^k C_{n}^{i}*C_m^i=\sum_{i=0}^k C_{n}^{i}*C_m^{m-i}=C_{n+m}^{n}$ 
 
@@ -4297,13 +4300,13 @@ namespace MAT{
 	T det(Mat<T> mt){ //行列行列式求值
 		int n = mt.n;
 		long long ans = 1;
-		for(int i = 0;i < n;i++){//if(mat_tree) please i begin with 1
+		for(int i = 0;i < n;i++){//if (mat_tree) i begin from 1
 			for(int j = i+1;j < n;j++){
 				while(mt.a[j][i]){
 					long long t = mt.a[i][i]/mt.a[j][i];
 					for(int k = i;k < n;k++) {
 						mt.a[i][k] = (mt.a[i][k] - mt.a[j][k] * t % mod + mod) % mod;
-                        //mt.a[i][k] -= t * mt.a[j][k];
+						//mt.a[i][k] -= t * mt.a[j][k];
 					}
 					std::swap(mt.a[i],mt.a[j]);
 					ans = -ans;
@@ -6142,6 +6145,57 @@ int main(){
 
 
 ### 平面几何
+
+
+
+#### 二维计算几何基础
+
+##### 正弦定理
+
+在 $\triangle \text{ABC}$ 中，若角 $A,B,C$ 所对边分别为 $a,b,c$，则有：
+
+$$
+\frac{a}{\sin A}=\frac{b}{\sin B}=\frac{c}{\sin C}=2R
+$$
+
+其中，$R$ 为 $\triangle \text{ABC}$ 的外接圆半径．
+
+
+
+##### 余弦定理
+
+在 $\triangle \text{ABC}$ 中，若角 $A,B,C$ 所对边分别为 $a,b,c$，则有：
+
+$$
+\begin{aligned}
+a^2&=b^2+c^2-2bc\cos A\\
+b^2&=a^2+c^2-2ac\cos B\\
+c^2&=a^2+b^2-2ab\cos C
+\end{aligned}
+$$
+
+
+
+
+
+
+**过一点做圆的切线**
+
+过圆外一点 $P(x_0, y_0)$ 作圆 $(x - a) + (y - b)^2 = r^2$ 的两条切线，两个切点的坐标：
+
+令 
+$$
+dx = x_0 - a,\ \ dy = y_0 - b \\
+d^2 = dx^2 = dy^2, \ \ d = \sqrt{d^2}
+$$
+因为 $P$ 在圆外，所以 $d > r$。两个切点 $T_1, T_2$ 的坐标为：
+$$
+x = a + \frac{r^2dx \mp r\sqrt{d^2 - r^2} dy}{d^2} \\
+y = b + \frac{r^2dy \pm r\sqrt{d^2 - r^2} dx}{d^2}
+$$
+
+
+
 
 
 
@@ -8214,7 +8268,7 @@ int main(){
 
 
 
-### 枚举子掩码
+### 枚举子集
 
 枚举单个掩码 m 的所有子掩码时间复杂度 $O(2^k)$ ，其中k为掩码 m 中 1 的位数
 
@@ -15840,9 +15894,9 @@ using Hash::hx,Hash::hx2;
 
 一个模式串匹配一个/多个文本串
 
-能够在线性时间内判定字符串 A[1~N] 是否为字符串 B[1~M] 的子串，并求出字符串A在字符串B中各次出现的位置。能比字符串哈希更高效准确地处理这个问题，并且能提供一些额外的信息
+能够在线性时间内判定字符串 `A[1~N]` 是否为字符串 `B[1~M]` 的子串，并求出字符串 `A` 在字符串 `B` 中各次出现的位置。能比字符串哈希更高效准确地处理这个问题，并且能提供一些额外的信息
 
-next[i]数组求的是子串s[1~i]的最长border(真前缀==真后缀)
+`next[i]` 数组求的是子串 `s[1~i]` 的最长 `border`(真前缀==真后缀)
 
 ```cpp
 //下标从1开始
@@ -16439,86 +16493,13 @@ int main(){
 
 ### 最大异或对
 
-> 在给定的 𝑁 个整数 𝐴1，𝐴2……𝐴𝑁 中选出两个进行 𝑥𝑜𝑟（异或）运算，得到的结果最大是多少？
+> 在给定的 𝑁 个整数中选出两个进行 𝑥𝑜𝑟（异或）运算，得到的结果最大是多少？
 
 ```cpp
 //https://www.luogu.com.cn/problem/P10471
-#include <iostream>
-#include <cstring>
+#include <bits/stdc++.h>
+using namespace std;
 
-namespace TRIE{//0_idx
-	const int N = 100005*32;
-	int son[N][2],cnt[N],idx;
-
-	struct Trie{
-
-		Trie(){init();}
-
-		void init(){
-			idx = cnt[0] = 0;
-			memset(son[0], 0, sizeof(son[0]));
-		}
-
-		int get(char x){
-			if(x >= 'a' && x <= 'z') return x - 'a';
-			if(x >= 'A' && x <= 'Z') return x - 'A' + 26;
-			if(x >= '0' && x <= '9') return x - '0' + 52;
-			return 0;
-		}
-
-		void insert(const int &x){
-			int p = 0;
-			for(int i = 30;i >= 0;i--){
-				bool u = x >> i & 1;
-				if(!son[p][u]) {
-					son[p][u] = ++idx;
-					cnt[idx] = 0;
-					std::memset(son[idx],0,sizeof son[idx]);
-				}
-				p = son[p][u];
-			}
-			cnt[p]++;
-		}
-
-		int query(const int &x){
-			int ans = 0;
-			int p = 0;
-			for(int i = 30;i >= 0;i--){
-				bool u = x >> i & 1;
-				if(son[p][!u]) {//高位开始，每次找与当前位相反的
-					ans = ans<<1|1;
-					p = son[p][!u];
-				}
-				else{
-					ans = ans<<1;
-					p = son[p][u];
-				}
-			}
-			return ans;
-		}
-	};
-};
-using TRIE::Trie;
-
-int main(){
-	Trie t;
-	int n; std::cin >> n;
-	int ans = 0;
-	while(n--){
-		int x; std::cin >> x;
-		ans = std::max(ans,t.query(x));
-		t.insert(x);
-	}
-	std::cout << ans;
-}
-```
-
-
-
-```cpp
-//xor_Trie 封装
-//插入/删除一个数
-//求x与另一个数异或的最大/最小值
 namespace TRIE{//0_idx  x<(2^31)
 	const int SIZ = 100005*32;
 	int son[SIZ][2],cnt[SIZ],idx;
@@ -16591,6 +16572,18 @@ namespace TRIE{//0_idx  x<(2^31)
 	};
 };
 using TRIE::xor_Trie;
+
+int main() {
+	xor_Trie t;
+	int n; std::cin >> n;
+	int ans = 0;
+	for (int i = 1; i <= n; i++) {
+		int x; std::cin >> x;
+		ans = std::max(ans, t.findMaxXor(x));
+		t.insert(x);
+	}
+	std::cout << ans;
+}
 ```
 
 
@@ -16933,14 +16926,41 @@ int main(){
 
 ## 回文串
 
+对于一个字符串 $s$，它的本质不同回文子串个数最多只有 $\left | s\right |$ 个
+
+
+
+
+
 ### Manacher
 
-O(N)求得对于每个i的最长回文长度，这里下标从0开始
+可以 O(N) 求得以 `i` 为中心的最长回文长度。通过在每个字符中间插入一个不存在的特殊字符，可以同时处理奇偶回文串，而不必分开讨论。
 
-`t = "abbba"` 则对应`s =  " #a#b#b#b#a#"`，可以同时处理奇偶回文串，而不必分开讨论，对s求得d1[ ]
-`d1[i]`为以`s[i]`为中心的最长回文串长度。
-对于`t[i]`来说,`d1[i*2]-1` 即为以`i`为中心，最长的奇数长度回文串
-`d1[i*2+1]-1`即为以`(i,i+1)`中点为中心最长的偶数长度回文串
+`t = "abbba"` 则对应`s =  " #a#b#b#b#a#"`
+
+对于 `s[i]` 来说 `d1[i]` 表示以 `i` 为中心的最长回文串长度。
+
+对于 `t[i]` 来说，`d1[i*2]-1` 即为以 `i` 为中心，最长的奇数长度回文串
+`d1[i*2+1]-1` 即为以 `(i,i+1)` 中点为中心最长的偶数长度回文串
+
+
+
+
+
+
+**构建过程**
+
+在线逐字符插入。维护一个 `last` 指针，表示当前串的最长回文后缀。
+
+插入字符 `s[i]` 时：
+
+1. 从 `last` 开始沿 `fail` 指针向上找，直到找到一个回文串，使得它的前一个字符等于 `s[i]`（即可以在两端扩展）
+2. 如果该回文串已经存在对应的 `next[s[i]]`，直接转移，`last` 更新为它
+3. 否则新建节点，长度为找到的回文串长度`+2`。
+4. 为新节点设置 `fail`：从找到的回文串的 `fail` 开始，继续向上找，找到第一个能扩展的回文串，将其 `next[s[i]]` 作为新节点的 `fail`。
+5. 更新 `last` 为新节点。
+
+
 
 ```cpp
 //https://www.luogu.com.cn/problem/P3805
@@ -16948,7 +16968,7 @@ O(N)求得对于每个i的最长回文长度，这里下标从0开始
 #include <bits/stdc++.h>
 using namespace std;
 
-template<typename T>
+template<typename T = std::string>
 struct Manacher{ //1_idx
 	int n,ans;
 	T s;
@@ -16978,7 +16998,7 @@ struct Manacher{ //1_idx
 		}
 	}
 
-	bool query(int l,int r){ // 查询区间是否为回文串
+	bool query(int l,int r){ // 查询原串区间[l,r]是否为回文串
 		l <<= 1,r <<= 1;
 		int mid = l + r >> 1;
 		return d[mid]-1 >= r-mid;
@@ -16994,6 +17014,155 @@ int main() {
 ```
 
 
+
+
+
+
+
+
+
+
+
+### 回文树
+
+回文树（Palindromic Tree），又叫 Eertree，是一种专门处理回文子串的数据结构。它能在线性时间内建出所有本质不同的回文子串，并维护每个回文子串的出现次数、长度、最长回文后缀等信息。
+
+
+
+它有两个根：
+
+- 奇根：长度 $len = -1$，代表长度为奇数的回文串的“虚拟父亲”。
+- 偶根：长度 $len = 0$，代表长度为偶数的回文串的“虚拟父亲”。
+
+每个节点包含字段：
+
+| 字段      | 含义                                        |
+| --------- | ------------------------------------------- |
+| `len`     | 该节点代表的回文串长度                      |
+| `fail`    | 指向该回文串的最长回文后缀对应的节点        |
+| `next[c]` | 在回文串两端加上字符`c`后形成的新回文串节点 |
+| `cnt`     | 该回文串出现的次数（构建后单独计算）        |
+
+边表示“在两端同时加一个字符”。例如节点 `aba` 通过边 `c` 可以转移到 `cabac`。
+
+
+
+
+
+[P3649 [APIO2014\] 回文串 - 洛谷](https://www.luogu.com.cn/problem/P3649)
+
+> 给定字符串 $s$，定义 $s$ 的一个子串的存在值为这个子串的出现此处乘以这个子串的长度，求所有回文子串中的最大存在值。
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+namespace PAM { // 0_idx
+	const int N = 300005, M = 26;
+	int son[N][M], len[N], fail[N], cnt[N], idx, last;
+	char str[N]; // 字符串从 1 开始, str[0] 为哨兵
+
+
+	struct Trie {
+		Trie() {
+			last = idx = 1;
+			init(0);
+			init(1);
+			len[0] = -1; // 奇根
+			len[1] = 0;  // 偶根
+			str[0] = -1; // 哨兵, 保证 while 一定终止
+		}
+
+		void init(int p) {
+			len[p] = fail[p] = cnt[p] = 0;
+			std::memset(son[p], 0, sizeof(son[p]));
+		}
+
+		int get(char x) {
+			if (x >= 'a' && x <= 'z') return x - 'a';
+			if (x >= 'A' && x <= 'Z') return x - 'A' + 26;
+			if (x >= '0' && x <= '9') return x - '0' + 52;
+			return -1;
+		}
+
+		// 从节点 p 出发, 找到能扩展 str[i] 的最长回文后缀节点
+		int get_fail(int p, int i) {
+			while (str[i - len[p]- 1] != str[i]) p = fail[p];
+			return p;
+		}
+
+		void insert(const std::string& s) {
+			int n = s.size();
+			for (int i = 1; i <= n; i++) str[i] = s[i - 1];
+			for (int i = 1; i <= n; i++) {
+				int u = get(str[i]);
+				int p = get_fail(last, i);
+				if (!son[p][u]) {
+					son[p][u] = ++idx;
+					init(idx);
+					len[idx] = len[p] + 2;
+					if (len[idx] == 1) {
+						fail[idx] = 1;
+					} else {
+						int q = get_fail(fail[p], i);
+						fail[idx] = son[q][u];
+					}
+				}
+				last = son[p][u];
+				cnt[last]++;
+			}
+		}
+
+		// 计算cnt, 得到每个回文串的出现次数
+		void calc() {
+			for (int i = idx; i >= 2; i--) {
+				cnt[fail[i]] += cnt[i];
+			}
+		}
+
+		// 本质不同的回文子串个数, 2~idx
+		int count() {
+			return idx - 1;
+		}
+
+		// 最长回文子串长度
+		int longest() {
+			int res = 0;
+			for (int i = 2; i <= idx; i++) res = std::max(res, len[i]);
+			return res;
+		}
+
+		// 所有回文子串总数 (按出现次数计)
+		long long total() {
+			long long res = 0;
+			for (int i = 2; i <= idx; i++) res += 1LL * cnt[i] * len[i];
+			return res;
+		}
+	};
+}
+using PAM::Trie; // Trie t
+
+void soviet() {
+	std::string s; std::cin >> s;
+	Trie t;
+	t.insert(s);
+
+	t.calc();
+
+	long long ans = 0;
+	for (int i = 2; i <= PAM::idx; i++) {
+		ans = std::max(ans, 1LL * PAM::cnt[i] * PAM::len[i]);
+	}
+	std::cout << ans;
+}
+
+int main() {
+	int M_T = 1; std::ios::sync_with_stdio(false); std::cin.tie(nullptr);
+//	std::cin >> M_T;
+	while (M_T--) { soviet(); }
+	return 0;
+}
+```
 
 
 
@@ -17248,7 +17417,7 @@ int main () {
 > [P4051 [JSOI2007\] 字符加密 - 洛谷 (luogu.com.cn)](https://www.luogu.com.cn/problem/P4051)
 > 将s复制一遍后，求sa[ ]
 
-> **求不同子串的数目**  
+> **求本质不同子串的数目**  
 > [P2408 不同子串个数 - 洛谷 (luogu.com.cn)](https://www.luogu.com.cn/problem/P2408)
 > 每个子串一定是某个后缀的前缀，所以可以计算子串总数，枚举每个后缀，减掉重复。
 > $$
@@ -29232,46 +29401,28 @@ int main(){
 ### clock_t
 
 ```cpp
-//计算程序运行某一段的耗时(ms)
-//例1
-#include <iostream>
-#include <ctime>
+// 例如, 计算程序运行某一段的耗时(ms)
+#include <bits/stdc++.h>
 using namespace std;
-clock_t start1, end1, start2, end2;
-int main() {	
-	start1 = clock();
-	for (int i = 0; i < 5e8; i++){
-		int b; b = i;
-	}
-	end1 = clock() - start1;
-	cout << end1 << "ms" << endl;
 
-	start2 = clock();
-	for (int i = 0; i < 1e9; i++){
-		int b; b = i;
-	}
-	end2 = clock();
-	cout << end2 - start2 << "ms" << endl;
+void test(function<void(void)> f) {
+	auto t1 = clock();
+	f();
+	auto t2 = clock();
+	cout << t2 - t1 << " ms\n";
 }
-```
 
-```cpp
-//例2
-#include <iostream>
-using namespace std;
 int main() {
-	int start1 = clock();
-	for (int i = 0; i < 1e7; i++);
-	int end1 = clock();
-	cout << end1 - start1 << "ms" << endl;
-
-	int start2 = clock();
-	for (int i = 0; i < 1e9; i++);
-	int end2 = clock();
-	cout << end2 - start2 << "ms" << endl;
-
-	return 0;
+	test([&]() {
+		long long ans = 0;
+		const int mod = 1e9 + 7;
+		for (long long i = 1; i <= 100000008; i++) {
+			ans = (i + ans * (i + ans) / i) % mod;
+		}
+		cout << ans << '\n';
+	});
 }
+
 ```
 
 
@@ -29309,10 +29460,6 @@ pb\_ds 库封装了很多数据结构，比如哈希（Hash）表，平衡二叉
 pb\_ds 只在使用 libstdc++ 为标准库的编译器下可以用。
 可以使用 `begin()` 和 `end()` 来获取 `iterator` 从而遍历
 可以 `increase_key`,`decrease_key` 以及删除单个元素
-
-
-
-
 
 
 
@@ -30099,7 +30246,7 @@ int ans1 =int(ans + eps);//对于负数的情况，只需要把ans + eps改为an
 cout << ans1 << endl;//正确输出8
 ```
 
-现在考虑一种情况,题目要求输出保留两位小数。有个case的正确答案的精确值是0.005,按理应该输出0.01,但你的结果可能是0.005000000001(恭喜)，也有可能是0.004999999999(悲剧),如果按照printf(“%.2lf”, a)输出，那你的遭遇将和括号里的字相同。
+现在考虑一种情况,题目要求输出保留两位小数。有个 case 的正确答案的精确值是 `0.005` ,按理应该输出 `0.01` ,但你的结果可能是 `0.005000000001` (恭喜)，也有可能是 `0.004999999999` (悲剧),如果按照 `printf("%.2lf", a)` 输出，那你的遭遇将和括号里的字相同。
 
 解决办法是，如果a为正，则输出a+eps, 否则输出a-eps
 
@@ -30107,7 +30254,7 @@ cout << ans1 << endl;//正确输出8
 
 两个浮点数之间的比较，eps缩写自epsilon，表示一个小量，但这个小量又要确保远大于浮点运算结果的不确定量。eps最常见的取值是1e-8左右。引入eps后，我们判断两浮点数a、b相等的方式如下:
 
-定义三出口函数如下: int sgn(double a){return a < -eps ? -1 : a < eps ? 0 : 1;}
+定义三出口函数如下：` int sgn(double a){return a < -eps ? -1 : a < eps ? 0 : 1;}`
 
 则各种判断大小的运算都应做如下修正:
 
@@ -30123,6 +30270,8 @@ cout << ans1 << endl;//正确输出8
 
 
 
+
+**分式比较**
 
 > 除法之间比较尽量转换为乘法之间比较，如$\frac{a}{b} < \frac{c}{d}$判断改为$a*d < b*c$
 >
@@ -30178,24 +30327,34 @@ void sol(){
 
 
 
-> sqrt
+**数学运算**
+
+> `sqrt`/`sqrtl`
+
+`sqrtl` 返回值为 `long double` 类型，精度更高。[Yet Another Simple Math Problem - Problem - QOJ.ac](https://qoj.ac/contest/1499/problem/8167)
 
 ```cpp
 int ans1 = 0,ans2 = 0,ans3 = 0;
 for(int i = 1;i <= 100;i++){
-    if(i == sqrt(i)*sqrt(i)) ans1++;//53
-    if(i - sqrt(i)*sqrt(i) < 1e-9) ans2++;//100
-    if(i == (int)sqrt(i)*sqrt(i)) ans3++;//10
+    if(i == sqrt(i)*sqrt(i)) ans1++;//49 错误
+    if(i - sqrt(i)*sqrt(i) < 1e-9) ans2++;//100 错误
+    if(i == (int)sqrt(i)*sqrt(i)) ans3++;//10 正确
+}
+
+// 建议手写 sqrt (向下取整)
+long long qsqrt(long long n) { 
+    long long s = std::sqrt(n);
+    while (s*s > n) { s--; }
+    while ((s+1)*(s+1) <= n) { s++; }
+    return s;
 }
 ```
 
-sqrtl返回值为long double类型，精度更高。[Yet Another Simple Math Problem - Problem - QOJ.ac](https://qoj.ac/contest/1499/problem/8167)
 
 
 
 
-
-> pow/ceil/floor/round参数类型和返回值类型均为浮点型，可能会导致输出与预期不符而wrong answer
+> `pow`/`ceil`/`floor`/`round`参数类型和返回值类型均为浮点型，可能会导致输出与预期不符而 `wrong answer`
 
 ```cpp
 int a = 1234;
@@ -30204,6 +30363,10 @@ cout << pow(a, 2) << endl;//1.52276e+06        可以用int n = pow(a,2)类型�
 ```
 
 
+
+
+
+**无符号整型溢出**
 
 > 有符号整型 - 无符号整型
 
@@ -30219,9 +30382,52 @@ while(n - v.size() > 0){
 
 
 
+
+
+**python 高精度库**
+
+精度可以任意调整，设置越高性能开销越大。
+
+```python
+from decimal import Decimal, getcontext
+getcontext().prec = 100  # 设置100位十进制精度
+
+a, b = input().split()
+
+a = Decimal(a)
+b = Decimal(b)
+
+print(a / b)
+```
+
+
+
+**python 分数库**
+
+用于表示精确的分数，避免浮点数的舍入误差。但分数非常复杂（分子分母极大）时，运算会变慢。通常建议在中间比较时使用分数，最终输出再转换为 `float` 或 `Decimal` 格式化。
+
+```python
+from fractions import Fraction
+
+x = Fraction(1, 6) + Fraction(1, 12)
+
+x /= 3
+x += 1
+
+print(x)  # 输出 13/12
+```
+
+
+
+
+
+
+
+
+
 ## 输入输出优化
 
-使用cin/cout会比scanf/printf慢
+关闭同步流
 
 ```cpp
 //关闭cstdio和iostream的同步后,cin/cout不要与printf/scanf/puts混用,也不要再使用endl,否则会造成输入输出混乱
@@ -30658,6 +30864,16 @@ g++ 1.cpp -O2 -o -1.exe
 
  `__int128` 仅仅是 GCC 编译器内的东西，不在 C++标准内，且仅 **GCC4.6** 以上**64位**版本支持
 
+```cpp
+// 检测宏
+#if defined(__SIZEOF_INT128__)
+using i128 = __int128;
+using u128 = unsigned __int128;
+#endif
+```
+
+
+
 **数据范围**
 
 > `__int128`数据范围 ： $-2^{127} \sim 2^{127}-1$   大于1.7e38
@@ -30741,6 +30957,27 @@ int main() {
 
 
 
+
+
+#### __float128
+
+`__float80` 和 `__float128` 是 GCC 编译器提供的扩展浮点数据类型，并非 C/C++ 标准的一部分，其可用性完全取决于目标平台和编译器。性能较差，比 `double` 慢几十倍，慎用。
+
+`long double` 和 `__float80` 精度（十进制）大概为18-19位。而`__float128` 为33-34位。
+
+```cpp
+// 检测宏
+#if defined(__SIZEOF_FLOAT128__)
+using lf128 = __float128;
+#endif
+```
+
+
+
+
+
+
+
 #### __cplusplus
 
 ```cpp
@@ -30756,6 +30993,7 @@ cout << __cplusplus << endl; // 可以直接输出预处理器宏参数
 | 201703L                   | C++17         |
 | 202002L                   | C++20         |
 | 202302L                   | C++23         |
+| 202603L                   | C++26         |
 
 
 
@@ -30772,7 +31010,7 @@ cout << __cplusplus << endl; // 可以直接输出预处理器宏参数
 ### 文件读写
 
 ```cpp
-//正式提交时请务必注释掉
+// 正式提交时请务必注释掉
 int main() {
 	freopen("in.txt","r",stdin);
 //	freopen("out.txt","w",stdout);
@@ -30782,10 +31020,10 @@ int main() {
 ```
 
 ```bash
-#windows cmd控制台读写方式
+# windows cmd
 a.exe < in.txt > out.txt
 
-#linux 控制台
+# linux bash
 ./a.out < in.txt > out.txt
 ```
 
@@ -30811,7 +31049,7 @@ void f(Args... args) {
 
 ## 时间复杂度
 
-仅供参考
+仅供参考，安全线一般取每秒 $10^8$ 次运算，浮点数或部分容器/函数运行更慢。
 
 | 数据范围 |                                     |                                                              |
 | -------- | ----------------------------------- | ------------------------------------------------------------ |
@@ -31052,65 +31290,147 @@ shuffle(v.begin(), v.end(), rng); // 需要配合随机数生成器使用
 写一个对拍程序`dp.exe`，不断调用数据生成器`data.exe`生成随机数据，通过将自己的程序`sol.exe` 和标准程序（或保证正确的暴力解）`std.exe` 运行结果进行比对，一旦结果不一致立即终止程序。利用问题样例调试程序。
 
 ```cpp
-//dp.cpp   windows
+// dp.cpp  (Windows)
 #include <bits/stdc++.h>
 using namespace std;
 
+auto SEED = chrono::steady_clock::now().time_since_epoch().count();
+mt19937_64 rng(SEED);
+
+template<typename T = long long>
+T rnd(const T &l, const T &r) { return rng() % (r - l + 1) + l; }
+
+vector<int> random_permutation(int n) {
+	vector<int> a(n);
+	iota(a.begin(), a.end(), 1);
+	shuffle(a.begin(), a.end(), rng);
+	return a;
+}
+
+void compile(string a, string an) {
+	if (system(("g++ " + a + " -o " + an + ".exe -O2 -std=c++17").c_str())) {
+		cout << "compile " << a << " failed" << endl;
+		exit(1);
+	}
+}
+
+// --------- 数据生成 ---------
+void create_data() {
+	ofstream fout("data.in"); // fout
+
+	int a = rnd(0, 10), b = rnd(0, 50);
+	fout << a << ' ' << b << '\n';
+}
+
 int main() {
-    int t = 0;
-    string sol = "sol";
-	cout << "filename(without .exe):";
-	cin >> sol;
+	string a = "a.cpp", b = "std.cpp";
+	cout << "input: <sol.cpp> : ";
+	cin >> a;
 
-    while (1) {
-        system("data.exe > data.in");
-        system("std.exe < data.in > std.out");
-        system((sol + ".exe < data.in > sol.out").c_str());
+	string an = a.substr(0, a.size() - 4);
+	string bn = b.substr(0, b.size() - 4);
 
-        if (system("fc std.out sol.out > nul")) {
-            cout << "\nWA on test " << ++t << "\n\nInput:\n";
-            system("type data.in");
-            cout << "\nYour output:\n";
-            system("type sol.out");
-            cout << "\nCorrect output:\n";
-            system("type std.out");
-            system("pause");
-            break;
-        }
-        cout << "Test " << ++t << " OK" << endl;
-    }
+	puts("Compiling...");
+	compile(a, an);
+	compile(b, bn);
+
+	for (int t = 1; t <= 100000; t++) {
+		create_data();
+
+		system((bn + ".exe < data.in > std.out").c_str());
+
+		clock_t c1 = clock();
+		system((an + ".exe < data.in > sol.out").c_str());
+		clock_t c2 = clock();
+
+		printf("Test:%4d : %ld ms ", t, c2 - c1);
+
+		if (system("fc std.out sol.out > nul")) {
+			puts("WA");
+			system("type data.in");
+			puts("\nyou:");
+			system("type sol.out");
+			puts("\nstd:");
+			system("type std.out");
+			puts("");
+			system("pause");
+			break;
+		}
+		printf("OK\n");
+	}
 }
 ```
 
 ```cpp
-//dp.cpp   linux
+// dp.cpp  (Linux)
 #include <bits/stdc++.h>
 using namespace std;
+using namespace chrono;
+
+auto SEED = steady_clock::now().time_since_epoch().count();
+mt19937_64 rng(SEED);
+
+template<typename T = long long>
+T rnd(const T &l, const T &r) { return rng() % (r - l + 1) + l; }
+
+vector<int> random_permutation(int n) {
+	vector<int> a(n);
+	iota(a.begin(), a.end(), 1);
+	shuffle(a.begin(), a.end(), rng);
+	return a;
+}
+
+void compile(const string &src, const string &out) {
+	if (system(("g++ " + src + " -o " + out + " -O2 -std=c++17").c_str())) {
+		cout << "compile " << src << " failed" << endl;
+		exit(1);
+	}
+}
+
+// --------- 数据生成 ---------
+void create_data() {
+	ofstream fout("data.in"); // fout
+
+	int a = rnd(0, 10), b = rnd(0, 20);
+	fout << a << ' ' << b << '\n';
+}
 
 int main() {
-    int t = 0;
-    string sol;
-    cout << "filename(without .out):";
-    cin >> sol;
+	string a = "a.cpp", b = "std.cpp";
+	cout << "input: <sol.cpp> : ";
+	cin >> a;
 
-    while (1) {
-        system("./data > data.in");
-        system("./std < data.in > std.txt");
-        system(("./" + sol + " < data.in > sol.txt").c_str());
+	string an = a.substr(0, a.size() - 4);
+	string bn = b.substr(0, b.size() - 4);
 
-        if (system("diff -q std.txt sol.txt > /dev/null")) {
-            cout << "\nWA on test " << ++t << "\n\nInput:\n";
-            system("cat data.in");
-            cout << "\nYour output:\n";
-            system("cat sol.txt");
-            cout << "\nCorrect output:\n";
-            system("cat std.txt");
-            cin.ignore();
-            break;
-        }
-        cout << "Test " << ++t << " OK" << endl;
-    }
-}  
+	puts("Compiling...");
+	compile(a, an);
+	compile(b, bn);
+
+	for (int t = 1; t <= 100000; t++) {
+		create_data();
+
+		system(("./" + bn + " < data.in > std.out").c_str());
+
+		auto c1 = steady_clock::now();
+		system(("./" + an + " < data.in > sol.out").c_str());
+		auto c2 = steady_clock::now();
+
+		long ms = duration_cast<milliseconds>(c2 - c1).count();
+		printf("Test:%4d : %ld ms ", t, ms);
+
+		if (system("diff -qZ std.out sol.out > /dev/null")) {
+			puts("WA");
+			system("cat data.in");
+			puts("\nyou:");
+			system("cat sol.out");
+			puts("\nstd:");
+			system("cat std.out");
+			break;
+		}
+		puts("OK");
+	}
+}
 ```
 
 
@@ -31146,71 +31466,6 @@ int main() { //例如生成数组a[n]
 
 
 
-```cpp
-//dp.cpp windows(太长,仅日常使用)
-#include <bits/stdc++.h>
-using namespace std;
-
-int main() {
-	int t = 0;
-	std::cout << "sol filename:";
-	std::string sol = "1.cpp"; std::cin >> sol;
-	std::cout << std::endl;
-
-	int suf_pos = sol.find_last_of(std::string("."));
-	std::string suf = ".cpp";
-	if (suf_pos != -1) {
-		suf = sol.substr(suf_pos);
-	}
-
-	if (sol.size() >= 4 && sol.substr(sol.size() - 4) == ".cpp") {
-		sol.pop_back(); sol.pop_back(); sol.pop_back(); sol.pop_back();
-	}
-
-	while (1) {
-
-		system("data.exe > data.in");
-
-		std::cout <<  "Test:" << std::left << std::setw(4) << ++t;
-
-		system("std.exe < data.in > std.out");
-
-		std::cout << "->";
-
-		clock_t c1 = clock();
-		if (suf.empty() || suf == ".exe" || suf == ".cpp") system((sol + " < data.in > sol.out").c_str());
-		else if (suf == ".py") system(("python " + sol + " <data.in > sol.out").c_str()); 
-		clock_t c2 = clock();
-
-		std::cout << std::right << " " << std::setw(4) << c2 - c1 << "ms ";
-
-		if (system("fc std.out sol.out > diff.log")) { // linux下为diff命令对比文件
-			system("cls");
-			printf("\a");
-
-			std::cout << "WA on Test " << t << ":" << std::endl;
-			system("type data.in");
-			std::cout << std::endl;
-
-			std::cout << "Your Answer:" << std::endl;
-			system("type sol.out");
-			std::cout << std::endl;
-
-			std::cout << "Std Answer:" << std::endl;
-			system("type std.out");
-			std::cout << std::endl;
-
-			system("pause");
-			break;
-		}
-		std::cout << "OK ";
-		std::cout << std::endl;
-	}
-
-	return 0;
-}
-```
-
 
 
 ## 外部链接
@@ -31229,6 +31484,8 @@ int main() {
 
 [Graph Editor：https://csacademy.com/app/graph_editor/](https://csacademy.com/app/graph_editor/) ：简易的图论作图工具
 
+[Another Graph Editor：https://anacc22.github.io/another_graph_editor/](https://anacc22.github.io/another_graph_editor/)：图论编辑工具
+
 [ACMer.info：https://acmer.info/](https://acmer.info/) ：整理和分享算法竞赛相关的群组、博客、比赛平台等资源
 
 [AlgoWiki：https://www.algowiki.cn/](https://www.algowiki.cn/)：竞赛wiki信息平台
@@ -31239,6 +31496,7 @@ int main() {
 
 [cppreference：https://en.cppreference.com/](https://en.cppreference.com/) ：c++参考手册
 
+[AWESOME XCPC：https://xcpc.link/](https://xcpc.link/)：XCPC实用小工具/网站集合
 
 
 
