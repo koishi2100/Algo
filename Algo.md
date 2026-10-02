@@ -6,11 +6,11 @@
 
 待填坑？：
 
-**数学**：计算几何、博弈论、多项式、Min25、Polya计数、
+**数学**：多项式、Polya计数、
 
-**基础算法**：倍增、整体二分、树上莫队、CDQ分治、反悔贪心、
+**基础算法**：倍增、整体二分、树上莫队、反悔贪心、
 
-**字符串**：后缀自动机、回文树、
+**字符串**：后缀自动机、
 
 **图论**：树分治、基环树、括号序、圆方树、可行流、树上启发式合并、
 
@@ -27,7 +27,7 @@
 
 2025.10.20 update：退役归档，不再更新、
 
-2026.09.25：分层图最短路、对拍、KMP修正、01Trie修正、调和级数、线性递推求逆元、添加了一些好van的网站、平面几何（多边形面积、求凸包）、笛卡尔树、类欧几里得算法、最小瓶颈路、子集枚举、并查集（可撤销，可删点、可持久化）、k-Dyck路、HLPP、极角排序、幂次哈希、三维偏序、回文树、
+2026.10.02：分层图最短路、对拍、KMP修正、01Trie修正、调和级数、线性递推求逆元、添加了一些好van的网站、平面几何（多边形面积、求凸包）、笛卡尔树、类欧几里得算法、最小瓶颈路、子集枚举、并查集（可撤销，可删点、可持久化）、k-Dyck路、HLPP、极角排序、幂次哈希、三维偏序、回文树、珂朵莉树、多项式、
 
 # 数学
 
@@ -4752,9 +4752,19 @@ int main(){
 
 
 
-注意观察能否将问题模型转换为卷积形式：$f(x) = \sum_{i+j=x}a_{i}b_{j}$
+注意观察能否将问题模型转换为卷积形式，比如：
 
+- $f(x) = \sum_{i+j=x}a_{i}b_{j}$    标准卷积
+- $f(x) = \sum_{i}^{}{a_ib_{x-i}}$        标准卷积
+- $f(x) = \sum_{i}^{}{a_ib_{i+x}}$        可通过翻转a或b转换为标准卷积
+- $f(x) = \sum_{i}^{}{a_ib_{i-x}}$        可通过翻转a或b转换为标准卷积
 
+即：
+
+- 有一个求和符号
+- 求和的变量出现在两个序列的下标里
+- 两个下标之和（或差）等于一个固定的量
+- 乘积项可以拆成只依赖一个变量的部分
 
 
 
@@ -5116,6 +5126,1498 @@ int main(){
 	std::cout << '\n';
 }
 ```
+
+
+
+
+
+### 多项式运算
+
+
+
+#### 多项式求逆
+
+
+
+**常见应用：**
+
+- 多项式除法：求 $A/B$ 的商和余式，需要先求 $B$ 的逆。
+
+- 多项式 $ln$、$exp$、开根：这些运算都依赖求逆。
+
+- 生成函数解组合计数：如解方程 $F = G(F)$ ，常需多项式求逆
+
+​	
+
+
+
+[P4238 【模板】多项式乘法逆 - 洛谷](https://www.luogu.com.cn/problem/P4238)
+
+> 给定多项式 $F(x)$，求 $G(x)$ 使得
+> $$
+> F(x) · G(x) \equiv 1 (mod\ x^n)
+> $$
+> 即在模 $x^n$ 意义下（忽略次数 $\ge n$ 的项），$G(x)$ 是 $F(x)$ 的乘法逆元。通常系数在模 998244353 下运算。
+
+使用**牛顿迭代法**，从模 $x^1$ 开始倍增到模 $x^n$。
+
+设当前已求出 $G_k$ 满足 $F · G_k \equiv 1 (mod \ x^k)$，要扩展到 $2k$。
+
+有迭代公式：
+$$
+G_{2k} \equiv G_{k} · (2 - F · G_k)\ (mod\ x^{2k})
+$$
+因为 $F · G_k = 1 + x^kH$，所以 $2 - F·G_k = 1 - x^kH$，乘上 $G_k$ 后即可得到更高精度的逆。
+
+每次乘法使用 $NTT$ 加速，总复杂度 $O(N\log N)$
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+const int mod = 998244353,G = 3,GI = 332748118;
+
+long long qmi(long long a,long long b,long long p){
+	long long ans = 1;
+	while(b){
+		if(b&1) ans = ans*a%p;
+		b>>=1;
+		a = a*a%p;
+	}
+	return ans;
+}
+
+void NTT(std::vector<long long>& a, bool invert) {
+	int n = a.size();
+
+	for(int i = 1,j = 0;i < n;i++) {
+		int bit = n >> 1;
+		for (; j&bit; bit >>= 1) j ^= bit;
+		j ^= bit;
+		if (i < j) std::swap(a[i],a[j]);
+	}
+
+	for(int len = 2;len <= n;len <<= 1) {
+		long long wlen = qmi(invert ? GI : G,(mod-1)/len,mod);
+		for (int i = 0;i < n;i += len) {
+			long long w = 1;
+			for (int j = 0;j < len/2;j++) {
+				long long u = a[i+j];
+				long long v = a[i+j + len/2] * w % mod;
+				a[i+j] = (u+v) % mod;
+				a[i+j + len/2] = (u-v+mod) % mod;
+				w = w * wlen % mod;
+			}
+		}
+	}
+	if(invert){
+		long long inv_n = qmi(n,mod-2,mod);
+		for(auto &x:a) x = x * inv_n % mod;
+	}
+}
+
+std::vector<long long> operator * (std::vector<long long>a,std::vector<long long>b){//值传递
+	int n = a.size(), m = b.size();
+
+	int MAX_N = 1;
+	while (MAX_N < n + m) MAX_N <<= 1;
+	a.resize(MAX_N);
+	b.resize(MAX_N);
+
+	NTT(a, false);
+	NTT(b, false);
+	for(int i = 0; i < MAX_N; i++) a[i] = a[i] * b[i] % mod;
+	NTT(a, true);
+
+	while(a.size() >= 2 && a.back() == 0) a.pop_back();
+	return a;
+}
+
+std::vector<long long> poly_inv(std::vector<long long>& a) {
+	std::vector<long long> g(1, qmi(a[0], mod - 2, mod));
+	int m = 1, n = a.size();
+	while (m < n) {
+		m = std::min(m * 2, n);
+		std::vector<long long> f(a.begin(), a.begin() + std::min<int>(a.size(), m));
+		auto t = f * g;
+		t.resize(m);
+		for (int i = 0; i < m; i++) t[i] = (mod - t[i]) % mod;
+		t[0] = (t[0] + 2) % mod;
+		g = g * t;
+		g.resize(m);
+	}
+	g.resize(a.size());
+	return g;
+}
+
+void soviet() {
+	int n; std::cin >> n;
+	std::vector<long long> a(n);
+	for (int i = 0; i < n; i++) std::cin >> a[i];
+	auto b = poly_inv(a);
+	for (int i = 0; i < n; i++) {
+		std::cout << b[i] << ' ';
+	}
+}
+
+int main() {
+	int M_T = 1; std::ios::sync_with_stdio(false); std::cin.tie(nullptr);
+//	std::cin >> M_T;
+	while (M_T--) { soviet(); }
+	return 0;
+}
+```
+
+
+
+
+
+
+
+#### 多项式对数
+
+[P4725 【模板】多项式对数函数（多项式 ln） - 洛谷](https://www.luogu.com.cn/problem/P4725)
+
+> 给定 $n - 1$ 次多项式 $A(x)$，求一个 $mod\ x^n$ 下的多项式 $B(x)$，满足 $B(x) \equiv \ln A(x)$。在 mod 998244353 意义下进行。保证 $a_0 = 1$
+
+根据求导法则
+$$
+B'(x) = \frac{A'(x)}{A(x)}
+$$
+因此：
+
+1. 计算 $A'(x)$ （导数）
+2. 计算 $A(x)$ 的逆 $A^{-1}(x)\ (mod\ x^{n - 1})$
+3. 计算 $B'(x) = A'(x) · A^{-1}(x) \ (mod\ x^{n - 1})$
+4. 对 $B'(x)$ 积分得到 $B(x)$，常数项为 0 （因为 $ln 1 = 0$)
+
+总复杂度 $O(N \log N)$
+
+
+
+
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+const int mod = 998244353,G = 3,GI = 332748118;
+
+long long qmi(long long a,long long b,long long p){
+	long long ans = 1;
+	while(b){
+		if(b&1) ans = ans*a%p;
+		b>>=1;
+		a = a*a%p;
+	}
+	return ans;
+}
+
+void NTT(std::vector<long long>& a, bool invert) {
+	int n = a.size();
+
+	for(int i = 1,j = 0;i < n;i++) {
+		int bit = n >> 1;
+		for (; j&bit; bit >>= 1) j ^= bit;
+		j ^= bit;
+		if (i < j) std::swap(a[i],a[j]);
+	}
+
+	for(int len = 2;len <= n;len <<= 1) {
+		long long wlen = qmi(invert ? GI : G,(mod-1)/len,mod);
+		for (int i = 0;i < n;i += len) {
+			long long w = 1;
+			for (int j = 0;j < len/2;j++) {
+				long long u = a[i+j];
+				long long v = a[i+j + len/2] * w % mod;
+				a[i+j] = (u+v) % mod;
+				a[i+j + len/2] = (u-v+mod) % mod;
+				w = w * wlen % mod;
+			}
+		}
+	}
+	if(invert){
+		long long inv_n = qmi(n,mod-2,mod);
+		for(auto &x:a) x = x * inv_n % mod;
+	}
+}
+
+std::vector<long long> operator * (std::vector<long long>a,std::vector<long long>b){//值传递
+	int n = a.size(), m = b.size();
+
+	int MAX_N = 1;
+	while (MAX_N < n + m) MAX_N <<= 1;
+	a.resize(MAX_N);
+	b.resize(MAX_N);
+
+	NTT(a, false);
+	NTT(b, false);
+	for(int i = 0; i < MAX_N; i++) a[i] = a[i] * b[i] % mod;
+	NTT(a, true);
+
+	while(a.size() >= 2 && a.back() == 0) a.pop_back();
+	return a;
+}
+
+std::vector<long long> poly_inv(std::vector<long long>& a) {
+	std::vector<long long> g(1, qmi(a[0], mod - 2, mod));
+	int m = 1, n = a.size();
+	while (m < n) {
+		m = std::min(m * 2, n);
+		std::vector<long long> f(a.begin(), a.begin() + std::min<int>(a.size(), m));
+		auto t = f * g;
+		t.resize(m);
+		for (int i = 0; i < m; i++) t[i] = (mod - t[i]) % mod;
+		t[0] = (t[0] + 2) % mod;
+		g = g * t;
+		g.resize(m);
+	}
+	g.resize(a.size());
+	return g;
+}
+
+vector<long long> poly_ln(const vector<long long>& a) {
+    int n = a.size();
+    if (n == 1) return vector<long long>{0};
+
+    // 预处理逆元
+    vector<long long> inv(n + 1);
+    inv[1] = 1;
+    for (int i = 2; i <= n; i++) {
+        inv[i] = (mod - mod / i) * inv[mod % i] % mod;
+    }
+
+    // 1. 求导
+    vector<long long> da(n - 1);
+    for (int i = 1; i < n; i++) {
+        da[i - 1] = a[i] * i % mod;
+    }
+
+    // 2. 求 a 的前 n-1 项的逆
+    vector<long long> a_cut(a.begin(), a.begin() + n - 1);
+    vector<long long> inva = poly_inv(a_cut);  // 长度 n-1
+
+    // 3. B' = A' * invA
+    vector<long long> prod = da * inva;
+    prod.resize(n - 1);
+
+    // 4. 积分
+    vector<long long> b(n);
+    b[0] = 0;
+    for (int i = 1; i < n; i++) {
+        b[i] = prod[i - 1] * inv[i] % mod;
+    }
+    return b;
+}
+
+void soviet() {
+	int n; std::cin >> n;
+	std::vector<long long> a(n);
+	for (int i = 0; i < n; i++) std::cin >> a[i];
+	auto b = poly_ln(a);
+	for (int i = 0; i < n; i++) std::cout << b[i] << ' ';
+}
+
+int main() {
+	int M_T = 1; std::ios::sync_with_stdio(false); std::cin.tie(nullptr);
+//	std::cin >> M_T;
+	while (M_T--) { soviet(); }
+	return 0;
+}
+```
+
+
+
+
+
+#### 多项式指数
+
+[P4726 【模板】多项式指数函数（多项式 exp） - 洛谷](https://www.luogu.com.cn/problem/P4726)
+
+> 给定 $n - 1$ 次多项式 $A(x)$ ，求一个 $mod\ x^n$ 下的多项式 $B(x)$，满足 $B(x) \equiv e^{A(x)}$。系数对 998244353 取模。保证 $a_0 = 1$
+
+求 $B(x) \equiv e^{A(x)} \ (mod \ x^n)$ ，且 $A(0) = 0$，所以 $B(0) = 1$。
+
+两边取对数：$\ln B(x) = A(x)$
+
+使用牛顿迭代：
+假设已有 $B$ 满足 $B \equiv e^A \ (mod \ x^m)$，要扩展到 $m_2 = min(2m, n)$。
+
+令误差 $E = \ln B - A$，则 $B_{new} = B · (1 - E)\ (mod \ x^{m_2})$。
+
+即：
+$$
+B_{new} = B · (1 - \ln B + A) \ (mod \ x^{m_2})
+$$
+总时间复杂度 $O(N \log N)$
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+const int mod = 998244353,G = 3,GI = 332748118;
+
+long long qmi(long long a,long long b,long long p){
+	long long ans = 1;
+	while(b){
+		if(b&1) ans = ans*a%p;
+		b>>=1;
+		a = a*a%p;
+	}
+	return ans;
+}
+
+void NTT(std::vector<long long>& a, bool invert) {
+	int n = a.size();
+
+	for(int i = 1,j = 0;i < n;i++) {
+		int bit = n >> 1;
+		for (; j&bit; bit >>= 1) j ^= bit;
+		j ^= bit;
+		if (i < j) std::swap(a[i],a[j]);
+	}
+
+	for(int len = 2;len <= n;len <<= 1) {
+		long long wlen = qmi(invert ? GI : G,(mod-1)/len,mod);
+		for (int i = 0;i < n;i += len) {
+			long long w = 1;
+			for (int j = 0;j < len/2;j++) {
+				long long u = a[i+j];
+				long long v = a[i+j + len/2] * w % mod;
+				a[i+j] = (u+v) % mod;
+				a[i+j + len/2] = (u-v+mod) % mod;
+				w = w * wlen % mod;
+			}
+		}
+	}
+	if(invert){
+		long long inv_n = qmi(n,mod-2,mod);
+		for(auto &x:a) x = x * inv_n % mod;
+	}
+}
+
+std::vector<long long> operator * (std::vector<long long>a,std::vector<long long>b){//值传递
+	int n = a.size(), m = b.size();
+
+	int MAX_N = 1;
+	while (MAX_N < n + m) MAX_N <<= 1;
+	a.resize(MAX_N);
+	b.resize(MAX_N);
+
+	NTT(a, false);
+	NTT(b, false);
+	for(int i = 0; i < MAX_N; i++) a[i] = a[i] * b[i] % mod;
+	NTT(a, true);
+
+	while(a.size() >= 2 && a.back() == 0) a.pop_back();
+	return a;
+}
+
+std::vector<long long> poly_inv(std::vector<long long>& a) {
+	std::vector<long long> g(1, qmi(a[0], mod - 2, mod));
+	int m = 1, n = a.size();
+	while (m < n) {
+		m = std::min(m * 2, n);
+		std::vector<long long> f(a.begin(), a.begin() + std::min<int>(a.size(), m));
+		auto t = f * g;
+		t.resize(m);
+		for (int i = 0; i < m; i++) t[i] = (mod - t[i]) % mod;
+		t[0] = (t[0] + 2) % mod;
+		g = g * t;
+		g.resize(m);
+	}
+	g.resize(a.size());
+	return g;
+}
+
+vector<long long> poly_ln(const vector<long long>& a) {
+    int n = a.size();
+    if (n == 1) return vector<long long>{0};
+
+    vector<long long> inv(n + 1);
+    inv[1] = 1;
+    for (int i = 2; i <= n; i++) {
+        inv[i] = (mod - mod / i) * inv[mod % i] % mod;
+    }
+
+    vector<long long> da(n - 1);
+    for (int i = 1; i < n; i++) {
+        da[i - 1] = a[i] * i % mod;
+    }
+
+    vector<long long> a_cut(a.begin(), a.begin() + n - 1);
+    vector<long long> inva = poly_inv(a_cut);  // 长度 n-1
+
+    vector<long long> prod = da * inva;
+    prod.resize(n - 1);
+
+    vector<long long> b(n);
+    b[0] = 0;
+    for (int i = 1; i < n; i++) {
+        b[i] = prod[i - 1] * inv[i] % mod;
+    }
+    return b;
+}
+
+std::vector<long long> poly_exp(std::vector<long long>& a) {
+	int n = a.size();
+	std::vector<long long> b(1, 1); // B = 1
+	int m = 1;
+	while (m < n) {
+		m = std::min(m * 2, n);
+		auto b_cut = b;
+		b_cut.resize(m);
+        // 计算 ln B mod x^{m2}
+		auto ln_b = poly_ln(b_cut);
+        // t = 1 + A - ln B
+		std::vector<long long> t(m);
+		for (int i = 0; i < m; i++) {
+			long long ai = i < (int)a.size() ? a[i] : 0;
+			t[i] = ((i == 0 ? 1 : 0) + ai - ln_b[i] + mod) % mod;
+		}
+        B = B * t mod x^{m2}
+		auto b_ext = b;
+		b_ext.resize(m, 0);
+		b = b_ext * t;
+		b.resize(m);
+	}
+	b.resize(n);
+	return b;
+}
+
+void soviet() {
+	int n; std::cin >> n;
+	std::vector<long long> a(n);
+	for (int i = 0; i < n; i++) std::cin >> a[i];
+	auto b = poly_exp(a);
+	for (int i = 0; i < n; i++) std::cout << b[i] << ' ';
+}
+
+int main() {
+	int M_T = 1; std::ios::sync_with_stdio(false); std::cin.tie(nullptr);
+//	std::cin >> M_T;
+	while (M_T--) { soviet(); }
+	return 0;
+}
+
+```
+
+
+
+
+
+#### 多项式开根
+
+[P5205 【模板】多项式开根 - 洛谷](https://www.luogu.com.cn/problem/P5205)
+
+> 给定一个 $n-1$ 次多项式 $A(x)$，求一个在 ${} \bmod x^n$ 意义下的多项式 $B(x)$，使得 $B^2(x) \equiv A(x) \pmod{x^n}$。若有多解，请取零次项系数较小的作为答案。保证 $a_0 = 1$。
+
+要求 $B^2 \equiv A \ (mod\ x^n)$，且 $A(0) = 1$，取  $B(0) = 1$ （零次项系数较小）。
+
+对两边取对数：
+$$
+\ln (B^2) = \ln A \Rightarrow 2\ln B = \ln A \Rightarrow \ln B = \frac{1}{2}\ln A
+$$
+再取指数：
+$$
+B = exp(\frac{1}{2}\ln A)
+$$
+由于 $A(0) = 1$，所以 $\ln A$ 存在且常数项为 0，乘以 1/2 后常数项仍为 0，满足 `poly_exp` 对输入常数项为 0 的要求。
+
+总时间复杂度 $O(N\log N)$
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+const int mod = 998244353,G = 3,GI = 332748118;
+
+long long qmi(long long a,long long b,long long p){
+	long long ans = 1;
+	while(b){
+		if(b&1) ans = ans*a%p;
+		b>>=1;
+		a = a*a%p;
+	}
+	return ans;
+}
+
+void NTT(std::vector<long long>& a, bool invert) {
+	int n = a.size();
+
+	for(int i = 1,j = 0;i < n;i++) {
+		int bit = n >> 1;
+		for (; j&bit; bit >>= 1) j ^= bit;
+		j ^= bit;
+		if (i < j) std::swap(a[i],a[j]);
+	}
+
+	for(int len = 2;len <= n;len <<= 1) {
+		long long wlen = qmi(invert ? GI : G,(mod-1)/len,mod);
+		for (int i = 0;i < n;i += len) {
+			long long w = 1;
+			for (int j = 0;j < len/2;j++) {
+				long long u = a[i+j];
+				long long v = a[i+j + len/2] * w % mod;
+				a[i+j] = (u+v) % mod;
+				a[i+j + len/2] = (u-v+mod) % mod;
+				w = w * wlen % mod;
+			}
+		}
+	}
+	if(invert){
+		long long inv_n = qmi(n,mod-2,mod);
+		for(auto &x:a) x = x * inv_n % mod;
+	}
+}
+
+std::vector<long long> operator * (std::vector<long long>a,std::vector<long long>b){//值传递
+	int n = a.size(), m = b.size();
+
+	int MAX_N = 1;
+	while (MAX_N < n + m) MAX_N <<= 1;
+	a.resize(MAX_N);
+	b.resize(MAX_N);
+
+	NTT(a, false);
+	NTT(b, false);
+	for(int i = 0; i < MAX_N; i++) a[i] = a[i] * b[i] % mod;
+	NTT(a, true);
+
+	while(a.size() >= 2 && a.back() == 0) a.pop_back();
+	return a;
+}
+
+std::vector<long long> poly_inv(std::vector<long long>& a) {
+	std::vector<long long> g(1, qmi(a[0], mod - 2, mod));
+	int m = 1, n = a.size();
+	while (m < n) {
+		m = std::min(m * 2, n);
+		std::vector<long long> f(a.begin(), a.begin() + std::min<int>(a.size(), m));
+		auto t = f * g;
+		t.resize(m);
+		for (int i = 0; i < m; i++) t[i] = (mod - t[i]) % mod;
+		t[0] = (t[0] + 2) % mod;
+		g = g * t;
+		g.resize(m);
+	}
+	g.resize(a.size());
+	return g;
+}
+
+vector<long long> poly_ln(const vector<long long>& a) {
+    int n = a.size();
+    if (n == 1) return vector<long long>{0};
+
+    vector<long long> inv(n + 1);
+    inv[1] = 1;
+    for (int i = 2; i <= n; i++) {
+        inv[i] = (mod - mod / i) * inv[mod % i] % mod;
+    }
+
+    vector<long long> da(n - 1);
+    for (int i = 1; i < n; i++) {
+        da[i - 1] = a[i] * i % mod;
+    }
+
+    vector<long long> a_cut(a.begin(), a.begin() + n - 1);
+    vector<long long> inva = poly_inv(a_cut);  // 长度 n-1
+
+    vector<long long> prod = da * inva;
+    prod.resize(n - 1);
+
+    vector<long long> b(n);
+    b[0] = 0;
+    for (int i = 1; i < n; i++) {
+        b[i] = prod[i - 1] * inv[i] % mod;
+    }
+    return b;
+}
+
+std::vector<long long> poly_exp(std::vector<long long>& a) {
+	int n = a.size();
+	std::vector<long long> b(1, 1);
+	int m = 1;
+	while (m < n) {
+		m = std::min(m * 2, n);
+		auto b_cut = b;
+		b_cut.resize(m);
+		auto ln_b = poly_ln(b_cut);
+		std::vector<long long> t(m);
+		for (int i = 0; i < m; i++) {
+			long long ai = i < (int)a.size() ? a[i] : 0;
+			t[i] = ((i == 0 ? 1 : 0) + ai - ln_b[i] + mod) % mod;
+		}
+
+		auto b_ext = b;
+		b_ext.resize(m, 0);
+		b = b_ext * t;
+		b.resize(m);
+	}
+	b.resize(n);
+	return b;
+}
+
+std::vector<long long> poly_sqrt(std::vector<long long>& a) {
+	int n = a.size();
+	auto ln_a = poly_ln(a);
+	long long inv2 = (mod + 1) / 2;
+	for (auto& x: ln_a) x = x * inv2 % mod;
+	return poly_exp(ln_a);
+}
+
+
+void soviet() {
+	int n; std::cin >> n;
+	std::vector<long long> a(n);
+	for (int i = 0; i < n; i++) std::cin >> a[i];
+	auto b = poly_sqrt(a);
+	for (int i = 0; i < n; i++) std::cout << b[i] << ' ';
+}
+
+int main() {
+	int M_T = 1; std::ios::sync_with_stdio(false); std::cin.tie(nullptr);
+//	std::cin >> M_T;
+	while (M_T--) { soviet(); }
+	return 0;
+}
+```
+
+
+
+
+
+[P5277 【模板】多项式开根（加强版） - 洛谷](https://www.luogu.com.cn/problem/P5277)
+
+> 本题不保证 $a[0] = 1$，但保证 $a[0]$ 是 $mod\ 998244353$ 下的二次剩余。
+
+核心思想是：提取最低非零项和常数因子，将多项式转化为常数项为 1 的形式，套用简单版开根，最后还原并选择字典序最小的根
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+const int mod = 998244353, G = 3, GI = 332748118;
+
+long long qmi(long long a, long long b, long long p) {
+	long long ans = 1;
+	while (b) {
+		if (b & 1) ans = ans * a % p;
+		b >>= 1;
+		a = a * a % p;
+	}
+	return ans;
+}
+
+void NTT(vector<long long>& a, bool invert) {
+	int n = a.size();
+	for (int i = 1, j = 0; i < n; i++) {
+		int bit = n >> 1;
+		for (; j & bit; bit >>= 1) j ^= bit;
+		j ^= bit;
+		if (i < j) swap(a[i], a[j]);
+	}
+	for (int len = 2; len <= n; len <<= 1) {
+		long long wlen = qmi(invert ? GI : G, (mod - 1) / len, mod);
+		for (int i = 0; i < n; i += len) {
+			long long w = 1;
+			for (int j = 0; j < len / 2; j++) {
+				long long u = a[i + j];
+				long long v = a[i + j + len / 2] * w % mod;
+				a[i + j] = (u + v) % mod;
+				a[i + j + len / 2] = (u - v + mod) % mod;
+				w = w * wlen % mod;
+			}
+		}
+	}
+	if (invert) {
+		long long inv_n = qmi(n, mod - 2, mod);
+		for (auto& x : a) x = x * inv_n % mod;
+	}
+}
+
+vector<long long> operator*(vector<long long> a, vector<long long> b) {
+	int n = a.size(), m = b.size();
+	if (n == 0 || m == 0) return {};
+	int MAX_N = 1;
+	while (MAX_N < n + m) MAX_N <<= 1;
+	a.resize(MAX_N);
+	b.resize(MAX_N);
+	NTT(a, false);
+	NTT(b, false);
+	for (int i = 0; i < MAX_N; i++) a[i] = a[i] * b[i] % mod;
+	NTT(a, true);
+	a.resize(n + m - 1);
+	while (a.size() >= 2 && a.back() == 0) a.pop_back();
+	return a;
+}
+
+vector<long long> poly_inv(const vector<long long>& a) {
+	vector<long long> g(1, qmi(a[0], mod - 2, mod));
+	int m = 1, n = a.size();
+	while (m < n) {
+		m = min(m * 2, n);
+		vector<long long> f(a.begin(), a.begin() + min((int)a.size(), m));
+		auto t = f * g;
+		t.resize(m);
+		for (int i = 0; i < m; i++) t[i] = (mod - t[i]) % mod;
+		t[0] = (t[0] + 2) % mod;
+		g = g * t;
+		g.resize(m);
+	}
+	g.resize(a.size());
+	return g;
+}
+
+vector<long long> poly_ln(const vector<long long>& a) {
+	int n = a.size();
+	if (n == 1) return vector<long long>{0};
+	vector<long long> inv(n + 1);
+	inv[1] = 1;
+	for (int i = 2; i <= n; i++) {
+		inv[i] = (mod - mod / i) * inv[mod % i] % mod;
+	}
+	vector<long long> da(n - 1);
+	for (int i = 1; i < n; i++) {
+		da[i - 1] = a[i] * i % mod;
+	}
+	vector<long long> a_cut(a.begin(), a.begin() + n - 1);
+	vector<long long> inva = poly_inv(a_cut);
+	vector<long long> prod = da * inva;
+	prod.resize(n - 1);
+	vector<long long> b(n);
+	b[0] = 0;
+	for (int i = 1; i < n; i++) {
+		b[i] = prod[i - 1] * inv[i] % mod;
+	}
+	return b;
+}
+
+vector<long long> poly_exp(const vector<long long>& a) {
+	int n = a.size();
+	vector<long long> b(1, 1);
+	int m = 1;
+	while (m < n) {
+		int m2 = min(m * 2, n);
+		vector<long long> b_cut = b;
+		b_cut.resize(m2, 0);
+		vector<long long> ln_b = poly_ln(b_cut);
+		vector<long long> t(m2);
+		for (int i = 0; i < m2; i++) {
+			long long ai = (i < (int)a.size() ? a[i] : 0);
+			t[i] = ((i == 0 ? 1 : 0) + ai - ln_b[i] + mod) % mod;
+		}
+		vector<long long> b_ext = b;
+		b_ext.resize(m2, 0);
+		b = b_ext * t;
+		b.resize(m2);
+		m = m2;
+	}
+	b.resize(n);
+	return b;
+}
+
+// 简单版开根，要求 a[0] = 1
+vector<long long> poly_sqrt_simple(const vector<long long>& a) {
+	int n = a.size();
+	vector<long long> ln_a = poly_ln(a);
+	long long inv2 = (mod + 1) / 2;
+	for (auto& x : ln_a) x = x * inv2 % mod;
+	return poly_exp(ln_a);
+}
+
+// Cipolla 算法求模平方根
+long long mod_p;
+struct Complex {
+	long long real, imag;
+	Complex(long long r = 0, long long i = 0) : real(r), imag(i) {}
+};
+Complex mul(Complex a, Complex b, long long w) {
+	Complex res;
+	res.real = (a.real * b.real % mod_p + a.imag * b.imag % mod_p * w % mod_p) % mod_p;
+	res.imag = (a.real * b.imag % mod_p + a.imag * b.real % mod_p) % mod_p;
+	return res;
+}
+Complex qpow(Complex a, long long b, long long w) {
+	Complex res(1, 0);
+	while (b) {
+		if (b & 1) res = mul(res, a, w);
+		a = mul(a, a, w);
+		b >>= 1;
+	}
+	return res;
+}
+long long sqrt_mod(long long n, long long p) {
+	if (n == 0) return 0;
+	if (p == 2) return n;
+	if (qmi(n, (p - 1) / 2, p) != 1) return -1;
+	long long a;
+	while (true) {
+		a = rand() % p;
+		long long t = (a * a % p - n + p) % p;
+		if (qmi(t, (p - 1) / 2, p) == p - 1) break;
+	}
+	mod_p = p;
+	long long w = (a * a % p - n + p) % p;
+	Complex x(a, 1);
+	Complex res = qpow(x, (p + 1) / 2, w);
+	return res.real;
+}
+
+// 加强版开根
+vector<long long> poly_sqrt(const vector<long long>& A) {
+	int n = A.size();
+	int p = 0;
+	while (p < n && A[p] == 0) p++;
+	if (p == n) return vector<long long>(n, 0);
+	if (p % 2 == 1) return vector<long long>(n, 0); // 无解，但题目保证有解
+	int half_p = p / 2;
+	vector<long long> C(n - p);
+	for (int i = p; i < n; i++) C[i - p] = A[i];
+	long long c0 = C[0];
+	long long r = sqrt_mod(c0, mod);
+	if (r == -1) return vector<long long>(n, 0);
+	long long d0 = min(r, mod - r);
+	long long inv_d0_sq = qmi(d0, mod - 2, mod);
+	inv_d0_sq = inv_d0_sq * inv_d0_sq % mod;
+	vector<long long> C_prime(n - p);
+	for (int i = 0; i < n - p; i++) {
+		C_prime[i] = C[i] * inv_d0_sq % mod;
+	}
+	vector<long long> D_prime = poly_sqrt_simple(C_prime);
+	vector<long long> D(n - p);
+	for (int i = 0; i < n - p; i++) {
+		D[i] = D_prime[i] * d0 % mod;
+	}
+	vector<long long> B(n, 0);
+	for (int i = 0; i < n - p; i++) {
+		if (half_p + i < n) {
+			B[half_p + i] = D[i];
+		}
+	}
+	return B;
+}
+
+void soviet() {
+	int n; cin >> n;
+	vector<long long> A(n);
+	for (int i = 0; i < n; i++) cin >> A[i];
+
+	vector<long long> B = poly_sqrt(A);
+
+	for (int i = 0; i < n; i++) {
+		cout << B[i] << " \n"[i == n - 1];
+	}
+}
+
+int main() {
+	int M_T = 1; std::ios::sync_with_stdio(false); std::cin.tie(nullptr);
+//	std::cin >> M_T;
+	while (M_T--) { soviet(); }
+	return 0;
+}
+
+```
+
+
+
+
+
+
+
+#### 多项式除法
+
+[P4512 【模板】多项式除法 - 洛谷](https://www.luogu.com.cn/problem/P4512)
+
+> 给定一个 $n$ 次多项式 $F(x)$ 和一个 $m$ 次多项式 $G(x)$，请求出多项式 $Q(x)$, $R(x)$，满足以下条件：  
+>
+> - $Q(x)$ 次数为 $n-m$，$R(x)$ 次数小于 $m$ 
+> - $F(x) = Q(x) * G(x) + R(x)$ 所有的运算在模 $998244353$ 意义下进行。
+
+
+
+
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+const int mod = 998244353,G = 3,GI = 332748118;
+
+long long qmi(long long a,long long b,long long p){
+	long long ans = 1;
+	while(b){
+		if(b&1) ans = ans*a%p;
+		b>>=1;
+		a = a*a%p;
+	}
+	return ans;
+}
+
+void NTT(std::vector<long long>& a, bool invert) {
+	int n = a.size();
+
+	for(int i = 1,j = 0;i < n;i++) {
+		int bit = n >> 1;
+		for (; j&bit; bit >>= 1) j ^= bit;
+		j ^= bit;
+		if (i < j) std::swap(a[i],a[j]);
+	}
+
+	for(int len = 2;len <= n;len <<= 1) {
+		long long wlen = qmi(invert ? GI : G,(mod-1)/len,mod);
+		for (int i = 0;i < n;i += len) {
+			long long w = 1;
+			for (int j = 0;j < len/2;j++) {
+				long long u = a[i+j];
+				long long v = a[i+j + len/2] * w % mod;
+				a[i+j] = (u+v) % mod;
+				a[i+j + len/2] = (u-v+mod) % mod;
+				w = w * wlen % mod;
+			}
+		}
+	}
+	if(invert){
+		long long inv_n = qmi(n,mod-2,mod);
+		for(auto &x:a) x = x * inv_n % mod;
+	}
+}
+
+std::vector<long long> operator * (std::vector<long long>a,std::vector<long long>b){//值传递
+	int n = a.size(), m = b.size();
+
+	int MAX_N = 1;
+	while (MAX_N < n + m) MAX_N <<= 1;
+	a.resize(MAX_N);
+	b.resize(MAX_N);
+
+	NTT(a, false);
+	NTT(b, false);
+	for(int i = 0; i < MAX_N; i++) a[i] = a[i] * b[i] % mod;
+	NTT(a, true);
+
+	while(a.size() >= 2 && a.back() == 0) a.pop_back();
+	return a;
+}
+
+std::vector<long long> poly_inv(std::vector<long long>& a) {
+	std::vector<long long> g(1, qmi(a[0], mod - 2, mod));
+	int m = 1, n = a.size();
+	while (m < n) {
+		m = std::min(m * 2, n);
+		std::vector<long long> f(a.begin(), a.begin() + std::min<int>(a.size(), m));
+		auto t = f * g;
+		t.resize(m);
+		for (int i = 0; i < m; i++) t[i] = (mod - t[i]) % mod;
+		t[0] = (t[0] + 2) % mod;
+		g = g * t;
+		g.resize(m);
+	}
+	g.resize(a.size());
+	return g;
+}
+
+// 多项式反转
+vector<long long> poly_rev(const vector<long long>& a) {
+    return vector<long long>(a.rbegin(), a.rend());
+}
+
+// 多项式除法：F = Q * G + R，返回 {Q, R}
+std::pair<std::vector<long long>, std::vector<long long>> poly_div(std::vector<long long>& f, std::vector<long long> &g) {
+	int n = f.size() - 1, m = g.size() - 1; // F 的次数、 G 的次数
+	if (n < m) return {{0}, f};
+	int len_q = n - m + 1;
+	auto f_rev = poly_rev(f);
+	f_rev.resize(len_q, 0);
+
+	auto g_rev = poly_rev(g);
+	g_rev.resize(len_q, 0);
+
+	auto inv_g_rev = poly_inv(g_rev);
+
+	std::vector<long long> q_rev = f_rev * inv_g_rev;
+	q_rev.resize(len_q, 0);
+
+	auto q = poly_rev(q_rev);
+
+	auto qg = q * g;
+	qg.resize(f.size(), 0);
+
+	std::vector<long long> r(m, 0);
+	for (int i = 0; i < m; i++) {
+		r[i] = (f[i] - qg[i] + mod) % mod;
+	}
+	return {q, r};
+}
+
+void soviet() {
+	int n, m; std::cin >> n >> m;
+	std::vector<long long> f(n + 1), g(m + 1);
+	for (int i = 0; i <= n; i++) std::cin >> f[i];
+	for (int i = 0; i <= m; i++) std::cin >> g[i];
+
+	auto [q, r] = poly_div(f, g);
+
+	for (int i = 0; i < q.size(); i++) std::cout << q[i] << ' ';
+	std::cout << '\n';
+	r.resize(m, 0);
+	for (int i = 0; i < r.size(); i++) std::cout << r[i] << ' ';
+
+}
+
+int main() {
+	int M_T = 1; std::ios::sync_with_stdio(false); std::cin.tie(nullptr);
+//	std::cin >> M_T;
+	while (M_T--) { soviet(); }
+	return 0;
+}
+```
+
+
+
+
+
+#### 多项式快速幂
+
+[P5245 【模板】多项式快速幂 - 洛谷](https://www.luogu.com.cn/problem/P5245)
+
+> 给定一个 $n-1$ 次多项式 $A(x)$，求一个在 $\bmod\ x^n$ 意义下的多项式 $B(x)$，使得 $B(x) \equiv (A(x))^k \ (\bmod\ x^n)$。 多项式的系数在 $\bmod\ 998244353$ 的意义下进行运算。$1< n \leq 10^5$，$0 \leq k \leq 10^{10^5}$，$a_i \in [0,998244352]$。保证 $a_0 = 1$。
+
+计算公式：
+$$
+A(x)^k = exp(k · \ln A(x)) \ (mod\ x^n)
+$$
+
+
+时间复杂度：$O(N\log N)$
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+const int mod = 998244353,G = 3,GI = 332748118;
+
+long long qmi(long long a,long long b,long long p){
+	long long ans = 1;
+	while(b){
+		if(b&1) ans = ans*a%p;
+		b>>=1;
+		a = a*a%p;
+	}
+	return ans;
+}
+
+void NTT(std::vector<long long>& a, bool invert) {
+	int n = a.size();
+
+	for(int i = 1,j = 0;i < n;i++) {
+		int bit = n >> 1;
+		for (; j&bit; bit >>= 1) j ^= bit;
+		j ^= bit;
+		if (i < j) std::swap(a[i],a[j]);
+	}
+
+	for(int len = 2;len <= n;len <<= 1) {
+		long long wlen = qmi(invert ? GI : G,(mod-1)/len,mod);
+		for (int i = 0;i < n;i += len) {
+			long long w = 1;
+			for (int j = 0;j < len/2;j++) {
+				long long u = a[i+j];
+				long long v = a[i+j + len/2] * w % mod;
+				a[i+j] = (u+v) % mod;
+				a[i+j + len/2] = (u-v+mod) % mod;
+				w = w * wlen % mod;
+			}
+		}
+	}
+	if(invert){
+		long long inv_n = qmi(n,mod-2,mod);
+		for(auto &x:a) x = x * inv_n % mod;
+	}
+}
+
+std::vector<long long> operator * (std::vector<long long>a,std::vector<long long>b){//值传递
+	int n = a.size(), m = b.size();
+
+	int MAX_N = 1;
+	while (MAX_N < n + m) MAX_N <<= 1;
+	a.resize(MAX_N);
+	b.resize(MAX_N);
+
+	NTT(a, false);
+	NTT(b, false);
+	for(int i = 0; i < MAX_N; i++) a[i] = a[i] * b[i] % mod;
+	NTT(a, true);
+
+	while(a.size() >= 2 && a.back() == 0) a.pop_back();
+	return a;
+}
+
+std::vector<long long> poly_inv(std::vector<long long>& a) {
+	std::vector<long long> g(1, qmi(a[0], mod - 2, mod));
+	int m = 1, n = a.size();
+	while (m < n) {
+		m = std::min(m * 2, n);
+		std::vector<long long> f(a.begin(), a.begin() + std::min<int>(a.size(), m));
+		auto t = f * g;
+		t.resize(m);
+		for (int i = 0; i < m; i++) t[i] = (mod - t[i]) % mod;
+		t[0] = (t[0] + 2) % mod;
+		g = g * t;
+		g.resize(m);
+	}
+	g.resize(a.size());
+	return g;
+}
+
+vector<long long> poly_ln(const vector<long long>& a) {
+    int n = a.size();
+    if (n == 1) return vector<long long>{0};
+
+    vector<long long> inv(n + 1);
+    inv[1] = 1;
+    for (int i = 2; i <= n; i++) {
+        inv[i] = (mod - mod / i) * inv[mod % i] % mod;
+    }
+
+    vector<long long> da(n - 1);
+    for (int i = 1; i < n; i++) {
+        da[i - 1] = a[i] * i % mod;
+    }
+
+    vector<long long> a_cut(a.begin(), a.begin() + n - 1);
+    vector<long long> inva = poly_inv(a_cut);  // 长度 n-1
+
+    vector<long long> prod = da * inva;
+    prod.resize(n - 1);
+
+    vector<long long> b(n);
+    b[0] = 0;
+    for (int i = 1; i < n; i++) {
+        b[i] = prod[i - 1] * inv[i] % mod;
+    }
+    return b;
+}
+
+std::vector<long long> poly_exp(std::vector<long long>& a) {
+	int n = a.size();
+	std::vector<long long> b(1, 1);
+	int m = 1;
+	while (m < n) {
+		m = std::min(m * 2, n);
+		auto b_cut = b;
+		b_cut.resize(m);
+		auto ln_b = poly_ln(b_cut);
+		std::vector<long long> t(m);
+		for (int i = 0; i < m; i++) {
+			long long ai = i < (int)a.size() ? a[i] : 0;
+			t[i] = ((i == 0 ? 1 : 0) + ai - ln_b[i] + mod) % mod;
+		}
+
+		auto b_ext = b;
+		b_ext.resize(m, 0);
+		b = b_ext * t;
+		b.resize(m);
+	}
+	b.resize(n);
+	return b;
+}
+
+void soviet() {
+	int n; std::cin >> n;
+	std::string k_str; std::cin >> k_str;
+	long long k = 0;
+	for (char c: k_str) {
+		k = (k * 10 + (c - '0')) % mod;
+	}
+
+	std::vector<long long> a(n);
+	for (int i = 0; i < n; i++) std::cin >> a[i];
+
+	auto ln_a = poly_ln(a);
+	for (auto& x : ln_a) x = x * k % mod;
+
+	auto b = poly_exp(ln_a);
+
+	for (int i = 0; i < n; i++) 
+		std::cout << b[i] << ' ';
+}
+
+int main() {
+	int M_T = 1; std::ios::sync_with_stdio(false); std::cin.tie(nullptr);
+//	std::cin >> M_T;
+	while (M_T--) { soviet(); }
+	return 0;
+}
+```
+
+
+
+
+
+[P5273 【模板】多项式幂函数（加强版） - 洛谷](https://www.luogu.com.cn/problem/P5273)
+
+> 本题不保证 $a[0] = 1$。
+
+把 $A(x)$ 写成：
+$$
+A(x)=x^p\cdot c_0\cdot C'(x)
+$$
+其中：
+- $p$：最低非零项下标；
+- $c_0=a_p$；
+- $C'(0)=1$。
+
+于是：
+$$
+A(x)^k=x^{pk}\cdot c_0^k\cdot C'(x)^k
+$$
+
+计算 $C'(x)^k$
+因为 $C'(0)=1$，可直接用：
+$$
+C'(x)^k=\exp(k\ln C'(x))
+$$
+步骤：
+1. 求 $\ln C'(x)$；
+2. 每项乘 $k\bmod p$；
+3. 做 $\exp$。
+
+指数 $k$ 的处理
+需要算三个量：
+
+- $k\bmod p$：用于乘 $\ln C'(x)$ 的系数；
+- $k\bmod(p-1)$：用于费马小定理算 $c_0^k$；
+- 判断 $k\ge n$：若成立，则 $pk\ge n$，答案前 $n$ 项全为 0。
+
+还原答案
+最终：
+$$
+B(x)=x^{pk}\cdot c_0^k\cdot C'(x)^k
+$$
+- 若 $pk\ge n$，直接返回全零；
+- 否则把结果左移 $pk$ 位，截断到 $n$ 项。
+
+边界情况
+- $k=0$：答案为 $1$，即 $[1,0,0,\dots]$；
+- 全零多项式：若 $k>0$，答案为全零；
+- $p=0$：偏移为 0，直接算。
+
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+const int mod = 998244353, G = 3, GI = 332748118;
+
+long long qmi(long long a, long long b, long long p) {
+    long long ans = 1;
+    while (b) {
+        if (b & 1) ans = ans * a % p;
+        b >>= 1;
+        a = a * a % p;
+    }
+    return ans;
+}
+
+void NTT(vector<long long>& a, bool invert) {
+    int n = a.size();
+    for (int i = 1, j = 0; i < n; i++) {
+        int bit = n >> 1;
+        for (; j & bit; bit >>= 1) j ^= bit;
+        j ^= bit;
+        if (i < j) swap(a[i], a[j]);
+    }
+    for (int len = 2; len <= n; len <<= 1) {
+        long long wlen = qmi(invert ? GI : G, (mod - 1) / len, mod);
+        for (int i = 0; i < n; i += len) {
+            long long w = 1;
+            for (int j = 0; j < len / 2; j++) {
+                long long u = a[i + j];
+                long long v = a[i + j + len / 2] * w % mod;
+                a[i + j] = (u + v) % mod;
+                a[i + j + len / 2] = (u - v + mod) % mod;
+                w = w * wlen % mod;
+            }
+        }
+    }
+    if (invert) {
+        long long inv_n = qmi(n, mod - 2, mod);
+        for (auto& x : a) x = x * inv_n % mod;
+    }
+}
+
+vector<long long> operator*(vector<long long> a, vector<long long> b) {
+    int n = a.size(), m = b.size();
+    if (n == 0 || m == 0) return {};
+    int MAX_N = 1;
+    while (MAX_N < n + m) MAX_N <<= 1;
+    a.resize(MAX_N);
+    b.resize(MAX_N);
+    NTT(a, false);
+    NTT(b, false);
+    for (int i = 0; i < MAX_N; i++) a[i] = a[i] * b[i] % mod;
+    NTT(a, true);
+    a.resize(n + m - 1);
+    while (a.size() >= 2 && a.back() == 0) a.pop_back();
+    return a;
+}
+
+vector<long long> poly_inv(const vector<long long>& a) {
+    vector<long long> g(1, qmi(a[0], mod - 2, mod));
+    int m = 1, n = a.size();
+    while (m < n) {
+        m = min(m * 2, n);
+        vector<long long> f(a.begin(), a.begin() + min((int)a.size(), m));
+        auto t = f * g;
+        t.resize(m);
+        for (int i = 0; i < m; i++) t[i] = (mod - t[i]) % mod;
+        t[0] = (t[0] + 2) % mod;
+        g = g * t;
+        g.resize(m);
+    }
+    g.resize(a.size());
+    return g;
+}
+
+vector<long long> poly_ln(const vector<long long>& a) {
+    int n = a.size();
+    if (n == 1) return vector<long long>{0};
+    vector<long long> inv(n + 1);
+    inv[1] = 1;
+    for (int i = 2; i <= n; i++) {
+        inv[i] = (mod - mod / i) * inv[mod % i] % mod;
+    }
+    vector<long long> da(n - 1);
+    for (int i = 1; i < n; i++) {
+        da[i - 1] = a[i] * i % mod;
+    }
+    vector<long long> a_cut(a.begin(), a.begin() + n - 1);
+    vector<long long> inva = poly_inv(a_cut);
+    vector<long long> prod = da * inva;
+    prod.resize(n - 1);
+    vector<long long> b(n);
+    b[0] = 0;
+    for (int i = 1; i < n; i++) {
+        b[i] = prod[i - 1] * inv[i] % mod;
+    }
+    return b;
+}
+
+vector<long long> poly_exp(const vector<long long>& a) {
+    int n = a.size();
+    vector<long long> b(1, 1);
+    int m = 1;
+    while (m < n) {
+        int m2 = min(m * 2, n);
+        vector<long long> b_cut = b;
+        b_cut.resize(m2, 0);
+        vector<long long> ln_b = poly_ln(b_cut);
+        vector<long long> t(m2);
+        for (int i = 0; i < m2; i++) {
+            long long ai = (i < (int)a.size() ? a[i] : 0);
+            t[i] = ((i == 0 ? 1 : 0) + ai - ln_b[i] + mod) % mod;
+        }
+        vector<long long> b_ext = b;
+        b_ext.resize(m2, 0);
+        b = b_ext * t;
+        b.resize(m2);
+        m = m2;
+    }
+    b.resize(n);
+    return b;
+}
+
+vector<long long> qmi(vector<long long> &a, vector<long long>& k) {
+    int n = a.size();
+
+    // 1. 处理指数 k
+    long long k_mod = 0, k_phi = 0;
+    long long k_val = 0;
+    bool k_large = false;   // 标记 k 是否 >= n
+    bool k_is_zero = true;  // 标记 k 是否为 0
+
+    for (long long d : k) {
+        k_mod = (k_mod * 10 + d) % mod;
+        k_phi = (k_phi * 10 + d) % (mod - 1);
+        if (d != 0) k_is_zero = false;
+        if (!k_large) {
+            k_val = k_val * 10 + d;
+            if (k_val >= n) k_large = true;
+        }
+    }
+
+    // 特判 k = 0
+    if (k_is_zero) {
+        vector<long long> ans(n, 0);
+        ans[0] = 1;
+        return ans;
+    }
+
+    // 2. 找到第一个非零项
+    int p = 0;
+    while (p < n && a[p] == 0) p++;
+
+    // 全零多项式
+    if (p == n) {
+        return vector<long long>(n, 0);
+    }
+
+    // 3. 提取常数因子，归一化
+    long long ap = a[p];
+    long long ap_inv = qmi(ap, mod - 2, mod);
+    vector<long long> a_prime(n - p);
+    for (int i = p; i < n; i++) {
+        a_prime[i - p] = a[i] * ap_inv % mod;
+    }
+
+    // 4. 计算 (A')^k
+    vector<long long> ln_a = poly_ln(a_prime);
+    for (auto& x : ln_a) x = x * k_mod % mod;
+    vector<long long> b_prime = poly_exp(ln_a);
+
+    // 5. 还原：乘以 ap^k，左移 pk 位
+    long long ap_k = qmi(ap, k_phi, mod);
+
+    long long offset = 0;
+    if (p > 0) {
+        if (k_large) {
+            // k >= n，且 p >= 1，所以 pk >= n，结果全零
+            return vector<long long>(n, 0);
+        } else {
+            offset = p * (long long)k_val;
+            if (offset >= n) return vector<long long>(n, 0);
+        }
+    }
+    // 若 p == 0，offset 始终为 0
+
+    vector<long long> ans(n, 0);
+    for (int i = 0; i < n - offset && i < (int)b_prime.size(); i++) {
+        ans[offset + i] = b_prime[i] * ap_k % mod;
+    }
+    return ans;
+}
+
+int main() {
+    int n;
+    string k_str;
+    cin >> n >> k_str;
+
+    vector<long long> k_digits;
+    for (char c : k_str) k_digits.push_back(c - '0');
+
+    vector<long long> a(n);
+    for (int i = 0; i < n; i++) cin >> a[i];
+
+    vector<long long> ans = qmi(a, k_digits);
+
+    for (int i = 0; i < n; i++) {
+        cout << ans[i] << ' ';
+    }
+}
+```
+
+
 
 
 
@@ -7067,11 +8569,6 @@ int main() {
 
 ## 前缀和&差分
 
-> 在头文件<numeric>中也包含了一维前缀和/差分函数
-> int a[6] = {1,2,3,4,5,6},s[6];
-> partial_sum(a,a+6,s); //s = {1,3,6,10,15,21}
-> adjacent_difference(a,a+6,s); //s = {1,1,1,1,1,1}
-
 ### 一维前缀和
 
 > pre[i] = a[1]+a[2] +...+a[i] = pre[i-1]+a[i]
@@ -7119,18 +8616,6 @@ s[i][j] = s[i-1][j] + s[i][j-1] - s[i-1][j-1] + a[i][j];
 //某一块S的求法：s[x1][y1]~s[x2][y2]
 s[x2][y2] - s[x1-1][y2] - s[x2][y1-1] + s[x1-1][y1-1];
 ```
-
-
-
-|      |      |           |      |           |      |      |
-| ---- | ---- | --------- | ---- | --------- | ---- | ---- |
-|      |      |           |      |           |      |      |
-|      |      | **x1,y1** |      |           |      |      |
-|      |      |           |      |           |      |      |
-|      |      |           |      | **x2,y2** |      |      |
-|      |      |           |      |           |      |      |
-|      |      |           |      |           |      |      |
-|      |      |           |      |           |      |      |
 
  
 
@@ -7291,7 +8776,7 @@ int main() {
 
 ### 二分查找
 
-> 目标数组需要为非降序排列
+> 目标数组需要为有序排列
 
 ```cpp
 #include <iostream>
@@ -7561,7 +9046,7 @@ int main(){
 
 求一个子段，他的和最大，**长度不超过k**：[135. 最大子段和](https://www.acwing.com/problem/content/137/)
 
->   详见 [单调队列优化](#sub_max_queue)
+>   详见 [单调队列：最大子段和](#sub_max_queue)
 
 
 
@@ -7693,6 +9178,10 @@ while (r - l > 2) {
 
 ## 双指针
 
+通过维护两个指针在数据结构中移动，能将许多原本 $O(n^2)$ 的问题优化到 $O(N)$ 或 $O(N\log N)$，且通常只需要 $O(1)$ 的额外空间。
+
+使用的关键前提：问题具有 “单调性” 或 “二段性”，使得两个指针无需回退，只需同向或反向移动。
+
 > ```cpp
 > for(int i = 1,j = 1;i <= n;i++){
 > 	while(j < i && check(i,j)) {
@@ -7702,7 +9191,6 @@ while (r - l > 2) {
 > }
 > ```
 >
-> 一般可以将$O(n^2)$或$O(NlogN)$优化到$O(n)$;
 
 ```cpp
 //最长连续无重复子序列
@@ -7754,11 +9242,11 @@ bool check(int mid){
 
 ### sort
 
-> 需包含头文件<algorithm>
+> 需包含头文件 `<algorithm>`
 >
 > 平均复杂度为O(NlogN)，不保证稳定性
 >
-> 语法：sort(begin, end, cmp);
+> 语法：`sort(begin, end, cmp);`
 >
 > 其中begin为指向待sort()的数组的`第一个元素的指针`，end为指向待sort()的数组的`最后一个元素的下一个位置的指针`，cmp参数为排序准则(不写默认从小到大进行排序); 
 
@@ -8033,6 +9521,71 @@ int main(){
 //	printf("%.4lf",sqrt(sol(1,n)));
 }
 ```
+
+
+
+
+
+### 根号分治
+
+根号分治，是一种对数据进行点分治的分治方式，它的作用是优化暴力算法，类似与分块，但应用范围比分块更广。
+
+具体来说，对于所进行的操作，按照某个点B划分，分为大于B以及小于B两个部分，两部分使用不同的方式处理。（一般以根号为分界$B = \sqrt{N}$，这样复杂度最平衡）。将两个暴力算法“拼接在一起”，实现优化复杂度的作用。
+
+
+
+[Colorful Graph（★6） - AtCoder typical90_ce - Virtual Judge (vjudge.net)](https://vjudge.net/problem/AtCoder-typical90_ce#author=GPT_zh)
+
+> 给定N个点M条边的无向图，初始时每个点颜色为1。再给定Q次查询，每次查询给定两个整数{x,c}，输出当前点x的颜色，然后将点x及其所有相邻的点颜色改为c。$1 \le N,M,Q \le 2e5$
+
+`ans[x]={time,color}`表示当前点最后被更新时的时间戳和颜色，`flag[x]={time,color}`flag状态标记，表示当前节点在time时更新应周围节点为color。
+以度数是否大于$\sqrt{N}$为分界，将点划分为重点和轻点。轻点直接枚举，重点打标记。
+查询当前点：对于轻点，直接枚举所有邻接点更新自身。对于重点，本身已经被其它点更新。
+更新邻接点：只需要更新周围的重点。
+
+```cpp
+#include <bits/stdc++.h>
+
+int main(){
+	int n,m;std::cin >> n >> m;
+	int sn = sqrt(m<<1);
+
+	std::vector<std::vector<int>>e(n+1);
+	std::vector<int>du(n+1);
+	for(int i = 1;i <= m;i++){
+		int x,y;std::cin >> x >> y;
+		e[x].emplace_back(y);
+		e[y].emplace_back(x);
+		du[x]++; du[y]++;
+	}
+
+	for(int i = 1;i <= n;i++){
+		std::sort(e[i].begin(),e[i].end(),[&](int x,int y){return du[x] > du[y];});
+	}
+
+	std::vector<std::pair<int,int>>ans(n+1,{0,1}),flag(n+1,{0,1});
+
+	int q;std::cin >> q;
+	for(int i = 1;i <= q;i++){
+		int x,c;std::cin >> x >> c;
+		if(du[x] <= sn){
+			for(auto& y:e[x]){
+				ans[x] = std::max(ans[x],flag[y]);
+			}
+		}
+		std::cout << ans[x].second << '\n';
+		ans[x] = flag[x] = {i,c};
+		for(auto& y:e[x]){
+			if(du[y] <= sn) break;
+			ans[y] = flag[x];
+		}
+	}
+}
+```
+
+
+
+
 
 
 
@@ -10538,65 +12091,6 @@ int main() {
 
 
 
-## 根号分治
-
-根号分治，是一种对数据进行点分治的分治方式，它的作用是优化暴力算法，类似与分块，但应用范围比分块更广。
-
-具体来说，对于所进行的操作，按照某个点B划分，分为大于B以及小于B两个部分，两部分使用不同的方式处理。（一般以根号为分界$B = \sqrt{N}$，这样复杂度最平衡）。将两个暴力算法“拼接在一起”，实现优化复杂度的作用。
-
-
-
-[Colorful Graph（★6） - AtCoder typical90_ce - Virtual Judge (vjudge.net)](https://vjudge.net/problem/AtCoder-typical90_ce#author=GPT_zh)
-
-> 给定N个点M条边的无向图，初始时每个点颜色为1。再给定Q次查询，每次查询给定两个整数{x,c}，输出当前点x的颜色，然后将点x及其所有相邻的点颜色改为c。$1 \le N,M,Q \le 2e5$
-
-`ans[x]={time,color}`表示当前点最后被更新时的时间戳和颜色，`flag[x]={time,color}`flag状态标记，表示当前节点在time时更新应周围节点为color。
-以度数是否大于$\sqrt{N}$为分界，将点划分为重点和轻点。轻点直接枚举，重点打标记。
-查询当前点：对于轻点，直接枚举所有邻接点更新自身。对于重点，本身已经被其它点更新。
-更新邻接点：只需要更新周围的重点。
-
-```cpp
-#include <bits/stdc++.h>
-
-int main(){
-	int n,m;std::cin >> n >> m;
-	int sn = sqrt(m<<1);
-
-	std::vector<std::vector<int>>e(n+1);
-	std::vector<int>du(n+1);
-	for(int i = 1;i <= m;i++){
-		int x,y;std::cin >> x >> y;
-		e[x].emplace_back(y);
-		e[y].emplace_back(x);
-		du[x]++; du[y]++;
-	}
-
-	for(int i = 1;i <= n;i++){
-		std::sort(e[i].begin(),e[i].end(),[&](int x,int y){return du[x] > du[y];});
-	}
-
-	std::vector<std::pair<int,int>>ans(n+1,{0,1}),flag(n+1,{0,1});
-
-	int q;std::cin >> q;
-	for(int i = 1;i <= q;i++){
-		int x,c;std::cin >> x >> c;
-		if(du[x] <= sn){
-			for(auto& y:e[x]){
-				ans[x] = std::max(ans[x],flag[y]);
-			}
-		}
-		std::cout << ans[x].second << '\n';
-		ans[x] = flag[x] = {i,c};
-		for(auto& y:e[x]){
-			if(du[y] <= sn) break;
-			ans[y] = flag[x];
-		}
-	}
-}
-```
-
-
-
 
 
 
@@ -11151,6 +12645,8 @@ int main() {
 
 
 ### CDQ 分治
+
+
 
 
 
@@ -13571,8 +15067,12 @@ int main(){
 
 ### 二维树状数组
 
-- 子矩阵加上一个数
-- 求子矩阵的和
+> 给定 $n \times m$ 的矩阵，维护以下 $q$ 次操作。 $1\le n, m \le 2048, 1\le q \le 2\times 10^5$。
+>
+> - 子矩阵加上一个数
+> - 求子矩阵的和
+
+空间复杂度 $O(nm)$，时间复杂度 $O(q\log (nm))$
 
 ```cpp
 //https://www.luogu.com.cn/problem/P4514
@@ -15654,6 +17154,159 @@ int main () {
 - 求所有子区间的最小值之和 / 最大值之和 / 最小值乘长度之和
 - 快速求“左右第一个更小/更大元素”
 - 代替“按最值分割”的分治递归
+
+
+
+
+
+## 珂朵莉树
+
+使用平衡树或链表，将值相同的一段区间合并成一个结点处理。对于含有区间覆盖的操作的问题，珂朵莉树可以更加方便地维护每个被覆盖区间的值。
+
+[CF896 C. Willem, Chtholly and Seniorious](https://codeforces.com/problemset/problem/896/C)
+
+> 给定长度为 $n$ 的数组 `a[]`，维护 $m$ 次操作。输入通过随机数种子 `seed`和 `vmax` 给出。$1\le n, m \le 10^5$
+>
+> - `1 l r x`：区间每个`a[i]` 赋值为 `a[i]+x`
+>
+> - `2 l r x`：区间每个`a[i]` 赋值为 `x`
+> - `3 l r x`：求区间第 `x` 小的数字，保证 $1 \le x \le r - l + 1$
+> - `4 l r x y`：输出区间内所有`a[i]` 的 `x` 次幂之和，对 `y` 取模。即$(\sum_{i = l}^{r}{a_i^x})mod\  y$
+
+在随机数据下效率较高，但是可以构造特定数据，将时间复杂度卡到平方级别。
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+struct Node {
+	int l, r;
+	mutable long long v;
+
+	Node(int _l, int _r = 0, long long _v = 0) : l(_l), r(_r), v(_v) { }
+
+	bool operator < (const Node& o) const {
+		return l < o.l;
+	}
+};
+
+std::set<Node> se;
+
+// 核心操作: 将原本包含 pos 的区间 [l,r] 分裂为 [l, pos) 和 [pos, r], 返回指向后者的迭代器
+std::set<Node>::iterator split(int pos) { 
+	auto it = se.lower_bound(Node(pos));
+	if (it != se.end() && it->l == pos) return it;
+	it--;
+	if (it->r < pos) return se.end();
+	auto [l, r, v] = *it;
+	se.erase(it);
+	se.insert(Node(l, pos - 1, v));
+	return se.insert(Node(pos, r, v)).first; // first 返回迭代器
+}
+
+// 先 split(r+1), 再 split(l)
+void add(int l, int r, long long x) {
+	auto itr = split(r + 1), itl = split(l);
+	for (auto it = itl; it != itr; it++) {
+		it->v += x;
+	}
+}
+
+void assign(int l, int r, long long x) {
+	auto itr = split(r + 1), itl = split(l);
+	se.erase(itl, itr);
+	se.insert(Node(l, r, x));
+}
+
+long long rnk(int l, int r, long long x) {
+	auto itr = split(r + 1), itl = split(l);
+	std::vector<Node> v;
+	for (auto it = itl; it != itr; it++) {
+		v.push_back(*it);
+	}
+	std::sort(v.begin(), v.end(), [&](auto& e1, auto& e2) { return e1.v < e2.v; });
+	for (int i = 0; i < v.size(); i++) {
+		int len = v[i].r - v[i].l + 1;
+		if (len < x) {
+			x -= len;
+		}
+		else return v[i].v;
+	}
+	return -1;
+}
+
+long long qmi(long long a,long long b,long long p) {
+	a %= p; //
+	long long ans = 1;
+	while (b) {
+		if (b & 1) ans = ans * a % p;
+		b >>= 1;
+		a = a * a % p;
+	}
+	return ans % p;
+}
+
+long long calc(int l, int r, long long x, long long y) {
+	auto itr = split(r + 1), itl = split(l);
+	long long ans = 0;
+	for (auto it = itl; it != itr; it++) {
+		ans = (ans + qmi(it->v, x, y) * (it->r - it->l + 1) % y) % y;
+	}
+	return ans;
+}
+
+long long seed, vmax;
+int rng() {
+	int ret = seed;
+	seed = (seed * 7 + 13) % 1000000007;
+	return ret;
+}
+
+void soviet() {
+	int n, m; std::cin >> n >> m >> seed >> vmax;
+	vector<int> a(n + 1);
+	for (int i = 1; i <= n; i++) {
+		a[i] = (rng() % vmax) + 1;
+		se.insert(Node(i, i, a[i]));
+	}
+
+	for (int i = 1; i <= m; i++) {
+		int op = (rng() % 4) + 1;
+		int l = (rng() % n) + 1;
+		int r = (rng() % n) + 1;
+		if (l > r) std::swap(l, r);
+
+		if (op == 1) { // 区间加 x
+			int x = (rng() % vmax) + 1;
+			add(l, r, x);
+		}
+		if (op == 2) { // 区间推平为 x
+			int x = (rng() % vmax) + 1;
+			assign(l, r, x);
+		}
+		if (op == 3) { // 区间第 x 小
+			int x = (rng() % (r - l + 1)) + 1;
+			std::cout << rnk(l, r, x) << '\n';
+		}
+		if (op == 4) { // 区间所有 a[i] 的 x 次幂之和 (mod y)
+			int x = (rng() % vmax) + 1;
+			int y = (rng() % vmax) + 1;
+			std::cout << calc(l, r, x, y) << '\n';
+		}
+	}
+}
+
+int main() {
+	int M_T = 1; std::ios::sync_with_stdio(false); std::cin.tie(nullptr);
+//	std::cin >> M_T;
+	while (M_T--) { soviet(); }
+	return 0;
+}
+```
+
+
+
+
 
 
 
