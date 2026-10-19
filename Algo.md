@@ -6,17 +6,17 @@
 
 待填坑？：
 
-**数学**：多项式、Polya计数、
+**数学**：多项式、~~Polya计数~~、
 
-**基础算法**：倍增、整体二分、树上莫队、反悔贪心、
+**基础算法**：分治、反悔贪心、整体二分、树上莫队、
 
 **字符串**：后缀自动机、
 
-**图论**：树分治、基环树、括号序、圆方树、可行流、树上启发式合并、
+**图论**：树上启发式合并、树分治(点分治)、基环树、括号序、~~圆方树~~、~~可行流~~、
 
-**数据结构**：可持久化(Trie)、线段树分治、平衡树(Treap、Splay)、动态树、
+**数据结构**：平衡树(Treap、~~Splay~~)、线段树分治、可持久化(Trie)、~~动态树~~、树套树、
 
-**动态规划**：插头DP、回滚背包、
+**动态规划**：回滚背包、插头DP、
 
 
 
@@ -27,7 +27,7 @@
 
 2025.10.20 update：退役归档，不再更新、
 
-2026.10.02：分层图最短路、对拍、KMP修正、01Trie修正、调和级数、线性递推求逆元、添加了一些好van的网站、平面几何（多边形面积、求凸包）、笛卡尔树、类欧几里得算法、最小瓶颈路、子集枚举、并查集（可撤销，可删点、可持久化）、k-Dyck路、HLPP、极角排序、幂次哈希、三维偏序、回文树、珂朵莉树、多项式、
+2026.10.19：分层图最短路、对拍、KMP修正、01Trie修正、调和级数、线性递推求逆元、添加了一些好van的网站、平面几何（多边形面积、求凸包）、笛卡尔树、类欧几里得算法、最小瓶颈路、子集枚举、并查集（可撤销，可删点、可持久化）、k-Dyck路、HLPP、极角排序、幂次哈希、回文树、珂朵莉树、多项式基础、CDQ 分治、倍增、
 
 # 数学
 
@@ -1375,6 +1375,63 @@ for (int i = 2; i < N; i++)
 
 
 
+[P1495 【模板】中国剩余定理（CRT）/ 曹冲养猪 - 洛谷](https://www.luogu.com.cn/problem/P1495)
+
+简单版 CRT，模数之间必须两两互质。
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+ll exgcd(ll a, ll b, ll &x, ll &y) {
+	if (!b) {
+		x = 1, y = 0;
+		return a;
+	}
+	ll d = exgcd(b, a % b, y, x);
+	y -= a / b * x;
+	return d;
+}
+
+ll inv(ll a, ll m) {
+	ll x, y;
+	exgcd(a, m, x, y);
+	return (x % m + m) % m;
+}
+
+ll crt(vector<ll>& a, vector<ll>& m) { // 0_idx
+	int n = a.size();
+	ll M = 1;
+	for (int i = 0; i < n; i++) M *= m[i];
+
+	ll ans = 0;
+	for (int i = 0; i < n; i++) {
+		ll Mi = M / m[i];
+		ll ti = inv(Mi % m[i], m[i]);
+		ans = (ans + (__int128)a[i] * Mi % M * ti % M) % M;
+	}
+	return ans;
+}
+
+int main() {
+	int n;
+	cin >> n;
+	vector<ll> a(n), m(n);
+	for (int i = 0; i < n; i++) {
+		cin >> m[i] >> a[i]; // 模 m 余 a
+	}
+	cout << crt(a, m);
+	return 0;
+}
+```
+
+
+
+
+
+
+
 
 
 **扩展中国剩余定理(EXCRT)：模数不互质**
@@ -1775,7 +1832,7 @@ $$
 \end{aligned}
 $$
 
-其中 $f*g$ 为数论函数 $f$ 和 $g$ 的 [狄利克雷卷积](../poly/dgf.md#dirichlet-%E5%8D%B7%E7%A7%AF)。
+其中 $f*g$ 为数论函数 $f$ 和 $g$ 的 狄利克雷卷积。
 
 那么可以得到递推式：
 
@@ -4575,7 +4632,7 @@ $$
 -   对任意实数 $a, b$，有 $E(aX + b) = a \cdot EX + b$
 -   $E(X + Y) = EX + EY$
 
-**随机变量乘积的期望** ：诺随机变量 $X,Y$ 的期望存在且[互相独立](并非必要条件)，则有
+**随机变量乘积的期望** ：诺随机变量 $X,Y$ 的期望存在且互相独立(并非必要条件)，则有
 $$
 E(XY) = EX \times EY
 $$
@@ -6623,6 +6680,117 @@ int main() {
 
 
 
+### 普通生成函数
+
+生成函数（Generating Function） 是把一个数列“编码”成一个形式幂级数，然后通过代数运算来研究数列的性质。
+
+简单说：
+数列 $a_0, a_1, a_2, ...$ 的生成函数就是
+$$
+F(x) = a_0 + a_1x + a_2x^2 + ...
+$$
+这里的 $x$ 只是一个符号，不关心它取什么值，也不关心级数是否收敛，所以也叫形式幂级数。
+
+普通生成函数的定义（OGF）：
+$$
+F(x) = \sum_{n\ge 0}{a_nx^n}
+$$
+
+
+**基本运算**
+
+考虑两个序列 $a,b$ 的普通生成函数，分别为 $F(x),G(x)$．那么有
+
+$$
+F(x)\pm G(x)=\sum_n (a_n\pm b_n)x^n
+$$
+
+因此 $F(x)\pm G(x)$ 是序列 $\langle a_n\pm b_n\rangle$ 的普通生成函数．
+
+考虑乘法运算，也就是卷积：
+
+$$
+F(x)G(x)=\sum_n x^n \sum_{i=0}^na_ib_{n-i}
+$$
+
+因此 $F(x)G(x)$ 是序列 $\langle \sum_{i=0}^n a_ib_{n-i} \rangle$ 的普通生成函数．
+
+
+
+**封闭形式**
+
+在运用生成函数的过程中，我们不会一直使用形式幂级数的形式，而会适时地转化为封闭形式以更好地化简、进行乘法、求逆、求导等运算。
+
+
+
+常见数列的生成函数封闭形式：
+
+- 常数数列 `a = {1, 1, 1, 1, 1, ...}`。 $F(x) = \frac{1}{1 - x}$
+- 等比数列 `a = {p, p^2, p^3, ...}`。 $F(x) = \frac{1}{1 - px}$
+- 斐波那契数列 `a = {0, 1, 1, 2, 3, 5, 8 ...}`。 $F(x) = \frac{x}{1 - x - x^2}$
+- 卡特兰数  $F(x) = \frac{1 - \sqrt{1 - 4x}}{2x}$
+- 二项式定理 $a_n = \binom{m}{n}$（$m$ 是常数， $n\ge 0$） 。$F(x)=\sum_{n\ge 0}\binom{m}{n}x^n=(1+x)^m$
+- 可重复组合 $a_n=\binom{m+n}{n}$（$m$ 是常数，$n\ge 0$）。$F(x)=\sum_{n\ge 0}\binom{m+n}{n}x^n=\frac{1}{(1-x)^{m+1}}$
+
+
+
+生成函数一般推导流程：
+
+- 定义 $F(x) = \sum_{n \ge 0} a_n x^n$
+- 写出递推式，确保对所有 $n$ 成立（或分段处理初始项）
+- 两边乘以  $x^n$，对 $n$ 求和
+- 把每一项用 $F(x)$ 表示：
+	- $\sum_{n\ge k}a_{n - k}x^n = x^kF(x)$ （可能需要减去前几项）
+	- 卷积项 $\sum_n{(\sum_{i + j = n}{a_ib_j})x^n} = F(x)G(x)$
+- 得到关于 $F(x)$ 的方程，解出 $F(x)$
+- 必要时展开成幂级数，得到通项或用于计算
+
+
+
+
+
+
+
+### 二项式定理
+
+**普通二项式定理**，其中 $m$ 是非负整数，$\binom{m}{n}$ 是组合数：
+$$
+(1 + x)^m = \sum_{n = 0}^m{\binom{m}{n}x^n}
+$$
+
+
+**负二项式定理**，就是二项式定理在负指数下的推广。
+
+比如 $-k (k > 0)$，二项式定理依然成立，只是展开编程无穷级数
+$$
+(1 + x)^{-k} = \sum_{n=0}^{\infty}{\binom{-k}{n}x^n}
+$$
+这里 $\binom{-k}{n}$ 叫负二项式系数，定义为：
+$$
+\binom{-k}{n} = \frac{(-k)(-k-1)(-k-2) \dots (-k-n+1)}{n!}
+$$
+负二项式系数的化简，其中 $\binom{k + n - 1}{m}$ 是普通的组合数：
+$$
+(1 + x)^{-k} = \sum_{n=0}^{\infty}{(-1)^n\binom{k + n - 1}{n}x^n}
+$$
+
+
+更常用的形式（把 $x$ 换成 $-x$）：
+$$
+(1 - x)^{-k} = \sum_{n = 0}^{\infty}{\binom{k + n - 1}{n}x^n}
+$$
+得到**重要公式**，注意 $\binom{k + n - 1}{n} = \binom{n + k - 1}{k - 1}$ ，两者相等：
+$$
+\frac{1}{(1 - x)^k} = \sum_{n=0}^{\infty}{\binom{n + k - 1}{k - 1}x^n}
+$$
+
+
+
+
+
+
+
+
 ## 数值算法
 
 
@@ -7680,6 +7848,36 @@ $$
 
 
 
+**圆的标准方程**
+
+其中圆心为 $(a, b)$，半径为 $r$：
+$$
+(x - a)^2 + (y - b)^2 = r^2
+$$
+
+
+**圆的一般方程**
+$$
+x^2 + y^2 + Dx + Ey + F = 0
+$$
+满足 $D^2 + E^2 - 4F > 0$ 时，表示圆。
+其中：
+
+- 圆心：$(-\frac{D}{2}, -\frac{E}{2})$
+- 半径：$\frac{1}{2} \sqrt{D^2 + E^2 - 4F}$
+
+
+
+**圆的直径端点式**
+
+诺圆的直径端点为 $A(a_1, b_1)$、$B(a_2, b_2)$，则圆的方程为：
+$$
+(x - a_1)(x - a_2) + (y - b_1)(y - b_2) = 0
+$$
+
+
+
+
 
 **过一点做圆的切线**
 
@@ -8337,11 +8535,11 @@ int main(){
 
 
 
-**nth第k小数求中位数**
+**nth 求全局第 k 小**
 
 时间复杂度 $O(N)$
 
-[快排](#ksort) 或STL函数`nth_element()`
+快排实现，每次只排一半。 或 STL 函数 `nth_element()`
 
 
 
@@ -9046,7 +9244,7 @@ int main(){
 
 求一个子段，他的和最大，**长度不超过k**：[135. 最大子段和](https://www.acwing.com/problem/content/137/)
 
->   详见 [单调队列：最大子段和](#sub_max_queue)
+>   详见 [单调队列：最大子段和]
 
 
 
@@ -9061,8 +9259,11 @@ int main(){
 > \max_{i-j>=k}\{A_{j+1}+A_{j+2}+...+A_i\} = \max_{k<=i<=n}\{sum_i-\min_{0<=j<=i-k}\{sum_j\}\}
 > $$
 
+类似的例题：[P1419 寻找段落 - 洛谷](https://www.luogu.com.cn/problem/P1419)。求一个长度在 $[S, T]$ 之间的且平均值最大连续子段，使用二分+单调队列维护。
+
 ```cpp
 //最佳牛围栏：https://www.acwing.com/problem/content/104/
+// 求一个长度 >= f 的区间，最大化该区间的平均值
 #include <iostream>
 #include <vector>
 #include <algorithm>
@@ -11182,210 +11383,197 @@ remove、recover、dance操作略有不同。
 
 > 倍增法（英语：binary lifting），顾名思义就是翻倍。它能够使线性的处理转化为对数级的处理，大大地优化时间复杂度。
 >
-> 这个方法在很多算法中均有应用，其中最常用的是 RMQ 问题和求 LCA(最近公共祖先)。
+> 这个方法在很多算法中均有应用，其中最常用的是 RMQ 问题、求 LCA(最近公共祖先)。
 
 
 
 
 
-### ST表
+例题：给出一个长度为 $n$ 的环和一个常数 $k$，每次会从第 $i$ 个点跳到第 $(i+k)\bmod n+1$ 个点，总共跳了 $m$ 次．每个点都有一个权值，记为 $a_i$，求 $m$ 次跳跃的起点的权值之和对 $10^9+7$ 取模的结果．
 
-ST表(Sparse Table,稀疏表)基于倍增思想,用于解决[可重复贡献问题][区间重合区域不影响结果，如「RMQ 」、「区间按位与」、「区间按位或」、「区间 GCD」]的数据结构，**不支持修改**
-O($N\log N$)预处理  O(1)查询
-
-<img src="C:\Users\21003\AppData\Roaming\Typora\typora-user-images\image-20240814143114839.png" alt="image-20240814143114839" style="zoom:50%;" />  
-
-令$st(i,j)$表示区间$[i,i+2^j-1]$的最大值，显然$st(i,0)=a_i$
-根据定义式，第二维就相当于倍增的时候「跳了 $2^j-1$ 步」，依据倍增的思路，写出状态转移方程：$st(i,j)=\max(st(i,j-1),st(i+2^{j-1},j-1))$
-
-对于每个询问 $[l,r]$，我们把它分成两部分：$[l,l+2^s-1]$ 与 $[r-2^s+1,r]$，其中 $s=\left\lfloor\log_2(r-l+1)\right\rfloor$。两部分的结果的最大值就是回答。
+数据范围：$1\leq n\leq 10^6$，$1\leq m\leq 10^{18}$，$1\leq k\leq n$，$0\le a_i\le 10^9$．
 
 ```cpp
-//https://www.luogu.com.cn/problem/P2880
 #include <bits/stdc++.h>
 using namespace std;
 
-namespace S_T{ //1_idx
-	const int N = 1000006;
-	int lg2[N];
+const int mod = 1e9 + 7;
 
-	struct info{
-		int mx,mn; //mn,gcd,and,or;
+const int N = 1000006;
+long long a[N];
+long long n, m, k;
 
-		info(){}
-		info(const int &x) { //init_info
-			mx = mn = x;
-		}
+long long go[60][N], sum[60][N]; // 长度小的放在第一维, 缓存友好
 
-		info friend operator + (const info &e1,const info &e2) { //updaet_info
-			info ans;
-			ans.mx = std::max(e1.mx,e2.mx);
-			ans.mn = std::min(e1.mn,e2.mn);
-			return ans;
-		}
-	};
-
-	void init_lg2(){ //下取整
-		lg2[0] = -1;
-		for(int i = 1;i < N;i++){
-			lg2[i] = lg2[i>>1]+1;
-		}
-	}
-
-	template<typename T>
-	struct ST{
-		int n,m;
-		std::vector<std::vector<info>>st;
-
-		ST(){}
-		ST(const T &v) {//1_idx
-			if(~lg2[0]) init_lg2();
-			n = v.size()-1,m = lg2[v.size()];
-			st = std::vector<std::vector<info>>(n+1,std::vector<info>(m+1));
-
-			for(int i = 1;i < v.size();i++){ st[i][0] = v[i]; }
-			for(int j = 1;(1<<j) < v.size();j++){
-				int pj = 1 << (j-1);
-				for(int i = 1;i+(1<<j)-1 < v.size();i++){
-					st[i][j] = st[i][j-1] + st[i+pj][j-1];
-				}
-			}
-		}
-
-		info query(int l,int r) {
-			int x = lg2[r-l+1];
-			info ans = st[l][x] + st[r-(1<<x)+1][x];
-			return ans;
-		}
-	};
-}
-using S_T::ST,S_T::info;
-
-int main() {
-	int n,q; std::cin >> n >> q;
-	vector<int> a(n+1);
-	for(int i = 1;i <= n;i++){
+void soviet() {
+	std::cin >> n >> k;
+	for (int i = 1; i <= n; i++) {
 		std::cin >> a[i];
 	}
-	ST t(a);
-	while(q--){
-		int l,r; std::cin >> l >> r;
-		auto ans = t.query(l,r);
-		std::cout << ans.mx - ans.mn << '\n';
+	std::cin >> m;
+
+	for (int i = 1; i <= n; i++) {
+		go[0][i] = (i + k) % n + 1;
+		sum[0][i] = a[i];
 	}
+
+	for (int j = 1; j < 60; j++) { // 先从小到大枚举倍数
+		for (int i = 1; i <= n; i++) { // 再枚举点
+			go[j][i] = go[j - 1][go[j - 1][i]]; // 从当前点i跳2^j步到达的点,相当于从点i跳2^{j-1}步到达的点再跳2^{j-1}步
+			sum[j][i] = (sum[j - 1][i] + sum[j - 1][go[j - 1][i]]) % mod;
+		}
+	}
+
+	long long ans = 0;
+	int cur = 1;
+	for (int i = 0; i < 60; i++) {
+		if (m >> i & 1) {
+			ans = (ans + sum[i][cur]) % mod;
+			cur = go[i][cur];
+		}
+	}
+	std::cout << ans;
 }
+
+int main() {
+	int M_T = 1; std::ios::sync_with_stdio(false); std::cin.tie(nullptr);
+//	std::cin >> M_T;
+	while (M_T--) { soviet(); }
+	return 0;
+}
+
 ```
 
 
 
 
 
-**二维ST表**
+**倍增+ 最短路** [P1613 跑路 - 洛谷](https://www.luogu.com.cn/problem/P1613)
 
-[Check Corners - HDU 2888 - Virtual Judge](https://vjudge.net/problem/HDU-2888)
+> 给定一个 $n$ 个节点 $m$ 条边的有向图，每条边的长度为 1，小明每秒可以移动 2 的幂次的距离。求从点 1 到点 n 的最小花费时间。$2 \le n \le 50, m \le 10^4$。
 
-查询子矩阵RMQ
+用 `st[i][j][k]` 标记从点 `i` 到点 `j` 是否有一条长度为 $2^k$ 的路径，如果`st[i][t][k - 1]` 为真，且 `st[t][j][k - 1]` 为真，那么`st[i][j][k]` 也为真，从 `i` 到 `j` 的其最小花费为 `1`。最后跑 Flyod 最短路即可。
 
 ```cpp
-#include <iostream>
-#include <algorithm>
-#include <vector>
+#include <bits/stdc++.h>
+using namespace std;
 
-namespace S_T{ //1_idx
-	const int N = 355, M = 9;
-	int lg2[N];
+const int N = 55;
 
-	struct info{
-		int mx; //gcd,and,or;
+int n, m;
 
-		info(){}
-		info(const int &x) { //init_info
-			mx = x;
-		}
+int dist[N][N];
+bool st[N][N][30];
 
-		info friend operator + (const info &e1,const info &e2) { //update_info
-			info ans;
-			ans.mx = std::max(e1.mx,e2.mx);
-			return ans;
-		}
-	}st[N][N][M][M];//vector内存开销较大,尽量使用定长数组
-
-	void init_lg2(){
-		lg2[0] = -1;
-		for(int i = 1;i < N;i++){
-			lg2[i] = lg2[i>>1]+1;
-		}
+void soviet() {
+	std::memset(dist, 0x3f, sizeof(dist));
+	std::cin >> n >> m;
+	for (int i = 1; i <= m; i++) {
+		int x, y; std::cin >> x >> y;
+		dist[x][y] = 1;
+		st[x][y][0] = 1;
 	}
-	
-	template<typename T>
-	struct ST{
-		int n,m;
 
-		ST(){}
-		ST(const std::vector<std::vector<T>> &mat) {//1_idx
-			if(~lg2[0]) init_lg2();
-			n = mat.size()-1;
-			m = mat[0].size()-1;
-
-			for (int ni = 0; 1 << ni <= n; ni++) {
-				for (int nj = 0; 1 << nj <= m; nj++) {
-					for (int i = 1; i + (1 << ni) - 1 <= n; i++) {
-						for (int j = 1; j + (1 << nj) - 1 <= m; j++) {
-							if (!ni && !nj) st[i][j][0][0] = info(mat[i][j]);
-							if (ni) st[i][j][ni][nj] = st[i][j][ni - 1][nj] + st[i + (1 << ni - 1)][j][ni - 1][nj];
-							if (nj) st[i][j][ni][nj] = st[i][j][ni][nj - 1] + st[i][j + (1 << nj - 1)][ni][nj - 1];
-						}
+	for (int k = 1; k < 30; k++) {
+		for (int i = 1; i <= n; i++) {
+			for (int t = 1; t <= n; t++) {
+				for (int j = 1; j <= n; j++) {
+					if (st[i][t][k - 1] && st[t][j][k - 1]) {
+						st[i][j][k] = 1;
+						dist[i][j] = 1;
 					}
 				}
 			}
 		}
+	}
 
-		info query(int x1, int y1, int x2, int y2) {
-			int kx = lg2[x2 - x1 + 1];
-			int ky = lg2[y2 - y1 + 1];
-
-			int len_x = 1 << kx;
-			int len_y = 1 << ky;
-
-			info res1 = st[x1][y1][kx][ky];
-			info res2 = st[x2 - len_x + 1][y1][kx][ky];
-			info res3 = st[x1][y2 - len_y + 1][kx][ky];
-			info res4 = st[x2 - len_x + 1][y2 - len_y + 1][kx][ky];
-
-			return res1 + res2 + res3 + res4;
-		}
-	};
-}
-using S_T::ST, S_T::info;
-
-int n,m;
-
-void sol() {
-	std::vector<std::vector<int>> a(n + 1, std::vector<int>(m + 1));
-	for (int i = 1; i <= n; i++) {
-		for (int j = 1; j <= m; j++) {
-			std::cin >> a[i][j];
+	for (int k = 1; k <= n; k++) {
+		for (int i = 1; i <= n; i++) {
+			for (int j = 1; j <= n; j++) {
+				dist[i][j] = std::min(dist[i][j], dist[i][k] + dist[k][j]);
+			}
 		}
 	}
 
-	ST t(a);
-	int q; std::cin >> q;
-	while (q--) {
-		int x1, y1, x2, y2; std::cin >> x1 >> y1 >> x2 >> y2;
-		int mx = t.query(x1, y1, x2, y2).mx;
-		std::cout << mx << ' ';
-		if (mx == std::max({a[x1][y1], a[x1][y2], a[x2][y1], a[x2][y2]}))  std::cout << "yes\n";
-		else std::cout << "no\n";
-	}
+	std::cout << dist[1][n];
 }
 
 int main() {
-	std::ios::sync_with_stdio(false); std::cin.tie(0);
-	while (std::cin >> n >> m) sol();
+	int M_T = 1; std::ios::sync_with_stdio(false); std::cin.tie(nullptr);
+//	std::cin >> M_T;
+	while (M_T--) { soviet(); }
+	return 0;
 }
 ```
 
 
+
+**倍增 + 区间覆盖** https://codeforces.com/contest/1175/problem/E
+
+> 给定数轴上 $n$ 条线段 $[l_i, r_i]$ 和 $q$ 次询问。每次询问给定一个目标区间 $[x, y]$，问最少需要选择多少条给定的线段，才能覆盖整个目标区间，如果无法覆盖输出 $-1$。
+> 数据范围 $1 \le n, q \le 2 \times 10^5$，$0 \le l_i < r_i \le 5 \times 10^5$，$0 \le x_i < y_i \le 5 \times 10^5$，
+
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+struct node {
+	int l, r;
+	bool operator < (const node& e2) const {
+		return l < e2.l;
+	}
+};
+
+void soviet() {
+	int n, q; std::cin >> n >> q;
+	int m = 500000;
+	std::vector<node> a(n + 1);
+	for (int i = 1; i <= n; i++) {
+		std::cin >> a[i].l >> a[i].r;
+	}
+	std::sort(a.begin() + 1, a.end());
+
+	// 对值域坐标进行转移
+	std::vector go(m + 1, std::vector<int> (21));
+
+	for (int i = 0, j = 1, mx = 0; i <= m; i++) {
+		while (j <= n && a[j].l <= i) {
+			mx = std::max(mx, a[j].r);
+			j++;
+		}
+		go[i][0] = mx;
+	}
+
+	for (int j = 1; j <= 20; j++) {
+		for (int i = 0; i <= m; i++) {
+			go[i][j] = go[go[i][j - 1]][j - 1];
+		}
+	}
+
+	while (q--) {
+		int x, y; std::cin >> x >> y;
+		int ans = 0;
+		for (int j = 20; j >= 0; j--) {
+			int nx = go[x][j];
+			if (nx < y) {
+				ans += 1 << j;
+				x = nx;
+			}
+		}
+
+		if (go[x][0] >= y) std::cout << ans + 1 << '\n';
+		else std::cout << -1 << '\n';
+	}
+}
+
+int main() {
+	int M_T = 1; std::ios::sync_with_stdio(false); std::cin.tie(nullptr);
+//	std::cin >> M_T;
+	while (M_T--) { soviet(); }
+	return 0;
+}
+```
 
 
 
@@ -12297,7 +12485,7 @@ int main() {
 
 
 
-单点修改，查询区间第k小：详见[值域分块](#值域分块)
+单点修改，查询区间第k小：详见值域分块。
 
 
 
@@ -12706,8 +12894,8 @@ struct node {
 	int a, b, c;
 	int cnt = 0, res = 0;
 
-	bool operator < (const node& e2) const {
-		return std::tie(a, b, c) < std::tie(e2.a, e2.b, e2.c);
+	bool operator < (const node& e2) const { // 按第一维升序, 第二维降序排序
+		return std::tie(a, e2.b) < std::tie(e2.a, b);
 	}
 
 	bool operator != (const node& e2) const {
@@ -12723,8 +12911,8 @@ void cdq(int l, int r) {
 	cdq(l, mid);
 	cdq(mid + 1, r);
 
-	std::sort(e + l, e + mid + 1, [&](auto& e1, auto& e2) { return std::tie(e1.b, e1.c) < std::tie(e2.b, e2.c); });
-	std::sort(e + mid + 1, e + r + 1, [&](auto& e1, auto& e2) { return std::tie(e1.b, e1.c) < std::tie(e2.b, e2.c); });
+	std::sort(e + l, e + mid + 1, [&](auto& e1, auto& e2) { return e1.b < e2.b; });
+	std::sort(e + mid + 1, e + r + 1, [&](auto& e1, auto& e2) { return e1.b < e2.b; });
 
 	int i = l, j = mid + 1;
 	for (; j <= r; j++) {
@@ -12735,7 +12923,7 @@ void cdq(int l, int r) {
 		e[j].res += fw.query(1, e[j].c);
 	}
 
-	for (int t = l; t < i; t++) {
+	for (int t = l; t < i; t++) { // 不要memset整棵树, 否则会让整体复杂度退化为O(N^2)
 		fw.add(e[t].c, -e[t].cnt);
 	}
 }
@@ -12746,7 +12934,7 @@ void soviet() {
 		std::cin >> ue[i].a >> ue[i].b >> ue[i].c;
 	}
 
-	std::sort(ue + 1, ue + n + 1);
+	std::sort(ue + 1, ue + n + 1, [&](auto& e1, auto& e2) { return std::tie(e1.a, e1.b, e1.c) < std::tie(e2.a, e2.b, e2.c); }); // 去重时按(a, b, c)升序排序
 	int idx = 0;
 	for (int i = 1, t = 0; i <= n; i++) { // 合并一模一样的点
 		++t;
@@ -12782,11 +12970,275 @@ int main() {
 
 
 
+#### 1D/1D 动态规划优化
+
+
+
+例如给定一个序列，每个序列都有属性 `(a, b)`，求 $dp_i = 1 + max_{j = 1}^{i - 1} dp_j[a_j < a_i][b_j < b_i]$，直接转移是 $O(N^2)$ ，可以通过 CDQ 分治优化为 $O(N \log^2N)$
+
+
+
+[3084. 纸箱堆叠 - AcWing题库](https://www.acwing.com/problem/content/3087/)
+
+> 给定 $n$ 个纸箱，每个纸箱都有长宽高 $(x, y, z)$ 三维边长，一个纸箱可以套进另一个纸箱当且仅当它的最短边、次短边、最长边长度分别小于另一个纸箱的最短边、次短边、最长边。求套娃层数最多的一个子集，输出其层数。
+>
+> $1 \le n \le 50000$
+
+```cpp
+// O(N^2) 朴素转移
+std::sort(v.begin() + 1, v.end());
+std::vector<int> dp(n + 1, 1);
+for (int i = 1; i <= n; i++) {
+    auto &[x, y, z] = v[i];
+    for (int j = 1; j < i; j++) {
+        if (v[i].x > v[j].x && v[i].y > v[j].y && v[i].z > v[j].z) {
+            dp[i] = std::max(dp[i], dp[j] + 1);
+        }
+    }
+}
+```
+
+
+
+```cpp
+// CDQ 优化 O(Nlog^2N)
+#include <bits/stdc++.h>
+using namespace std;
+
+template<typename T>
+struct Fenwick { // 1_idx 求前缀最大值的树状数组, 常数比线段树小
+	int n;
+	std::vector<T> t;
+
+	explicit Fenwick(int _n = 0) : n(_n) {
+		t.assign(_n + 1, T{});
+	}
+
+	void update(int i, T x) { // 将数组第 i 个元素变为 x, 只能让其单调不减,不能改小
+		while (i <= n) {
+			t[i] = std::max(t[i], x);
+			i += i & -i;
+		}
+	}
+
+	T query(int i) { // 求前缀区间[1, i]的最大值
+		T ans = 0;
+		while (i) {
+			ans = std::max(ans, t[i]);
+			i -= i & -i;
+		}
+		return ans;
+	}
+
+	void clear(int i) { // 单点回滚, 一般需要整体回滚
+		while (i <= n) {
+			t[i] = 0;
+			i += i & -i;
+		}
+	}
+};
+
+struct node {
+	int x, y, z, dp;
+	bool operator < (const node& e2) const {
+		return std::tie(x, e2.y) < std::tie(e2.x, y); // 第一维升序, 第二维降序
+	}
+};
+
+void soviet() {
+	int a, p, n; std::cin >> a >> p >> n;
+	std::vector<node> v(n + 1);
+	std::vector<int> hs(1);
+	for (int i = 1, s = 1; i <= n; i++) {
+		auto& [x, y, z, dp] = v[i];
+		dp = 1;
+		std::vector<int> tmp;
+		for (int j = 0; j < 3; j++) {
+			tmp.emplace_back(s = 1LL * s * a % p);
+		}
+		std::sort(tmp.begin(), tmp.end());
+		std::tie(x, y, z) = std::tuple(tmp[0], tmp[1], tmp[2]);
+		hs.emplace_back(z);
+	}
+
+	std::sort(v.begin() + 1, v.end());
+	std::sort(hs.begin() + 1, hs.end());
+	hs.erase(std::unique(hs.begin() + 1, hs.end()), hs.end());
+	for (int i = 1; i <= n; i++) { // 对第三维z离散化
+		v[i].z = std::lower_bound(hs.begin() + 1, hs.end(), v[i].z) - hs.begin();
+	}
+
+	Fenwick<int> fw(hs.size());
+
+	auto cdq = [&](auto& cdq, int l, int r) -> void {
+		if (l == r) return ;
+		int mid = l + r >> 1;
+
+        // 处理左半内部的转移
+		cdq(cdq, l, mid); 
+        
+        // 处理左半对右半的转移(二维偏序处理)
+		std::sort(v.begin() + l, v.begin() + mid + 1, [&](auto& v1, auto& v2) { return v1.y < v2.y; });
+		std::sort(v.begin() + mid + 1, v.begin() + r + 1, [&](auto& v1, auto& v2) { return v1.y < v2.y; });
+
+		int i = l, j = mid + 1;
+		for (; j <= r; j++) {
+			while (i <= mid && v[i].y < v[j].y) {
+				fw.update(v[i].z, v[i].dp);
+				i++;
+			}
+			v[j].dp = std::max(v[j].dp, fw.query(v[j].z - 1) + 1);
+		}
+
+		for (int t = l; t < i; t++) {
+			fw.clear(v[t].z);
+		}
+
+        // 复原数组、处理右半内部的转移
+		sort(v.begin() + l, v.begin() + r + 1);
+		cdq(cdq, mid + 1, r);
+	};
+
+	cdq(cdq, 1, n);
+
+	int ans = 0;
+	for (int i = 1; i <= n; i++) {
+		ans = max(ans, v[i].dp);
+	}
+	std::cout << ans;
+}
+
+int main() {
+	int M_T = 1; std::ios::sync_with_stdio(false); std::cin.tie(nullptr);
+//	std::cin >> M_T;
+	while (M_T--) { soviet(); }
+	return 0;
+}
+```
 
 
 
 
 
+
+
+#### 斜率DP优化
+
+用于处理斜率和添加的决策点都不单调的情况。
+
+
+
+[P4027 [NOI2007\] 货币兑换 - 洛谷](https://www.luogu.com.cn/problem/P4027)
+
+> 已知接下来 $n$ 天的A股和B股行情，其价值为 $a_i$ 和 $b_i$，初始你有 $m$ 元，每天购买A股和B股比例需要为 $r_i$，每次可以以全部卖出。求最多能获得多少元钱。
+>
+> $n \le 10^5$，$a_i, b_i, k_i$ 均为正实数。
+
+第 $k$ 天能购买 A 股票的数量 $x_k = \frac{f_kr_k}{a_kr_k + b_k}$，B 股票数量 $y_k = \frac{f_k}{a_kr_k + b_k}$
+
+朴素转移方程为 $f_i = max_{j < i}\{ a_ix_j + b_iy_j \}$
+
+将其化为斜截式：$y_j = -\frac{a_i}{b_i}x_j + \frac{f_i}{b_i}$
+
+- 这里决策点横坐标无单调性：$x_j$ 随 $j$ 无规律变化。
+
+- 查询斜率 $k_i = -\frac{a_i}{b_i}$ 也无单调性
+
+所以不能在线维护凸包，也不能单调扫指针。CDQ 分治把动态决策拆成静态子问题，每一层只处理（左半决策点 -> 右半查询），此时左半点集固定，可以排序建凸包、排序查询，只需要考虑左半区间对右半区间的贡献。时间复杂度 $O(N \log^2N)$
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+const double eps = 1e-9;
+
+struct node {
+	double a, b, rt, k;
+	int id;
+	double x, y;
+	double dp;
+	bool operator < (const node& e2) const {
+		return k > e2.k;
+	}
+};
+
+double slope(node& e1, node& e2) {
+	if (std::abs(e1.x - e2.x) < eps) return 1e18;
+	return (e1.y - e2.y) / (e1.x - e2.x);
+}
+
+void soviet() {
+	int n, m; std::cin >> n >> m;
+	std::vector<node> v(n + 1);
+	for (int i = 1; i <= n; i++) {
+		std::cin >> v[i].a >> v[i].b >> v[i].rt;
+		v[i].k = -v[i].a / v[i].b;
+		v[i].id = i;
+		v[i].dp = m;
+	}
+
+	auto cdq = [&](auto&& cdq, int l, int r) -> void {
+		if (l == r) {
+			v[l].dp = std::max(v[l].dp, v[l - 1].dp);
+			v[l].x = v[l].dp * v[l].rt / (v[l].a * v[l].rt + v[l].b);
+			v[l].y = v[l].dp / (v[l].a * v[l].rt + v[l].b);
+			return;
+		}
+
+		int mid = l + r >> 1;
+        // 先处理左半内部
+		cdq(cdq, l, mid);
+
+		std::vector<node> left, right;
+		for (int i = l; i <= mid; i++) left.emplace_back(v[i]);
+		for (int i = mid + 1; i <= r; i++) right.emplace_back(v[i]);
+
+		// 收集左半决策点, 按横坐标 x 升序, 构建上凸包
+        std::sort(left.begin(), left.end(), [&](auto& e1, auto& e2) {
+			if (std::abs(e1.x - e2.x) > eps) return e1.x < e2.x;
+			return e1.y > e2.y;
+		});
+        
+		std::vector<node> hull;
+		for (auto& p: left) {
+			if (hull.size() && std::abs(hull.back().x - p.x) < eps) continue;
+			while(hull.size() >= 2 && slope(hull[hull.size() - 2], hull.back()) <= slope(hull.back(), p)) {
+				hull.pop_back();
+			}
+			hull.emplace_back(p);
+		}
+
+
+		// 处理左半部分对右半部分的贡献, 右半部分按斜率 k 降序, 单调指针在左半部分构建的凸包上扫, 更新右半的答案
+		std::sort(right.begin(), right.end(), [&](auto& e1, auto& e2) {
+			return e1.k > e2.k;
+		});
+
+		int ptr = 0;
+		for (auto& p : right) {
+			while (ptr + 1 < hull.size() && slope(hull[ptr], hull[ptr + 1]) >= p.k - eps) {
+				ptr++;
+			}
+			v[p.id].dp = std::max(v[p.id].dp, hull[ptr].x * p.a + hull[ptr].y * p.b);
+		}
+
+        // 处理右半内部
+		cdq(cdq, mid + 1, r);
+	};
+
+	cdq(cdq, 1, n);
+
+	std::cout << std::fixed << std::setprecision(10) << v[n].dp;
+}
+
+int main() {
+	int M_T = 1; std::ios::sync_with_stdio(false); std::cin.tie(nullptr);
+//	std::cin >> M_T;
+	while (M_T--) { soviet(); }
+	return 0;
+}
+
+```
 
 
 
@@ -13459,7 +13911,7 @@ int main(){
 using namespace std;
 const int N = 300005;
 int n,m,a[N];
-int q[N],hh,tt;//tt = -1；q[++tt] = 0;
+int q[N],hh,tt;//tt = -1；q[++tt] = 0; 队列初始含有一个元素0
 
 int main(){
 	cin >> n >> m;
@@ -16613,6 +17065,218 @@ int main() {
 	while (std::cin >> n >> q) sol();
 }
 ```
+
+
+
+
+
+## ST表
+
+
+
+ST表(Sparse Table,稀疏表)基于倍增思想,用于解决[可重复贡献问题][区间重合区域不影响结果，如「RMQ 」、「区间按位与」、「区间按位或」、「区间 GCD」]的数据结构，**不支持修改**。
+
+O($N\log N$)预处理  O(1)查询
+
+<img src="C:\Users\21003\AppData\Roaming\Typora\typora-user-images\image-20240814143114839.png" alt="image-20240814143114839" style="zoom:50%;" />  
+
+令$st(i,j)$表示区间$[i,i+2^j-1]$的最大值，显然$st(i,0)=a_i$
+根据定义式，第二维就相当于倍增的时候「跳了 $2^j-1$ 步」，依据倍增的思路，写出状态转移方程：$st(i,j)=\max(st(i,j-1),st(i+2^{j-1},j-1))$
+
+对于每个询问 $[l,r]$，我们把它分成两部分：$[l,l+2^s-1]$ 与 $[r-2^s+1,r]$，其中 $s=\left\lfloor\log_2(r-l+1)\right\rfloor$。两部分的结果的最大值就是回答。
+
+```cpp
+//https://www.luogu.com.cn/problem/P2880
+#include <bits/stdc++.h>
+using namespace std;
+
+namespace S_T{ //1_idx
+	const int N = 1000006;
+	int lg2[N];
+
+	struct info{
+		int mx,mn; //mn,gcd,and,or;
+
+		info(){}
+		info(const int &x) { //init_info
+			mx = mn = x;
+		}
+
+		info friend operator + (const info &e1,const info &e2) { //updaet_info
+			info ans;
+			ans.mx = std::max(e1.mx,e2.mx);
+			ans.mn = std::min(e1.mn,e2.mn);
+			return ans;
+		}
+	};
+
+	void init_lg2(){ //下取整
+		lg2[0] = -1;
+		for(int i = 1;i < N;i++){
+			lg2[i] = lg2[i>>1]+1;
+		}
+	}
+
+	template<typename T>
+	struct ST{
+		int n,m;
+		std::vector<std::vector<info>>st;
+
+		ST(){}
+		ST(const T &v) {//1_idx
+			if(~lg2[0]) init_lg2();
+			n = v.size()-1,m = lg2[v.size()];
+			st = std::vector<std::vector<info>>(n+1,std::vector<info>(m+1));
+
+			for(int i = 1;i < v.size();i++){ st[i][0] = v[i]; }
+			for(int j = 1;(1<<j) < v.size();j++){
+				int pj = 1 << (j-1);
+				for(int i = 1;i+(1<<j)-1 < v.size();i++){
+					st[i][j] = st[i][j-1] + st[i+pj][j-1];
+				}
+			}
+		}
+
+		info query(int l,int r) {
+			int x = lg2[r-l+1];
+			info ans = st[l][x] + st[r-(1<<x)+1][x];
+			return ans;
+		}
+	};
+}
+using S_T::ST,S_T::info;
+
+int main() {
+	int n,q; std::cin >> n >> q;
+	vector<int> a(n+1);
+	for(int i = 1;i <= n;i++){
+		std::cin >> a[i];
+	}
+	ST t(a);
+	while(q--){
+		int l,r; std::cin >> l >> r;
+		auto ans = t.query(l,r);
+		std::cout << ans.mx - ans.mn << '\n';
+	}
+}
+```
+
+
+
+
+
+**二维ST表**
+
+[Check Corners - HDU 2888 - Virtual Judge](https://vjudge.net/problem/HDU-2888)
+
+查询子矩阵RMQ
+
+```cpp
+#include <iostream>
+#include <algorithm>
+#include <vector>
+
+namespace S_T{ //1_idx
+	const int N = 355, M = 9;
+	int lg2[N];
+
+	struct info{
+		int mx; //gcd,and,or;
+
+		info(){}
+		info(const int &x) { //init_info
+			mx = x;
+		}
+
+		info friend operator + (const info &e1,const info &e2) { //update_info
+			info ans;
+			ans.mx = std::max(e1.mx,e2.mx);
+			return ans;
+		}
+	}st[N][N][M][M];//vector内存开销较大,尽量使用定长数组
+
+	void init_lg2(){
+		lg2[0] = -1;
+		for(int i = 1;i < N;i++){
+			lg2[i] = lg2[i>>1]+1;
+		}
+	}
+	
+	template<typename T>
+	struct ST{
+		int n,m;
+
+		ST(){}
+		ST(const std::vector<std::vector<T>> &mat) {//1_idx
+			if(~lg2[0]) init_lg2();
+			n = mat.size()-1;
+			m = mat[0].size()-1;
+
+			for (int ni = 0; 1 << ni <= n; ni++) {
+				for (int nj = 0; 1 << nj <= m; nj++) {
+					for (int i = 1; i + (1 << ni) - 1 <= n; i++) {
+						for (int j = 1; j + (1 << nj) - 1 <= m; j++) {
+							if (!ni && !nj) st[i][j][0][0] = info(mat[i][j]);
+							if (ni) st[i][j][ni][nj] = st[i][j][ni - 1][nj] + st[i + (1 << ni - 1)][j][ni - 1][nj];
+							if (nj) st[i][j][ni][nj] = st[i][j][ni][nj - 1] + st[i][j + (1 << nj - 1)][ni][nj - 1];
+						}
+					}
+				}
+			}
+		}
+
+		info query(int x1, int y1, int x2, int y2) {
+			int kx = lg2[x2 - x1 + 1];
+			int ky = lg2[y2 - y1 + 1];
+
+			int len_x = 1 << kx;
+			int len_y = 1 << ky;
+
+			info res1 = st[x1][y1][kx][ky];
+			info res2 = st[x2 - len_x + 1][y1][kx][ky];
+			info res3 = st[x1][y2 - len_y + 1][kx][ky];
+			info res4 = st[x2 - len_x + 1][y2 - len_y + 1][kx][ky];
+
+			return res1 + res2 + res3 + res4;
+		}
+	};
+}
+using S_T::ST, S_T::info;
+
+int n,m;
+
+void sol() {
+	std::vector<std::vector<int>> a(n + 1, std::vector<int>(m + 1));
+	for (int i = 1; i <= n; i++) {
+		for (int j = 1; j <= m; j++) {
+			std::cin >> a[i][j];
+		}
+	}
+
+	ST t(a);
+	int q; std::cin >> q;
+	while (q--) {
+		int x1, y1, x2, y2; std::cin >> x1 >> y1 >> x2 >> y2;
+		int mx = t.query(x1, y1, x2, y2).mx;
+		std::cout << mx << ' ';
+		if (mx == std::max({a[x1][y1], a[x1][y2], a[x2][y1], a[x2][y2]}))  std::cout << "yes\n";
+		else std::cout << "no\n";
+	}
+}
+
+int main() {
+	std::ios::sync_with_stdio(false); std::cin.tie(0);
+	while (std::cin >> n >> m) sol();
+}
+```
+
+
+
+
+
+
+
+
 
 
 
@@ -20373,7 +21037,8 @@ int main(){
 
 ### 树的中心
 
-在树中，如果节点 $x$ 作为根节点时，从 $x$ 出发的最长链最短，那么称 $x$ 为这棵树的中心。
+> 在树中，如果节点 $x$ 作为根节点时，从 $x$ 出发的最长链最短，那么称 $x$ 为这棵树的中心。
+>
 
 性质：
 
@@ -24895,7 +25560,7 @@ $\sum_{(S,v)\in E} f(S,v)$，为整个网络的流量(其中S表示源点)
 
 时间复杂度$O(NM^2)$，实际效率较高，一般能处理10^3 ~ 10^4 规模的网络
 
-每次bfs遍历整个[残量网络](网络中所有节点以及剩余容量大于0的边构成的子图)，找出任意一条增广路，同时计算路径上各边剩余流量的最小值minf，显然可以让一股流沿着增广路从S流向T，网络的流量就可以增加minf。直到网络上不存在增广路为止。
+每次bfs遍历整个 残量网络(网络中所有节点以及剩余容量大于0的边构成的子图)，找出任意一条增广路，同时计算路径上各边剩余流量的最小值minf，显然可以让一股流沿着增广路从S流向T，网络的流量就可以增加minf。直到网络上不存在增广路为止。
 
 
 
@@ -27507,7 +28172,7 @@ int dfs(int u){
 
  [洛谷 P1352 没有上司的舞会](https://www.luogu.com.cn/problem/P1352)
 
-​    求解一颗有向树的[最大权独立集](所选的顶点之间没有两边，且点权和最大)，每条边最多选一个点
+​    求解一颗有向树的 最大权独立集(所选的顶点之间没有两边，且点权和最大)，每条边最多选一个点
 
 > 我们设 $f(i,0/1)$ 代表以 $i$ 为根的子树的最优解（第二维的值为 0 代表 $i$ 不参加舞会的情况，1 代表 $i$ 参加舞会的情况）。
 >
@@ -28252,16 +28917,21 @@ int main(){
 
 [【学习笔记】动态规划—斜率优化DP（超详细）——辰星凌的博客QAQ](https://www.cnblogs.com/Xing-Ling/p/11210179.html)
 
-先写出DP方程，例如:$dp[i] = min\{dp[j] + (s[i]-s[j])^2 + m\}$
-去掉$min$，对齐进行移项变换为$y = kx+b$的点斜式。
-把含有$function(i)*funciton(j)$的表达式看做斜率$k$乘以未知数$x$，含有$dp[i]$或常数项在$b$的表达式中，含有$function(j)$的项在$y$的表达式中。
+先写出DP方程，例如：$dp[i] = min\{dp[j] + (s[i]-s[j])^2 + m\}$
+
+去掉 $min$，对齐进行移项变换为 $y = kx+b$的点斜式。
+
+把含有 $function(i)*funciton(j)$ 的表达式看做斜率$k$乘以未知数 $x$，含有 $dp[i]$ 或常数项在$b$的表达式中，含有 $function(j)$ 的项在$y$的表达式中。
+
 $dp[j] + s[j]^2 = 2*s[i]*s[j] + dp[i]-s[i]^2-m$。
+
 此处 $y = dp[j] +s[j]^2$，$k = 2*s[i]$，$x = s[j]$，$b = dp[i]-s[i]^2 - m$。
-即找出一个点$(s[j],dp[j]+s[j]^2)$，使得$b$也即$dp[i]$最大
+
+即找出一个点 $(s[j],dp[j]+s[j]^2)$，使得 $b$ 也即 $dp[i]$ 最大
 
 写出DP方程后，判断能否使用斜率优化，即是否存在 $function(i) * function(j)$ 的项，或者 $\frac{Y(j)-Y(j')}{X(j) - X(j')}$
 
-通过大小于符号或者换$b$中$dp[i]$的符号结合题目要求$(min/max)$判断是上凸包还是下凸包。
+通过大小于符号或者换 $b$ 中 $dp[i]$ 的符号结合题目要求 $(min/max)$ 判断是上凸包还是下凸包。
 
 
 
@@ -28320,7 +28990,21 @@ int main(){
 
 [P5785 [SDOI2012\] 任务安排 - 洛谷 (luogu.com.cn)](https://www.luogu.com.cn/problem/P5785)
 
-本题，诺k不满足单调性，则需要维护整个凸包，每次决策时只需要在队列中用`二分/CDQ/平衡树`找到点 j 满足：点j左边的斜率都小于k，右边的斜率都大于k。
+> 给定 $n$ 个任务，完成每个任务所需要的时间为 $t_i$，需要的费用为它完成的时刻乘以一个费用系数 $C_i$，任务执行顺序不可改变。你需要将其分成若干批，每批任务开始前，机器需要花费启动时间 $s$，同一批任务将在同一时刻完成。确定一个分组方案，使得总费用最小。
+>
+> $1 \le n \le 3 \times 10^5, 1\le s \le 2^8, -2^8 \le t_i \le 2^8, 0\le C_i \le 2^8$
+
+
+
+朴素枚举 $O(N^2)$：$f_i = min_{j < i}\{ f_j + S*c(j, n) + t_i * c(j, i) \}$，其中 $c(l, r) = \sum_{i=l}^{r}c_i$。
+
+查询斜率 $k$ 不满足单调性，则需要维护整个凸包，每次决策时只需要在队列中用`二分/CDQ/平衡树`找到点  $j$ 满足：点 $j$ 左边的斜率都小于 $k$，右边的斜率都大于 $k$ 。本题 $k$ 不单调，但是加入决策点的横坐标是单调的，可以在凸包上二分。如果二者都不单调可以考虑CDQ或平衡树。
+
+$f_i = min\{ f_j + S*(sc_n - sc_j) + st_i * (sc_i - sc_j) \}$
+
+$f_j = (S + sc_i)sc_j + f_i - S*sc_n - st_i * sc_i$
+
+<img src="https://cdn.luogu.com.cn/upload/image_hosting/t9v5i4sj.png" alt="img" style="zoom:50%;" /> 
 
 ```cpp
 #include <iostream>
@@ -28361,7 +29045,7 @@ int main(){
 	for(int i = 1;i <= n;i++){
 		int j = lb(st[i]+s,hh,tt);
 		dp[i] = dp[j] - (s+st[i])*sc[j] + st[i]*sc[i] + s*sc[n];
-		while(hh <= tt - 1){
+		while(hh <= tt - 1){ // 维护下凸包
 			node p1 = {sc[q[tt-1]],dp[q[tt-1]]},p2 = {sc[q[tt]],dp[q[tt]]},p3 = {sc[i],dp[i]};
 			if(__int128(p3.y-p2.y)*(p2.x-p1.x) <= __int128(p2.y-p1.y)*(p3.x-p2.x)) tt--;
 			else break;
@@ -28371,6 +29055,12 @@ int main(){
 	cout << dp[n];
 }
 ```
+
+
+
+
+
+
 
 
 
@@ -28483,12 +29173,13 @@ for(int i = 1;i <= n+1;i++){//dp[N][M]
         }
     }
 }
+
 //可以优化为
 for(int i = 1;i <= n+1;i++){//dp[2][M]
     for(auto s1:st[i-1]){
         for(auto s2:st[i]){
 			if(s1&s2) continue;
-             dp[i&1][s2] = 0;
+             dp[i&1][s2] = 0; // 先清空
         }
     }
     for(auto s1:st[i-1]){
@@ -28946,8 +29637,7 @@ int n = atoi(a.c_str());//从第一位开始，遇到非数字停止，诺第一
 
 ### memset
 
-> #include <cstring>
->
+> `#include <cstring>`
 > 按字节初始化
 
 ```cpp
@@ -28956,6 +29646,8 @@ char arr[100];
 memset(arr,'a',sizeof arr);//可以初始化为任意字符
 for (int i = 0;i < 100;i++) cout << arr[i];
 ```
+
+
 
 ```cpp
 //非字符型数组
@@ -29893,7 +30585,7 @@ int main() {
 
 ### unordered_map
 
-> #include <unordered_map> 
+>` #include <unordered_map> `
 >
 > unordered_map 容器等价为无序的 map 容器。
 >
@@ -29946,11 +30638,12 @@ unordered_map<int,int,hh>mp;
 
 > 使用STL向函数传递容器时使用&引用传递或者*指针传递，否则会发生拷贝构造，与数组不同
 >
-> ```cpp
+```cpp
 > void function1(vector<int> vec)//传值		//值传递，会发拷贝构造，与数组不同
 > void function2(vector<int>& vec)//传引用	//引用传递，不会发生拷贝构造
 > void function3(vector<int>* vec)//传指针	//指针传递，不会发生拷贝构造
 > ```
+
 
 ### 常用函数
 
@@ -30107,7 +30800,7 @@ else {
 
 ### 遍历元素
 
-vector<int> v = { 100,200,300,400,500,600 };
+`vector<int> v = { 100,200,300,400,500,600 };`
 
 ```cpp
 //通过迭代器
@@ -30289,10 +30982,14 @@ for (int i = 0; i < 5;i++) {
 
 
 
-> priority_queue<结构类型> 队列名;
-> priority_queue<double>q0;
-> priority_queue<int,vector<int>,less<int> >q1;  			//大根堆，父节点>子节点
-> priority_queue<int, vector<int>, greater<int>> q2;  	//小根堆 ，父节点<子节点
+> `priority_queue<结构类型> 队列名;`
+
+```cpp
+priority_queue<double>q0;
+priority_queue<int,vector<int>,less<int> >q1;  			//大根堆，父节点>子节点
+priority_queue<int, vector<int>, greater<int>> q2;  	//小根堆 ，父节点<子节点
+```
+
 
 ```cpp
 //例	利用大根堆实现元素自动从大到小排列
@@ -30419,7 +31116,7 @@ deque<int> d4(d1);
 
 ### 遍历链表
 
-> queue<int>q;
+> `queue<int>q;`
 
 ```cpp
 //利用迭代器
@@ -30482,7 +31179,7 @@ dfs(q,1);
 
 ### 清空
 
-由于stack没有clear()函数，可以手动清空，或者sk = stack<int>();
+由于stack没有clear()函数，可以手动清空，或者`sk = stack<int>();`
 
 
 
@@ -30615,7 +31312,7 @@ multiset.erase(x);会把所有的x删除，诺只想要删一个，则应删除�
 
 ### unordered_set
 
-> #include <unordered_set>
+> `#include <unordered_set>`
 >
 > 与set唯一的区别就在于 unordered_set 容器不会自行对存储的数据进行排序 
 
@@ -30960,7 +31657,7 @@ int main(){
 
 ## tuple
 
-#include <tuple>
+`#include <tuple>`
 
 tuple（元组）在c++11开始引用，是一个固定大小的不**同类型值的集合**，是**泛化的std::pair**。我们也可以把他当做一个通用的结构体来用，不需要创建结构体又获取结构体的特征，在某些情况下可以取代结构体使程序更简洁，直观。std::tuple理论上可以有无数个任意类型的成员变量，而std::pair只能是2个成员，因此在需要保存3个及以上的数据时就需要使用tuple元组了。
 
@@ -31507,8 +32204,6 @@ int main(){
 
 
 
-/
-
 
 
 ### rope
@@ -31643,37 +32338,6 @@ int main(){
 	}
 }
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
