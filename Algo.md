@@ -6,17 +6,17 @@
 
 待填坑？：
 
-**数学**：计算几何、博弈论、多项式、Min25、Polya计数、
+**数学**：多项式、~~Polya计数~~、
 
-**基础算法**：倍增、整体二分、树上莫队、CDQ分治、反悔贪心、
+**基础算法**：分治、反悔贪心、整体二分、树上莫队、
 
-**字符串**：后缀自动机、回文树、
+**字符串**：后缀自动机、
 
-**图论**：树分治、基环树、括号序、圆方树、可行流、树上启发式合并、
+**图论**：树上启发式合并、树分治(点分治)、基环树、括号序、~~圆方树~~、~~可行流~~、
 
-**数据结构**：可持久化(Trie)、线段树分治、平衡树(Treap、Splay)、动态树、
+**数据结构**：平衡树(Treap、~~Splay~~)、线段树分治、可持久化(Trie)、~~动态树~~、树套树、
 
-**动态规划**：插头DP、回滚背包、
+**动态规划**：回滚背包、插头DP、
 
 
 
@@ -27,7 +27,7 @@
 
 2025.10.20 update：退役归档，不再更新、
 
-2026.09.19：分层图最短路、对拍、KMP修正、01Trie修正、调和级数、线性递推求逆元、添加了一些好van的网站、平面几何（多边形面积、求凸包）、笛卡尔树、类欧几里得算法、最小瓶颈路、子集枚举、并查集（可撤销，可删点、可持久化）、k-Dyck路、HLPP、极角排序、幂次哈希、
+2026.10.19：分层图最短路、对拍、KMP修正、01Trie修正、调和级数、线性递推求逆元、添加了一些好van的网站、平面几何（多边形面积、求凸包）、笛卡尔树、类欧几里得算法、最小瓶颈路、子集枚举、并查集（可撤销，可删点、可持久化）、k-Dyck路、HLPP、极角排序、幂次哈希、回文树、珂朵莉树、多项式基础、CDQ 分治、倍增、
 
 # 数学
 
@@ -1375,6 +1375,63 @@ for (int i = 2; i < N; i++)
 
 
 
+[P1495 【模板】中国剩余定理（CRT）/ 曹冲养猪 - 洛谷](https://www.luogu.com.cn/problem/P1495)
+
+简单版 CRT，模数之间必须两两互质。
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+ll exgcd(ll a, ll b, ll &x, ll &y) {
+	if (!b) {
+		x = 1, y = 0;
+		return a;
+	}
+	ll d = exgcd(b, a % b, y, x);
+	y -= a / b * x;
+	return d;
+}
+
+ll inv(ll a, ll m) {
+	ll x, y;
+	exgcd(a, m, x, y);
+	return (x % m + m) % m;
+}
+
+ll crt(vector<ll>& a, vector<ll>& m) { // 0_idx
+	int n = a.size();
+	ll M = 1;
+	for (int i = 0; i < n; i++) M *= m[i];
+
+	ll ans = 0;
+	for (int i = 0; i < n; i++) {
+		ll Mi = M / m[i];
+		ll ti = inv(Mi % m[i], m[i]);
+		ans = (ans + (__int128)a[i] * Mi % M * ti % M) % M;
+	}
+	return ans;
+}
+
+int main() {
+	int n;
+	cin >> n;
+	vector<ll> a(n), m(n);
+	for (int i = 0; i < n; i++) {
+		cin >> m[i] >> a[i]; // 模 m 余 a
+	}
+	cout << crt(a, m);
+	return 0;
+}
+```
+
+
+
+
+
+
+
 
 
 **扩展中国剩余定理(EXCRT)：模数不互质**
@@ -1596,7 +1653,7 @@ $$
 $$
 
 
-莫比乌斯函数不仅是积性函数，还有如下**性质**
+莫比乌斯函数不仅是**积性函数**，还有如下**性质**
 $$
 \sum_{d\mid n}\mu(d)=
 \begin{cases}
@@ -1775,7 +1832,7 @@ $$
 \end{aligned}
 $$
 
-其中 $f*g$ 为数论函数 $f$ 和 $g$ 的 [狄利克雷卷积](../poly/dgf.md#dirichlet-%E5%8D%B7%E7%A7%AF)。
+其中 $f*g$ 为数论函数 $f$ 和 $g$ 的 狄利克雷卷积。
 
 那么可以得到递推式：
 
@@ -1909,6 +1966,8 @@ long long sol(long long a, long long b, long long c, long long n) {
 	return m * n - sol(c, c - b - 1, a, m - 1);
 }
 ```
+
+
 
 [P5170 【模板】类欧几里德算法 - 洛谷](https://www.luogu.com.cn/problem/P5170)
 
@@ -3960,8 +4019,9 @@ a[ ]->s[ ]，s[ ]+rk->a[ ] [U72177 火星人plus - 洛谷 (luogu.com.cn)](https:
 
 在数量为 $n+m$ 的堆中选 $k$ 个元素，和分别在数量为 $n、m$ 的堆中选 $i、k-i$ 个元素的方案数是相同的，即$\displaystyle{\sum_{i=0}^k\binom{n}{i}\binom{m}{k-i}=\binom{n+m}{k}}$ 
 
-变体：
+变体及推论：
 
+- $\sum_{i = 1}^{n}{C_{n}^{i}C_{n}^{i - 1}} = C_{2n}^{n - 1}$
 - $\sum_{i=0}^k C_{i+n}^{i}=C_{k+n+1}^{k}$ 
 - $\sum_{i=0}^k C_{n}^{i}*C_m^i=\sum_{i=0}^k C_{n}^{i}*C_m^{m-i}=C_{n+m}^{n}$ 
 
@@ -4297,13 +4357,13 @@ namespace MAT{
 	T det(Mat<T> mt){ //行列行列式求值
 		int n = mt.n;
 		long long ans = 1;
-		for(int i = 0;i < n;i++){//if(mat_tree) please i begin with 1
+		for(int i = 0;i < n;i++){//if (mat_tree) i begin from 1
 			for(int j = i+1;j < n;j++){
 				while(mt.a[j][i]){
 					long long t = mt.a[i][i]/mt.a[j][i];
 					for(int k = i;k < n;k++) {
 						mt.a[i][k] = (mt.a[i][k] - mt.a[j][k] * t % mod + mod) % mod;
-                        //mt.a[i][k] -= t * mt.a[j][k];
+						//mt.a[i][k] -= t * mt.a[j][k];
 					}
 					std::swap(mt.a[i],mt.a[j]);
 					ans = -ans;
@@ -4572,7 +4632,7 @@ $$
 -   对任意实数 $a, b$，有 $E(aX + b) = a \cdot EX + b$
 -   $E(X + Y) = EX + EY$
 
-**随机变量乘积的期望** ：诺随机变量 $X,Y$ 的期望存在且[互相独立](并非必要条件)，则有
+**随机变量乘积的期望** ：诺随机变量 $X,Y$ 的期望存在且互相独立(并非必要条件)，则有
 $$
 E(XY) = EX \times EY
 $$
@@ -4749,9 +4809,19 @@ int main(){
 
 
 
-注意观察能否将问题模型转换为卷积形式：$f(x) = \sum_{i+j=x}a_{i}b_{j}$
+注意观察能否将问题模型转换为卷积形式，比如：
 
+- $f(x) = \sum_{i+j=x}a_{i}b_{j}$    标准卷积
+- $f(x) = \sum_{i}^{}{a_ib_{x-i}}$        标准卷积
+- $f(x) = \sum_{i}^{}{a_ib_{i+x}}$        可通过翻转a或b转换为标准卷积
+- $f(x) = \sum_{i}^{}{a_ib_{i-x}}$        可通过翻转a或b转换为标准卷积
 
+即：
+
+- 有一个求和符号
+- 求和的变量出现在两个序列的下标里
+- 两个下标之和（或差）等于一个固定的量
+- 乘积项可以拆成只依赖一个变量的部分
 
 
 
@@ -5113,6 +5183,1609 @@ int main(){
 	std::cout << '\n';
 }
 ```
+
+
+
+
+
+### 多项式运算
+
+
+
+#### 多项式求逆
+
+
+
+**常见应用：**
+
+- 多项式除法：求 $A/B$ 的商和余式，需要先求 $B$ 的逆。
+
+- 多项式 $ln$、$exp$、开根：这些运算都依赖求逆。
+
+- 生成函数解组合计数：如解方程 $F = G(F)$ ，常需多项式求逆
+
+​	
+
+
+
+[P4238 【模板】多项式乘法逆 - 洛谷](https://www.luogu.com.cn/problem/P4238)
+
+> 给定多项式 $F(x)$，求 $G(x)$ 使得
+> $$
+> F(x) · G(x) \equiv 1 (mod\ x^n)
+> $$
+> 即在模 $x^n$ 意义下（忽略次数 $\ge n$ 的项），$G(x)$ 是 $F(x)$ 的乘法逆元。通常系数在模 998244353 下运算。
+
+使用**牛顿迭代法**，从模 $x^1$ 开始倍增到模 $x^n$。
+
+设当前已求出 $G_k$ 满足 $F · G_k \equiv 1 (mod \ x^k)$，要扩展到 $2k$。
+
+有迭代公式：
+$$
+G_{2k} \equiv G_{k} · (2 - F · G_k)\ (mod\ x^{2k})
+$$
+因为 $F · G_k = 1 + x^kH$，所以 $2 - F·G_k = 1 - x^kH$，乘上 $G_k$ 后即可得到更高精度的逆。
+
+每次乘法使用 $NTT$ 加速，总复杂度 $O(N\log N)$
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+const int mod = 998244353,G = 3,GI = 332748118;
+
+long long qmi(long long a,long long b,long long p){
+	long long ans = 1;
+	while(b){
+		if(b&1) ans = ans*a%p;
+		b>>=1;
+		a = a*a%p;
+	}
+	return ans;
+}
+
+void NTT(std::vector<long long>& a, bool invert) {
+	int n = a.size();
+
+	for(int i = 1,j = 0;i < n;i++) {
+		int bit = n >> 1;
+		for (; j&bit; bit >>= 1) j ^= bit;
+		j ^= bit;
+		if (i < j) std::swap(a[i],a[j]);
+	}
+
+	for(int len = 2;len <= n;len <<= 1) {
+		long long wlen = qmi(invert ? GI : G,(mod-1)/len,mod);
+		for (int i = 0;i < n;i += len) {
+			long long w = 1;
+			for (int j = 0;j < len/2;j++) {
+				long long u = a[i+j];
+				long long v = a[i+j + len/2] * w % mod;
+				a[i+j] = (u+v) % mod;
+				a[i+j + len/2] = (u-v+mod) % mod;
+				w = w * wlen % mod;
+			}
+		}
+	}
+	if(invert){
+		long long inv_n = qmi(n,mod-2,mod);
+		for(auto &x:a) x = x * inv_n % mod;
+	}
+}
+
+std::vector<long long> operator * (std::vector<long long>a,std::vector<long long>b){//值传递
+	int n = a.size(), m = b.size();
+
+	int MAX_N = 1;
+	while (MAX_N < n + m) MAX_N <<= 1;
+	a.resize(MAX_N);
+	b.resize(MAX_N);
+
+	NTT(a, false);
+	NTT(b, false);
+	for(int i = 0; i < MAX_N; i++) a[i] = a[i] * b[i] % mod;
+	NTT(a, true);
+
+	while(a.size() >= 2 && a.back() == 0) a.pop_back();
+	return a;
+}
+
+std::vector<long long> poly_inv(std::vector<long long>& a) {
+	std::vector<long long> g(1, qmi(a[0], mod - 2, mod));
+	int m = 1, n = a.size();
+	while (m < n) {
+		m = std::min(m * 2, n);
+		std::vector<long long> f(a.begin(), a.begin() + std::min<int>(a.size(), m));
+		auto t = f * g;
+		t.resize(m);
+		for (int i = 0; i < m; i++) t[i] = (mod - t[i]) % mod;
+		t[0] = (t[0] + 2) % mod;
+		g = g * t;
+		g.resize(m);
+	}
+	g.resize(a.size());
+	return g;
+}
+
+void soviet() {
+	int n; std::cin >> n;
+	std::vector<long long> a(n);
+	for (int i = 0; i < n; i++) std::cin >> a[i];
+	auto b = poly_inv(a);
+	for (int i = 0; i < n; i++) {
+		std::cout << b[i] << ' ';
+	}
+}
+
+int main() {
+	int M_T = 1; std::ios::sync_with_stdio(false); std::cin.tie(nullptr);
+//	std::cin >> M_T;
+	while (M_T--) { soviet(); }
+	return 0;
+}
+```
+
+
+
+
+
+
+
+#### 多项式对数
+
+[P4725 【模板】多项式对数函数（多项式 ln） - 洛谷](https://www.luogu.com.cn/problem/P4725)
+
+> 给定 $n - 1$ 次多项式 $A(x)$，求一个 $mod\ x^n$ 下的多项式 $B(x)$，满足 $B(x) \equiv \ln A(x)$。在 mod 998244353 意义下进行。保证 $a_0 = 1$
+
+根据求导法则
+$$
+B'(x) = \frac{A'(x)}{A(x)}
+$$
+因此：
+
+1. 计算 $A'(x)$ （导数）
+2. 计算 $A(x)$ 的逆 $A^{-1}(x)\ (mod\ x^{n - 1})$
+3. 计算 $B'(x) = A'(x) · A^{-1}(x) \ (mod\ x^{n - 1})$
+4. 对 $B'(x)$ 积分得到 $B(x)$，常数项为 0 （因为 $ln 1 = 0$)
+
+总复杂度 $O(N \log N)$
+
+
+
+
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+const int mod = 998244353,G = 3,GI = 332748118;
+
+long long qmi(long long a,long long b,long long p){
+	long long ans = 1;
+	while(b){
+		if(b&1) ans = ans*a%p;
+		b>>=1;
+		a = a*a%p;
+	}
+	return ans;
+}
+
+void NTT(std::vector<long long>& a, bool invert) {
+	int n = a.size();
+
+	for(int i = 1,j = 0;i < n;i++) {
+		int bit = n >> 1;
+		for (; j&bit; bit >>= 1) j ^= bit;
+		j ^= bit;
+		if (i < j) std::swap(a[i],a[j]);
+	}
+
+	for(int len = 2;len <= n;len <<= 1) {
+		long long wlen = qmi(invert ? GI : G,(mod-1)/len,mod);
+		for (int i = 0;i < n;i += len) {
+			long long w = 1;
+			for (int j = 0;j < len/2;j++) {
+				long long u = a[i+j];
+				long long v = a[i+j + len/2] * w % mod;
+				a[i+j] = (u+v) % mod;
+				a[i+j + len/2] = (u-v+mod) % mod;
+				w = w * wlen % mod;
+			}
+		}
+	}
+	if(invert){
+		long long inv_n = qmi(n,mod-2,mod);
+		for(auto &x:a) x = x * inv_n % mod;
+	}
+}
+
+std::vector<long long> operator * (std::vector<long long>a,std::vector<long long>b){//值传递
+	int n = a.size(), m = b.size();
+
+	int MAX_N = 1;
+	while (MAX_N < n + m) MAX_N <<= 1;
+	a.resize(MAX_N);
+	b.resize(MAX_N);
+
+	NTT(a, false);
+	NTT(b, false);
+	for(int i = 0; i < MAX_N; i++) a[i] = a[i] * b[i] % mod;
+	NTT(a, true);
+
+	while(a.size() >= 2 && a.back() == 0) a.pop_back();
+	return a;
+}
+
+std::vector<long long> poly_inv(std::vector<long long>& a) {
+	std::vector<long long> g(1, qmi(a[0], mod - 2, mod));
+	int m = 1, n = a.size();
+	while (m < n) {
+		m = std::min(m * 2, n);
+		std::vector<long long> f(a.begin(), a.begin() + std::min<int>(a.size(), m));
+		auto t = f * g;
+		t.resize(m);
+		for (int i = 0; i < m; i++) t[i] = (mod - t[i]) % mod;
+		t[0] = (t[0] + 2) % mod;
+		g = g * t;
+		g.resize(m);
+	}
+	g.resize(a.size());
+	return g;
+}
+
+vector<long long> poly_ln(const vector<long long>& a) {
+    int n = a.size();
+    if (n == 1) return vector<long long>{0};
+
+    // 预处理逆元
+    vector<long long> inv(n + 1);
+    inv[1] = 1;
+    for (int i = 2; i <= n; i++) {
+        inv[i] = (mod - mod / i) * inv[mod % i] % mod;
+    }
+
+    // 1. 求导
+    vector<long long> da(n - 1);
+    for (int i = 1; i < n; i++) {
+        da[i - 1] = a[i] * i % mod;
+    }
+
+    // 2. 求 a 的前 n-1 项的逆
+    vector<long long> a_cut(a.begin(), a.begin() + n - 1);
+    vector<long long> inva = poly_inv(a_cut);  // 长度 n-1
+
+    // 3. B' = A' * invA
+    vector<long long> prod = da * inva;
+    prod.resize(n - 1);
+
+    // 4. 积分
+    vector<long long> b(n);
+    b[0] = 0;
+    for (int i = 1; i < n; i++) {
+        b[i] = prod[i - 1] * inv[i] % mod;
+    }
+    return b;
+}
+
+void soviet() {
+	int n; std::cin >> n;
+	std::vector<long long> a(n);
+	for (int i = 0; i < n; i++) std::cin >> a[i];
+	auto b = poly_ln(a);
+	for (int i = 0; i < n; i++) std::cout << b[i] << ' ';
+}
+
+int main() {
+	int M_T = 1; std::ios::sync_with_stdio(false); std::cin.tie(nullptr);
+//	std::cin >> M_T;
+	while (M_T--) { soviet(); }
+	return 0;
+}
+```
+
+
+
+
+
+#### 多项式指数
+
+[P4726 【模板】多项式指数函数（多项式 exp） - 洛谷](https://www.luogu.com.cn/problem/P4726)
+
+> 给定 $n - 1$ 次多项式 $A(x)$ ，求一个 $mod\ x^n$ 下的多项式 $B(x)$，满足 $B(x) \equiv e^{A(x)}$。系数对 998244353 取模。保证 $a_0 = 1$
+
+求 $B(x) \equiv e^{A(x)} \ (mod \ x^n)$ ，且 $A(0) = 0$，所以 $B(0) = 1$。
+
+两边取对数：$\ln B(x) = A(x)$
+
+使用牛顿迭代：
+假设已有 $B$ 满足 $B \equiv e^A \ (mod \ x^m)$，要扩展到 $m_2 = min(2m, n)$。
+
+令误差 $E = \ln B - A$，则 $B_{new} = B · (1 - E)\ (mod \ x^{m_2})$。
+
+即：
+$$
+B_{new} = B · (1 - \ln B + A) \ (mod \ x^{m_2})
+$$
+总时间复杂度 $O(N \log N)$
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+const int mod = 998244353,G = 3,GI = 332748118;
+
+long long qmi(long long a,long long b,long long p){
+	long long ans = 1;
+	while(b){
+		if(b&1) ans = ans*a%p;
+		b>>=1;
+		a = a*a%p;
+	}
+	return ans;
+}
+
+void NTT(std::vector<long long>& a, bool invert) {
+	int n = a.size();
+
+	for(int i = 1,j = 0;i < n;i++) {
+		int bit = n >> 1;
+		for (; j&bit; bit >>= 1) j ^= bit;
+		j ^= bit;
+		if (i < j) std::swap(a[i],a[j]);
+	}
+
+	for(int len = 2;len <= n;len <<= 1) {
+		long long wlen = qmi(invert ? GI : G,(mod-1)/len,mod);
+		for (int i = 0;i < n;i += len) {
+			long long w = 1;
+			for (int j = 0;j < len/2;j++) {
+				long long u = a[i+j];
+				long long v = a[i+j + len/2] * w % mod;
+				a[i+j] = (u+v) % mod;
+				a[i+j + len/2] = (u-v+mod) % mod;
+				w = w * wlen % mod;
+			}
+		}
+	}
+	if(invert){
+		long long inv_n = qmi(n,mod-2,mod);
+		for(auto &x:a) x = x * inv_n % mod;
+	}
+}
+
+std::vector<long long> operator * (std::vector<long long>a,std::vector<long long>b){//值传递
+	int n = a.size(), m = b.size();
+
+	int MAX_N = 1;
+	while (MAX_N < n + m) MAX_N <<= 1;
+	a.resize(MAX_N);
+	b.resize(MAX_N);
+
+	NTT(a, false);
+	NTT(b, false);
+	for(int i = 0; i < MAX_N; i++) a[i] = a[i] * b[i] % mod;
+	NTT(a, true);
+
+	while(a.size() >= 2 && a.back() == 0) a.pop_back();
+	return a;
+}
+
+std::vector<long long> poly_inv(std::vector<long long>& a) {
+	std::vector<long long> g(1, qmi(a[0], mod - 2, mod));
+	int m = 1, n = a.size();
+	while (m < n) {
+		m = std::min(m * 2, n);
+		std::vector<long long> f(a.begin(), a.begin() + std::min<int>(a.size(), m));
+		auto t = f * g;
+		t.resize(m);
+		for (int i = 0; i < m; i++) t[i] = (mod - t[i]) % mod;
+		t[0] = (t[0] + 2) % mod;
+		g = g * t;
+		g.resize(m);
+	}
+	g.resize(a.size());
+	return g;
+}
+
+vector<long long> poly_ln(const vector<long long>& a) {
+    int n = a.size();
+    if (n == 1) return vector<long long>{0};
+
+    vector<long long> inv(n + 1);
+    inv[1] = 1;
+    for (int i = 2; i <= n; i++) {
+        inv[i] = (mod - mod / i) * inv[mod % i] % mod;
+    }
+
+    vector<long long> da(n - 1);
+    for (int i = 1; i < n; i++) {
+        da[i - 1] = a[i] * i % mod;
+    }
+
+    vector<long long> a_cut(a.begin(), a.begin() + n - 1);
+    vector<long long> inva = poly_inv(a_cut);  // 长度 n-1
+
+    vector<long long> prod = da * inva;
+    prod.resize(n - 1);
+
+    vector<long long> b(n);
+    b[0] = 0;
+    for (int i = 1; i < n; i++) {
+        b[i] = prod[i - 1] * inv[i] % mod;
+    }
+    return b;
+}
+
+std::vector<long long> poly_exp(std::vector<long long>& a) {
+	int n = a.size();
+	std::vector<long long> b(1, 1); // B = 1
+	int m = 1;
+	while (m < n) {
+		m = std::min(m * 2, n);
+		auto b_cut = b;
+		b_cut.resize(m);
+        // 计算 ln B mod x^{m2}
+		auto ln_b = poly_ln(b_cut);
+        // t = 1 + A - ln B
+		std::vector<long long> t(m);
+		for (int i = 0; i < m; i++) {
+			long long ai = i < (int)a.size() ? a[i] : 0;
+			t[i] = ((i == 0 ? 1 : 0) + ai - ln_b[i] + mod) % mod;
+		}
+        B = B * t mod x^{m2}
+		auto b_ext = b;
+		b_ext.resize(m, 0);
+		b = b_ext * t;
+		b.resize(m);
+	}
+	b.resize(n);
+	return b;
+}
+
+void soviet() {
+	int n; std::cin >> n;
+	std::vector<long long> a(n);
+	for (int i = 0; i < n; i++) std::cin >> a[i];
+	auto b = poly_exp(a);
+	for (int i = 0; i < n; i++) std::cout << b[i] << ' ';
+}
+
+int main() {
+	int M_T = 1; std::ios::sync_with_stdio(false); std::cin.tie(nullptr);
+//	std::cin >> M_T;
+	while (M_T--) { soviet(); }
+	return 0;
+}
+
+```
+
+
+
+
+
+#### 多项式开根
+
+[P5205 【模板】多项式开根 - 洛谷](https://www.luogu.com.cn/problem/P5205)
+
+> 给定一个 $n-1$ 次多项式 $A(x)$，求一个在 ${} \bmod x^n$ 意义下的多项式 $B(x)$，使得 $B^2(x) \equiv A(x) \pmod{x^n}$。若有多解，请取零次项系数较小的作为答案。保证 $a_0 = 1$。
+
+要求 $B^2 \equiv A \ (mod\ x^n)$，且 $A(0) = 1$，取  $B(0) = 1$ （零次项系数较小）。
+
+对两边取对数：
+$$
+\ln (B^2) = \ln A \Rightarrow 2\ln B = \ln A \Rightarrow \ln B = \frac{1}{2}\ln A
+$$
+再取指数：
+$$
+B = exp(\frac{1}{2}\ln A)
+$$
+由于 $A(0) = 1$，所以 $\ln A$ 存在且常数项为 0，乘以 1/2 后常数项仍为 0，满足 `poly_exp` 对输入常数项为 0 的要求。
+
+总时间复杂度 $O(N\log N)$
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+const int mod = 998244353,G = 3,GI = 332748118;
+
+long long qmi(long long a,long long b,long long p){
+	long long ans = 1;
+	while(b){
+		if(b&1) ans = ans*a%p;
+		b>>=1;
+		a = a*a%p;
+	}
+	return ans;
+}
+
+void NTT(std::vector<long long>& a, bool invert) {
+	int n = a.size();
+
+	for(int i = 1,j = 0;i < n;i++) {
+		int bit = n >> 1;
+		for (; j&bit; bit >>= 1) j ^= bit;
+		j ^= bit;
+		if (i < j) std::swap(a[i],a[j]);
+	}
+
+	for(int len = 2;len <= n;len <<= 1) {
+		long long wlen = qmi(invert ? GI : G,(mod-1)/len,mod);
+		for (int i = 0;i < n;i += len) {
+			long long w = 1;
+			for (int j = 0;j < len/2;j++) {
+				long long u = a[i+j];
+				long long v = a[i+j + len/2] * w % mod;
+				a[i+j] = (u+v) % mod;
+				a[i+j + len/2] = (u-v+mod) % mod;
+				w = w * wlen % mod;
+			}
+		}
+	}
+	if(invert){
+		long long inv_n = qmi(n,mod-2,mod);
+		for(auto &x:a) x = x * inv_n % mod;
+	}
+}
+
+std::vector<long long> operator * (std::vector<long long>a,std::vector<long long>b){//值传递
+	int n = a.size(), m = b.size();
+
+	int MAX_N = 1;
+	while (MAX_N < n + m) MAX_N <<= 1;
+	a.resize(MAX_N);
+	b.resize(MAX_N);
+
+	NTT(a, false);
+	NTT(b, false);
+	for(int i = 0; i < MAX_N; i++) a[i] = a[i] * b[i] % mod;
+	NTT(a, true);
+
+	while(a.size() >= 2 && a.back() == 0) a.pop_back();
+	return a;
+}
+
+std::vector<long long> poly_inv(std::vector<long long>& a) {
+	std::vector<long long> g(1, qmi(a[0], mod - 2, mod));
+	int m = 1, n = a.size();
+	while (m < n) {
+		m = std::min(m * 2, n);
+		std::vector<long long> f(a.begin(), a.begin() + std::min<int>(a.size(), m));
+		auto t = f * g;
+		t.resize(m);
+		for (int i = 0; i < m; i++) t[i] = (mod - t[i]) % mod;
+		t[0] = (t[0] + 2) % mod;
+		g = g * t;
+		g.resize(m);
+	}
+	g.resize(a.size());
+	return g;
+}
+
+vector<long long> poly_ln(const vector<long long>& a) {
+    int n = a.size();
+    if (n == 1) return vector<long long>{0};
+
+    vector<long long> inv(n + 1);
+    inv[1] = 1;
+    for (int i = 2; i <= n; i++) {
+        inv[i] = (mod - mod / i) * inv[mod % i] % mod;
+    }
+
+    vector<long long> da(n - 1);
+    for (int i = 1; i < n; i++) {
+        da[i - 1] = a[i] * i % mod;
+    }
+
+    vector<long long> a_cut(a.begin(), a.begin() + n - 1);
+    vector<long long> inva = poly_inv(a_cut);  // 长度 n-1
+
+    vector<long long> prod = da * inva;
+    prod.resize(n - 1);
+
+    vector<long long> b(n);
+    b[0] = 0;
+    for (int i = 1; i < n; i++) {
+        b[i] = prod[i - 1] * inv[i] % mod;
+    }
+    return b;
+}
+
+std::vector<long long> poly_exp(std::vector<long long>& a) {
+	int n = a.size();
+	std::vector<long long> b(1, 1);
+	int m = 1;
+	while (m < n) {
+		m = std::min(m * 2, n);
+		auto b_cut = b;
+		b_cut.resize(m);
+		auto ln_b = poly_ln(b_cut);
+		std::vector<long long> t(m);
+		for (int i = 0; i < m; i++) {
+			long long ai = i < (int)a.size() ? a[i] : 0;
+			t[i] = ((i == 0 ? 1 : 0) + ai - ln_b[i] + mod) % mod;
+		}
+
+		auto b_ext = b;
+		b_ext.resize(m, 0);
+		b = b_ext * t;
+		b.resize(m);
+	}
+	b.resize(n);
+	return b;
+}
+
+std::vector<long long> poly_sqrt(std::vector<long long>& a) {
+	int n = a.size();
+	auto ln_a = poly_ln(a);
+	long long inv2 = (mod + 1) / 2;
+	for (auto& x: ln_a) x = x * inv2 % mod;
+	return poly_exp(ln_a);
+}
+
+
+void soviet() {
+	int n; std::cin >> n;
+	std::vector<long long> a(n);
+	for (int i = 0; i < n; i++) std::cin >> a[i];
+	auto b = poly_sqrt(a);
+	for (int i = 0; i < n; i++) std::cout << b[i] << ' ';
+}
+
+int main() {
+	int M_T = 1; std::ios::sync_with_stdio(false); std::cin.tie(nullptr);
+//	std::cin >> M_T;
+	while (M_T--) { soviet(); }
+	return 0;
+}
+```
+
+
+
+
+
+[P5277 【模板】多项式开根（加强版） - 洛谷](https://www.luogu.com.cn/problem/P5277)
+
+> 本题不保证 $a[0] = 1$，但保证 $a[0]$ 是 $mod\ 998244353$ 下的二次剩余。
+
+核心思想是：提取最低非零项和常数因子，将多项式转化为常数项为 1 的形式，套用简单版开根，最后还原并选择字典序最小的根
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+const int mod = 998244353, G = 3, GI = 332748118;
+
+long long qmi(long long a, long long b, long long p) {
+	long long ans = 1;
+	while (b) {
+		if (b & 1) ans = ans * a % p;
+		b >>= 1;
+		a = a * a % p;
+	}
+	return ans;
+}
+
+void NTT(vector<long long>& a, bool invert) {
+	int n = a.size();
+	for (int i = 1, j = 0; i < n; i++) {
+		int bit = n >> 1;
+		for (; j & bit; bit >>= 1) j ^= bit;
+		j ^= bit;
+		if (i < j) swap(a[i], a[j]);
+	}
+	for (int len = 2; len <= n; len <<= 1) {
+		long long wlen = qmi(invert ? GI : G, (mod - 1) / len, mod);
+		for (int i = 0; i < n; i += len) {
+			long long w = 1;
+			for (int j = 0; j < len / 2; j++) {
+				long long u = a[i + j];
+				long long v = a[i + j + len / 2] * w % mod;
+				a[i + j] = (u + v) % mod;
+				a[i + j + len / 2] = (u - v + mod) % mod;
+				w = w * wlen % mod;
+			}
+		}
+	}
+	if (invert) {
+		long long inv_n = qmi(n, mod - 2, mod);
+		for (auto& x : a) x = x * inv_n % mod;
+	}
+}
+
+vector<long long> operator*(vector<long long> a, vector<long long> b) {
+	int n = a.size(), m = b.size();
+	if (n == 0 || m == 0) return {};
+	int MAX_N = 1;
+	while (MAX_N < n + m) MAX_N <<= 1;
+	a.resize(MAX_N);
+	b.resize(MAX_N);
+	NTT(a, false);
+	NTT(b, false);
+	for (int i = 0; i < MAX_N; i++) a[i] = a[i] * b[i] % mod;
+	NTT(a, true);
+	a.resize(n + m - 1);
+	while (a.size() >= 2 && a.back() == 0) a.pop_back();
+	return a;
+}
+
+vector<long long> poly_inv(const vector<long long>& a) {
+	vector<long long> g(1, qmi(a[0], mod - 2, mod));
+	int m = 1, n = a.size();
+	while (m < n) {
+		m = min(m * 2, n);
+		vector<long long> f(a.begin(), a.begin() + min((int)a.size(), m));
+		auto t = f * g;
+		t.resize(m);
+		for (int i = 0; i < m; i++) t[i] = (mod - t[i]) % mod;
+		t[0] = (t[0] + 2) % mod;
+		g = g * t;
+		g.resize(m);
+	}
+	g.resize(a.size());
+	return g;
+}
+
+vector<long long> poly_ln(const vector<long long>& a) {
+	int n = a.size();
+	if (n == 1) return vector<long long>{0};
+	vector<long long> inv(n + 1);
+	inv[1] = 1;
+	for (int i = 2; i <= n; i++) {
+		inv[i] = (mod - mod / i) * inv[mod % i] % mod;
+	}
+	vector<long long> da(n - 1);
+	for (int i = 1; i < n; i++) {
+		da[i - 1] = a[i] * i % mod;
+	}
+	vector<long long> a_cut(a.begin(), a.begin() + n - 1);
+	vector<long long> inva = poly_inv(a_cut);
+	vector<long long> prod = da * inva;
+	prod.resize(n - 1);
+	vector<long long> b(n);
+	b[0] = 0;
+	for (int i = 1; i < n; i++) {
+		b[i] = prod[i - 1] * inv[i] % mod;
+	}
+	return b;
+}
+
+vector<long long> poly_exp(const vector<long long>& a) {
+	int n = a.size();
+	vector<long long> b(1, 1);
+	int m = 1;
+	while (m < n) {
+		int m2 = min(m * 2, n);
+		vector<long long> b_cut = b;
+		b_cut.resize(m2, 0);
+		vector<long long> ln_b = poly_ln(b_cut);
+		vector<long long> t(m2);
+		for (int i = 0; i < m2; i++) {
+			long long ai = (i < (int)a.size() ? a[i] : 0);
+			t[i] = ((i == 0 ? 1 : 0) + ai - ln_b[i] + mod) % mod;
+		}
+		vector<long long> b_ext = b;
+		b_ext.resize(m2, 0);
+		b = b_ext * t;
+		b.resize(m2);
+		m = m2;
+	}
+	b.resize(n);
+	return b;
+}
+
+// 简单版开根，要求 a[0] = 1
+vector<long long> poly_sqrt_simple(const vector<long long>& a) {
+	int n = a.size();
+	vector<long long> ln_a = poly_ln(a);
+	long long inv2 = (mod + 1) / 2;
+	for (auto& x : ln_a) x = x * inv2 % mod;
+	return poly_exp(ln_a);
+}
+
+// Cipolla 算法求模平方根
+long long mod_p;
+struct Complex {
+	long long real, imag;
+	Complex(long long r = 0, long long i = 0) : real(r), imag(i) {}
+};
+Complex mul(Complex a, Complex b, long long w) {
+	Complex res;
+	res.real = (a.real * b.real % mod_p + a.imag * b.imag % mod_p * w % mod_p) % mod_p;
+	res.imag = (a.real * b.imag % mod_p + a.imag * b.real % mod_p) % mod_p;
+	return res;
+}
+Complex qpow(Complex a, long long b, long long w) {
+	Complex res(1, 0);
+	while (b) {
+		if (b & 1) res = mul(res, a, w);
+		a = mul(a, a, w);
+		b >>= 1;
+	}
+	return res;
+}
+long long sqrt_mod(long long n, long long p) {
+	if (n == 0) return 0;
+	if (p == 2) return n;
+	if (qmi(n, (p - 1) / 2, p) != 1) return -1;
+	long long a;
+	while (true) {
+		a = rand() % p;
+		long long t = (a * a % p - n + p) % p;
+		if (qmi(t, (p - 1) / 2, p) == p - 1) break;
+	}
+	mod_p = p;
+	long long w = (a * a % p - n + p) % p;
+	Complex x(a, 1);
+	Complex res = qpow(x, (p + 1) / 2, w);
+	return res.real;
+}
+
+// 加强版开根
+vector<long long> poly_sqrt(const vector<long long>& A) {
+	int n = A.size();
+	int p = 0;
+	while (p < n && A[p] == 0) p++;
+	if (p == n) return vector<long long>(n, 0);
+	if (p % 2 == 1) return vector<long long>(n, 0); // 无解，但题目保证有解
+	int half_p = p / 2;
+	vector<long long> C(n - p);
+	for (int i = p; i < n; i++) C[i - p] = A[i];
+	long long c0 = C[0];
+	long long r = sqrt_mod(c0, mod);
+	if (r == -1) return vector<long long>(n, 0);
+	long long d0 = min(r, mod - r);
+	long long inv_d0_sq = qmi(d0, mod - 2, mod);
+	inv_d0_sq = inv_d0_sq * inv_d0_sq % mod;
+	vector<long long> C_prime(n - p);
+	for (int i = 0; i < n - p; i++) {
+		C_prime[i] = C[i] * inv_d0_sq % mod;
+	}
+	vector<long long> D_prime = poly_sqrt_simple(C_prime);
+	vector<long long> D(n - p);
+	for (int i = 0; i < n - p; i++) {
+		D[i] = D_prime[i] * d0 % mod;
+	}
+	vector<long long> B(n, 0);
+	for (int i = 0; i < n - p; i++) {
+		if (half_p + i < n) {
+			B[half_p + i] = D[i];
+		}
+	}
+	return B;
+}
+
+void soviet() {
+	int n; cin >> n;
+	vector<long long> A(n);
+	for (int i = 0; i < n; i++) cin >> A[i];
+
+	vector<long long> B = poly_sqrt(A);
+
+	for (int i = 0; i < n; i++) {
+		cout << B[i] << " \n"[i == n - 1];
+	}
+}
+
+int main() {
+	int M_T = 1; std::ios::sync_with_stdio(false); std::cin.tie(nullptr);
+//	std::cin >> M_T;
+	while (M_T--) { soviet(); }
+	return 0;
+}
+
+```
+
+
+
+
+
+
+
+#### 多项式除法
+
+[P4512 【模板】多项式除法 - 洛谷](https://www.luogu.com.cn/problem/P4512)
+
+> 给定一个 $n$ 次多项式 $F(x)$ 和一个 $m$ 次多项式 $G(x)$，请求出多项式 $Q(x)$, $R(x)$，满足以下条件：  
+>
+> - $Q(x)$ 次数为 $n-m$，$R(x)$ 次数小于 $m$ 
+> - $F(x) = Q(x) * G(x) + R(x)$ 所有的运算在模 $998244353$ 意义下进行。
+
+
+
+
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+const int mod = 998244353,G = 3,GI = 332748118;
+
+long long qmi(long long a,long long b,long long p){
+	long long ans = 1;
+	while(b){
+		if(b&1) ans = ans*a%p;
+		b>>=1;
+		a = a*a%p;
+	}
+	return ans;
+}
+
+void NTT(std::vector<long long>& a, bool invert) {
+	int n = a.size();
+
+	for(int i = 1,j = 0;i < n;i++) {
+		int bit = n >> 1;
+		for (; j&bit; bit >>= 1) j ^= bit;
+		j ^= bit;
+		if (i < j) std::swap(a[i],a[j]);
+	}
+
+	for(int len = 2;len <= n;len <<= 1) {
+		long long wlen = qmi(invert ? GI : G,(mod-1)/len,mod);
+		for (int i = 0;i < n;i += len) {
+			long long w = 1;
+			for (int j = 0;j < len/2;j++) {
+				long long u = a[i+j];
+				long long v = a[i+j + len/2] * w % mod;
+				a[i+j] = (u+v) % mod;
+				a[i+j + len/2] = (u-v+mod) % mod;
+				w = w * wlen % mod;
+			}
+		}
+	}
+	if(invert){
+		long long inv_n = qmi(n,mod-2,mod);
+		for(auto &x:a) x = x * inv_n % mod;
+	}
+}
+
+std::vector<long long> operator * (std::vector<long long>a,std::vector<long long>b){//值传递
+	int n = a.size(), m = b.size();
+
+	int MAX_N = 1;
+	while (MAX_N < n + m) MAX_N <<= 1;
+	a.resize(MAX_N);
+	b.resize(MAX_N);
+
+	NTT(a, false);
+	NTT(b, false);
+	for(int i = 0; i < MAX_N; i++) a[i] = a[i] * b[i] % mod;
+	NTT(a, true);
+
+	while(a.size() >= 2 && a.back() == 0) a.pop_back();
+	return a;
+}
+
+std::vector<long long> poly_inv(std::vector<long long>& a) {
+	std::vector<long long> g(1, qmi(a[0], mod - 2, mod));
+	int m = 1, n = a.size();
+	while (m < n) {
+		m = std::min(m * 2, n);
+		std::vector<long long> f(a.begin(), a.begin() + std::min<int>(a.size(), m));
+		auto t = f * g;
+		t.resize(m);
+		for (int i = 0; i < m; i++) t[i] = (mod - t[i]) % mod;
+		t[0] = (t[0] + 2) % mod;
+		g = g * t;
+		g.resize(m);
+	}
+	g.resize(a.size());
+	return g;
+}
+
+// 多项式反转
+vector<long long> poly_rev(const vector<long long>& a) {
+    return vector<long long>(a.rbegin(), a.rend());
+}
+
+// 多项式除法：F = Q * G + R，返回 {Q, R}
+std::pair<std::vector<long long>, std::vector<long long>> poly_div(std::vector<long long>& f, std::vector<long long> &g) {
+	int n = f.size() - 1, m = g.size() - 1; // F 的次数、 G 的次数
+	if (n < m) return {{0}, f};
+	int len_q = n - m + 1;
+	auto f_rev = poly_rev(f);
+	f_rev.resize(len_q, 0);
+
+	auto g_rev = poly_rev(g);
+	g_rev.resize(len_q, 0);
+
+	auto inv_g_rev = poly_inv(g_rev);
+
+	std::vector<long long> q_rev = f_rev * inv_g_rev;
+	q_rev.resize(len_q, 0);
+
+	auto q = poly_rev(q_rev);
+
+	auto qg = q * g;
+	qg.resize(f.size(), 0);
+
+	std::vector<long long> r(m, 0);
+	for (int i = 0; i < m; i++) {
+		r[i] = (f[i] - qg[i] + mod) % mod;
+	}
+	return {q, r};
+}
+
+void soviet() {
+	int n, m; std::cin >> n >> m;
+	std::vector<long long> f(n + 1), g(m + 1);
+	for (int i = 0; i <= n; i++) std::cin >> f[i];
+	for (int i = 0; i <= m; i++) std::cin >> g[i];
+
+	auto [q, r] = poly_div(f, g);
+
+	for (int i = 0; i < q.size(); i++) std::cout << q[i] << ' ';
+	std::cout << '\n';
+	r.resize(m, 0);
+	for (int i = 0; i < r.size(); i++) std::cout << r[i] << ' ';
+
+}
+
+int main() {
+	int M_T = 1; std::ios::sync_with_stdio(false); std::cin.tie(nullptr);
+//	std::cin >> M_T;
+	while (M_T--) { soviet(); }
+	return 0;
+}
+```
+
+
+
+
+
+#### 多项式快速幂
+
+[P5245 【模板】多项式快速幂 - 洛谷](https://www.luogu.com.cn/problem/P5245)
+
+> 给定一个 $n-1$ 次多项式 $A(x)$，求一个在 $\bmod\ x^n$ 意义下的多项式 $B(x)$，使得 $B(x) \equiv (A(x))^k \ (\bmod\ x^n)$。 多项式的系数在 $\bmod\ 998244353$ 的意义下进行运算。$1< n \leq 10^5$，$0 \leq k \leq 10^{10^5}$，$a_i \in [0,998244352]$。保证 $a_0 = 1$。
+
+计算公式：
+$$
+A(x)^k = exp(k · \ln A(x)) \ (mod\ x^n)
+$$
+
+
+时间复杂度：$O(N\log N)$
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+const int mod = 998244353,G = 3,GI = 332748118;
+
+long long qmi(long long a,long long b,long long p){
+	long long ans = 1;
+	while(b){
+		if(b&1) ans = ans*a%p;
+		b>>=1;
+		a = a*a%p;
+	}
+	return ans;
+}
+
+void NTT(std::vector<long long>& a, bool invert) {
+	int n = a.size();
+
+	for(int i = 1,j = 0;i < n;i++) {
+		int bit = n >> 1;
+		for (; j&bit; bit >>= 1) j ^= bit;
+		j ^= bit;
+		if (i < j) std::swap(a[i],a[j]);
+	}
+
+	for(int len = 2;len <= n;len <<= 1) {
+		long long wlen = qmi(invert ? GI : G,(mod-1)/len,mod);
+		for (int i = 0;i < n;i += len) {
+			long long w = 1;
+			for (int j = 0;j < len/2;j++) {
+				long long u = a[i+j];
+				long long v = a[i+j + len/2] * w % mod;
+				a[i+j] = (u+v) % mod;
+				a[i+j + len/2] = (u-v+mod) % mod;
+				w = w * wlen % mod;
+			}
+		}
+	}
+	if(invert){
+		long long inv_n = qmi(n,mod-2,mod);
+		for(auto &x:a) x = x * inv_n % mod;
+	}
+}
+
+std::vector<long long> operator * (std::vector<long long>a,std::vector<long long>b){//值传递
+	int n = a.size(), m = b.size();
+
+	int MAX_N = 1;
+	while (MAX_N < n + m) MAX_N <<= 1;
+	a.resize(MAX_N);
+	b.resize(MAX_N);
+
+	NTT(a, false);
+	NTT(b, false);
+	for(int i = 0; i < MAX_N; i++) a[i] = a[i] * b[i] % mod;
+	NTT(a, true);
+
+	while(a.size() >= 2 && a.back() == 0) a.pop_back();
+	return a;
+}
+
+std::vector<long long> poly_inv(std::vector<long long>& a) {
+	std::vector<long long> g(1, qmi(a[0], mod - 2, mod));
+	int m = 1, n = a.size();
+	while (m < n) {
+		m = std::min(m * 2, n);
+		std::vector<long long> f(a.begin(), a.begin() + std::min<int>(a.size(), m));
+		auto t = f * g;
+		t.resize(m);
+		for (int i = 0; i < m; i++) t[i] = (mod - t[i]) % mod;
+		t[0] = (t[0] + 2) % mod;
+		g = g * t;
+		g.resize(m);
+	}
+	g.resize(a.size());
+	return g;
+}
+
+vector<long long> poly_ln(const vector<long long>& a) {
+    int n = a.size();
+    if (n == 1) return vector<long long>{0};
+
+    vector<long long> inv(n + 1);
+    inv[1] = 1;
+    for (int i = 2; i <= n; i++) {
+        inv[i] = (mod - mod / i) * inv[mod % i] % mod;
+    }
+
+    vector<long long> da(n - 1);
+    for (int i = 1; i < n; i++) {
+        da[i - 1] = a[i] * i % mod;
+    }
+
+    vector<long long> a_cut(a.begin(), a.begin() + n - 1);
+    vector<long long> inva = poly_inv(a_cut);  // 长度 n-1
+
+    vector<long long> prod = da * inva;
+    prod.resize(n - 1);
+
+    vector<long long> b(n);
+    b[0] = 0;
+    for (int i = 1; i < n; i++) {
+        b[i] = prod[i - 1] * inv[i] % mod;
+    }
+    return b;
+}
+
+std::vector<long long> poly_exp(std::vector<long long>& a) {
+	int n = a.size();
+	std::vector<long long> b(1, 1);
+	int m = 1;
+	while (m < n) {
+		m = std::min(m * 2, n);
+		auto b_cut = b;
+		b_cut.resize(m);
+		auto ln_b = poly_ln(b_cut);
+		std::vector<long long> t(m);
+		for (int i = 0; i < m; i++) {
+			long long ai = i < (int)a.size() ? a[i] : 0;
+			t[i] = ((i == 0 ? 1 : 0) + ai - ln_b[i] + mod) % mod;
+		}
+
+		auto b_ext = b;
+		b_ext.resize(m, 0);
+		b = b_ext * t;
+		b.resize(m);
+	}
+	b.resize(n);
+	return b;
+}
+
+void soviet() {
+	int n; std::cin >> n;
+	std::string k_str; std::cin >> k_str;
+	long long k = 0;
+	for (char c: k_str) {
+		k = (k * 10 + (c - '0')) % mod;
+	}
+
+	std::vector<long long> a(n);
+	for (int i = 0; i < n; i++) std::cin >> a[i];
+
+	auto ln_a = poly_ln(a);
+	for (auto& x : ln_a) x = x * k % mod;
+
+	auto b = poly_exp(ln_a);
+
+	for (int i = 0; i < n; i++) 
+		std::cout << b[i] << ' ';
+}
+
+int main() {
+	int M_T = 1; std::ios::sync_with_stdio(false); std::cin.tie(nullptr);
+//	std::cin >> M_T;
+	while (M_T--) { soviet(); }
+	return 0;
+}
+```
+
+
+
+
+
+[P5273 【模板】多项式幂函数（加强版） - 洛谷](https://www.luogu.com.cn/problem/P5273)
+
+> 本题不保证 $a[0] = 1$。
+
+把 $A(x)$ 写成：
+$$
+A(x)=x^p\cdot c_0\cdot C'(x)
+$$
+其中：
+- $p$：最低非零项下标；
+- $c_0=a_p$；
+- $C'(0)=1$。
+
+于是：
+$$
+A(x)^k=x^{pk}\cdot c_0^k\cdot C'(x)^k
+$$
+
+计算 $C'(x)^k$
+因为 $C'(0)=1$，可直接用：
+$$
+C'(x)^k=\exp(k\ln C'(x))
+$$
+步骤：
+1. 求 $\ln C'(x)$；
+2. 每项乘 $k\bmod p$；
+3. 做 $\exp$。
+
+指数 $k$ 的处理
+需要算三个量：
+
+- $k\bmod p$：用于乘 $\ln C'(x)$ 的系数；
+- $k\bmod(p-1)$：用于费马小定理算 $c_0^k$；
+- 判断 $k\ge n$：若成立，则 $pk\ge n$，答案前 $n$ 项全为 0。
+
+还原答案
+最终：
+$$
+B(x)=x^{pk}\cdot c_0^k\cdot C'(x)^k
+$$
+- 若 $pk\ge n$，直接返回全零；
+- 否则把结果左移 $pk$ 位，截断到 $n$ 项。
+
+边界情况
+- $k=0$：答案为 $1$，即 $[1,0,0,\dots]$；
+- 全零多项式：若 $k>0$，答案为全零；
+- $p=0$：偏移为 0，直接算。
+
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+const int mod = 998244353, G = 3, GI = 332748118;
+
+long long qmi(long long a, long long b, long long p) {
+    long long ans = 1;
+    while (b) {
+        if (b & 1) ans = ans * a % p;
+        b >>= 1;
+        a = a * a % p;
+    }
+    return ans;
+}
+
+void NTT(vector<long long>& a, bool invert) {
+    int n = a.size();
+    for (int i = 1, j = 0; i < n; i++) {
+        int bit = n >> 1;
+        for (; j & bit; bit >>= 1) j ^= bit;
+        j ^= bit;
+        if (i < j) swap(a[i], a[j]);
+    }
+    for (int len = 2; len <= n; len <<= 1) {
+        long long wlen = qmi(invert ? GI : G, (mod - 1) / len, mod);
+        for (int i = 0; i < n; i += len) {
+            long long w = 1;
+            for (int j = 0; j < len / 2; j++) {
+                long long u = a[i + j];
+                long long v = a[i + j + len / 2] * w % mod;
+                a[i + j] = (u + v) % mod;
+                a[i + j + len / 2] = (u - v + mod) % mod;
+                w = w * wlen % mod;
+            }
+        }
+    }
+    if (invert) {
+        long long inv_n = qmi(n, mod - 2, mod);
+        for (auto& x : a) x = x * inv_n % mod;
+    }
+}
+
+vector<long long> operator*(vector<long long> a, vector<long long> b) {
+    int n = a.size(), m = b.size();
+    if (n == 0 || m == 0) return {};
+    int MAX_N = 1;
+    while (MAX_N < n + m) MAX_N <<= 1;
+    a.resize(MAX_N);
+    b.resize(MAX_N);
+    NTT(a, false);
+    NTT(b, false);
+    for (int i = 0; i < MAX_N; i++) a[i] = a[i] * b[i] % mod;
+    NTT(a, true);
+    a.resize(n + m - 1);
+    while (a.size() >= 2 && a.back() == 0) a.pop_back();
+    return a;
+}
+
+vector<long long> poly_inv(const vector<long long>& a) {
+    vector<long long> g(1, qmi(a[0], mod - 2, mod));
+    int m = 1, n = a.size();
+    while (m < n) {
+        m = min(m * 2, n);
+        vector<long long> f(a.begin(), a.begin() + min((int)a.size(), m));
+        auto t = f * g;
+        t.resize(m);
+        for (int i = 0; i < m; i++) t[i] = (mod - t[i]) % mod;
+        t[0] = (t[0] + 2) % mod;
+        g = g * t;
+        g.resize(m);
+    }
+    g.resize(a.size());
+    return g;
+}
+
+vector<long long> poly_ln(const vector<long long>& a) {
+    int n = a.size();
+    if (n == 1) return vector<long long>{0};
+    vector<long long> inv(n + 1);
+    inv[1] = 1;
+    for (int i = 2; i <= n; i++) {
+        inv[i] = (mod - mod / i) * inv[mod % i] % mod;
+    }
+    vector<long long> da(n - 1);
+    for (int i = 1; i < n; i++) {
+        da[i - 1] = a[i] * i % mod;
+    }
+    vector<long long> a_cut(a.begin(), a.begin() + n - 1);
+    vector<long long> inva = poly_inv(a_cut);
+    vector<long long> prod = da * inva;
+    prod.resize(n - 1);
+    vector<long long> b(n);
+    b[0] = 0;
+    for (int i = 1; i < n; i++) {
+        b[i] = prod[i - 1] * inv[i] % mod;
+    }
+    return b;
+}
+
+vector<long long> poly_exp(const vector<long long>& a) {
+    int n = a.size();
+    vector<long long> b(1, 1);
+    int m = 1;
+    while (m < n) {
+        int m2 = min(m * 2, n);
+        vector<long long> b_cut = b;
+        b_cut.resize(m2, 0);
+        vector<long long> ln_b = poly_ln(b_cut);
+        vector<long long> t(m2);
+        for (int i = 0; i < m2; i++) {
+            long long ai = (i < (int)a.size() ? a[i] : 0);
+            t[i] = ((i == 0 ? 1 : 0) + ai - ln_b[i] + mod) % mod;
+        }
+        vector<long long> b_ext = b;
+        b_ext.resize(m2, 0);
+        b = b_ext * t;
+        b.resize(m2);
+        m = m2;
+    }
+    b.resize(n);
+    return b;
+}
+
+vector<long long> qmi(vector<long long> &a, vector<long long>& k) {
+    int n = a.size();
+
+    // 1. 处理指数 k
+    long long k_mod = 0, k_phi = 0;
+    long long k_val = 0;
+    bool k_large = false;   // 标记 k 是否 >= n
+    bool k_is_zero = true;  // 标记 k 是否为 0
+
+    for (long long d : k) {
+        k_mod = (k_mod * 10 + d) % mod;
+        k_phi = (k_phi * 10 + d) % (mod - 1);
+        if (d != 0) k_is_zero = false;
+        if (!k_large) {
+            k_val = k_val * 10 + d;
+            if (k_val >= n) k_large = true;
+        }
+    }
+
+    // 特判 k = 0
+    if (k_is_zero) {
+        vector<long long> ans(n, 0);
+        ans[0] = 1;
+        return ans;
+    }
+
+    // 2. 找到第一个非零项
+    int p = 0;
+    while (p < n && a[p] == 0) p++;
+
+    // 全零多项式
+    if (p == n) {
+        return vector<long long>(n, 0);
+    }
+
+    // 3. 提取常数因子，归一化
+    long long ap = a[p];
+    long long ap_inv = qmi(ap, mod - 2, mod);
+    vector<long long> a_prime(n - p);
+    for (int i = p; i < n; i++) {
+        a_prime[i - p] = a[i] * ap_inv % mod;
+    }
+
+    // 4. 计算 (A')^k
+    vector<long long> ln_a = poly_ln(a_prime);
+    for (auto& x : ln_a) x = x * k_mod % mod;
+    vector<long long> b_prime = poly_exp(ln_a);
+
+    // 5. 还原：乘以 ap^k，左移 pk 位
+    long long ap_k = qmi(ap, k_phi, mod);
+
+    long long offset = 0;
+    if (p > 0) {
+        if (k_large) {
+            // k >= n，且 p >= 1，所以 pk >= n，结果全零
+            return vector<long long>(n, 0);
+        } else {
+            offset = p * (long long)k_val;
+            if (offset >= n) return vector<long long>(n, 0);
+        }
+    }
+    // 若 p == 0，offset 始终为 0
+
+    vector<long long> ans(n, 0);
+    for (int i = 0; i < n - offset && i < (int)b_prime.size(); i++) {
+        ans[offset + i] = b_prime[i] * ap_k % mod;
+    }
+    return ans;
+}
+
+int main() {
+    int n;
+    string k_str;
+    cin >> n >> k_str;
+
+    vector<long long> k_digits;
+    for (char c : k_str) k_digits.push_back(c - '0');
+
+    vector<long long> a(n);
+    for (int i = 0; i < n; i++) cin >> a[i];
+
+    vector<long long> ans = qmi(a, k_digits);
+
+    for (int i = 0; i < n; i++) {
+        cout << ans[i] << ' ';
+    }
+}
+```
+
+
+
+
+
+
+
+### 普通生成函数
+
+生成函数（Generating Function） 是把一个数列“编码”成一个形式幂级数，然后通过代数运算来研究数列的性质。
+
+简单说：
+数列 $a_0, a_1, a_2, ...$ 的生成函数就是
+$$
+F(x) = a_0 + a_1x + a_2x^2 + ...
+$$
+这里的 $x$ 只是一个符号，不关心它取什么值，也不关心级数是否收敛，所以也叫形式幂级数。
+
+普通生成函数的定义（OGF）：
+$$
+F(x) = \sum_{n\ge 0}{a_nx^n}
+$$
+
+
+**基本运算**
+
+考虑两个序列 $a,b$ 的普通生成函数，分别为 $F(x),G(x)$．那么有
+
+$$
+F(x)\pm G(x)=\sum_n (a_n\pm b_n)x^n
+$$
+
+因此 $F(x)\pm G(x)$ 是序列 $\langle a_n\pm b_n\rangle$ 的普通生成函数．
+
+考虑乘法运算，也就是卷积：
+
+$$
+F(x)G(x)=\sum_n x^n \sum_{i=0}^na_ib_{n-i}
+$$
+
+因此 $F(x)G(x)$ 是序列 $\langle \sum_{i=0}^n a_ib_{n-i} \rangle$ 的普通生成函数．
+
+
+
+**封闭形式**
+
+在运用生成函数的过程中，我们不会一直使用形式幂级数的形式，而会适时地转化为封闭形式以更好地化简、进行乘法、求逆、求导等运算。
+
+
+
+常见数列的生成函数封闭形式：
+
+- 常数数列 `a = {1, 1, 1, 1, 1, ...}`。 $F(x) = \frac{1}{1 - x}$
+- 等比数列 `a = {p, p^2, p^3, ...}`。 $F(x) = \frac{1}{1 - px}$
+- 斐波那契数列 `a = {0, 1, 1, 2, 3, 5, 8 ...}`。 $F(x) = \frac{x}{1 - x - x^2}$
+- 卡特兰数  $F(x) = \frac{1 - \sqrt{1 - 4x}}{2x}$
+- 二项式定理 $a_n = \binom{m}{n}$（$m$ 是常数， $n\ge 0$） 。$F(x)=\sum_{n\ge 0}\binom{m}{n}x^n=(1+x)^m$
+- 可重复组合 $a_n=\binom{m+n}{n}$（$m$ 是常数，$n\ge 0$）。$F(x)=\sum_{n\ge 0}\binom{m+n}{n}x^n=\frac{1}{(1-x)^{m+1}}$
+
+
+
+生成函数一般推导流程：
+
+- 定义 $F(x) = \sum_{n \ge 0} a_n x^n$
+- 写出递推式，确保对所有 $n$ 成立（或分段处理初始项）
+- 两边乘以  $x^n$，对 $n$ 求和
+- 把每一项用 $F(x)$ 表示：
+	- $\sum_{n\ge k}a_{n - k}x^n = x^kF(x)$ （可能需要减去前几项）
+	- 卷积项 $\sum_n{(\sum_{i + j = n}{a_ib_j})x^n} = F(x)G(x)$
+- 得到关于 $F(x)$ 的方程，解出 $F(x)$
+- 必要时展开成幂级数，得到通项或用于计算
+
+
+
+
+
+
+
+### 二项式定理
+
+**普通二项式定理**，其中 $m$ 是非负整数，$\binom{m}{n}$ 是组合数：
+$$
+(1 + x)^m = \sum_{n = 0}^m{\binom{m}{n}x^n}
+$$
+
+
+**负二项式定理**，就是二项式定理在负指数下的推广。
+
+比如 $-k (k > 0)$，二项式定理依然成立，只是展开编程无穷级数
+$$
+(1 + x)^{-k} = \sum_{n=0}^{\infty}{\binom{-k}{n}x^n}
+$$
+这里 $\binom{-k}{n}$ 叫负二项式系数，定义为：
+$$
+\binom{-k}{n} = \frac{(-k)(-k-1)(-k-2) \dots (-k-n+1)}{n!}
+$$
+负二项式系数的化简，其中 $\binom{k + n - 1}{m}$ 是普通的组合数：
+$$
+(1 + x)^{-k} = \sum_{n=0}^{\infty}{(-1)^n\binom{k + n - 1}{n}x^n}
+$$
+
+
+更常用的形式（把 $x$ 换成 $-x$）：
+$$
+(1 - x)^{-k} = \sum_{n = 0}^{\infty}{\binom{k + n - 1}{n}x^n}
+$$
+得到**重要公式**，注意 $\binom{k + n - 1}{n} = \binom{n + k - 1}{k - 1}$ ，两者相等：
+$$
+\frac{1}{(1 - x)^k} = \sum_{n=0}^{\infty}{\binom{n + k - 1}{k - 1}x^n}
+$$
+
+
+
 
 
 
@@ -6145,6 +7818,87 @@ int main(){
 
 
 
+#### 二维计算几何基础
+
+##### 正弦定理
+
+在 $\triangle \text{ABC}$ 中，若角 $A,B,C$ 所对边分别为 $a,b,c$，则有：
+
+$$
+\frac{a}{\sin A}=\frac{b}{\sin B}=\frac{c}{\sin C}=2R
+$$
+
+其中，$R$ 为 $\triangle \text{ABC}$ 的外接圆半径．
+
+
+
+##### 余弦定理
+
+在 $\triangle \text{ABC}$ 中，若角 $A,B,C$ 所对边分别为 $a,b,c$，则有：
+
+$$
+\begin{aligned}
+a^2&=b^2+c^2-2bc\cos A\\
+b^2&=a^2+c^2-2ac\cos B\\
+c^2&=a^2+b^2-2ab\cos C
+\end{aligned}
+$$
+
+
+
+
+
+**圆的标准方程**
+
+其中圆心为 $(a, b)$，半径为 $r$：
+$$
+(x - a)^2 + (y - b)^2 = r^2
+$$
+
+
+**圆的一般方程**
+$$
+x^2 + y^2 + Dx + Ey + F = 0
+$$
+满足 $D^2 + E^2 - 4F > 0$ 时，表示圆。
+其中：
+
+- 圆心：$(-\frac{D}{2}, -\frac{E}{2})$
+- 半径：$\frac{1}{2} \sqrt{D^2 + E^2 - 4F}$
+
+
+
+**圆的直径端点式**
+
+诺圆的直径端点为 $A(a_1, b_1)$、$B(a_2, b_2)$，则圆的方程为：
+$$
+(x - a_1)(x - a_2) + (y - b_1)(y - b_2) = 0
+$$
+
+
+
+
+
+**过一点做圆的切线**
+
+过圆外一点 $P(x_0, y_0)$ 作圆 $(x - a) + (y - b)^2 = r^2$ 的两条切线，两个切点的坐标：
+
+令 
+$$
+dx = x_0 - a,\ \ dy = y_0 - b \\
+d^2 = dx^2 = dy^2, \ \ d = \sqrt{d^2}
+$$
+因为 $P$ 在圆外，所以 $d > r$。两个切点 $T_1, T_2$ 的坐标为：
+$$
+x = a + \frac{r^2dx \mp r\sqrt{d^2 - r^2} dy}{d^2} \\
+y = b + \frac{r^2dy \pm r\sqrt{d^2 - r^2} dx}{d^2}
+$$
+
+
+
+
+
+
 #### 点线封装
 
 
@@ -6781,11 +8535,11 @@ int main(){
 
 
 
-**nth第k小数求中位数**
+**nth 求全局第 k 小**
 
 时间复杂度 $O(N)$
 
-[快排](#ksort) 或STL函数`nth_element()`
+快排实现，每次只排一半。 或 STL 函数 `nth_element()`
 
 
 
@@ -7013,11 +8767,6 @@ int main() {
 
 ## 前缀和&差分
 
-> 在头文件<numeric>中也包含了一维前缀和/差分函数
-> int a[6] = {1,2,3,4,5,6},s[6];
-> partial_sum(a,a+6,s); //s = {1,3,6,10,15,21}
-> adjacent_difference(a,a+6,s); //s = {1,1,1,1,1,1}
-
 ### 一维前缀和
 
 > pre[i] = a[1]+a[2] +...+a[i] = pre[i-1]+a[i]
@@ -7065,18 +8814,6 @@ s[i][j] = s[i-1][j] + s[i][j-1] - s[i-1][j-1] + a[i][j];
 //某一块S的求法：s[x1][y1]~s[x2][y2]
 s[x2][y2] - s[x1-1][y2] - s[x2][y1-1] + s[x1-1][y1-1];
 ```
-
-
-
-|      |      |           |      |           |      |      |
-| ---- | ---- | --------- | ---- | --------- | ---- | ---- |
-|      |      |           |      |           |      |      |
-|      |      | **x1,y1** |      |           |      |      |
-|      |      |           |      |           |      |      |
-|      |      |           |      | **x2,y2** |      |      |
-|      |      |           |      |           |      |      |
-|      |      |           |      |           |      |      |
-|      |      |           |      |           |      |      |
 
  
 
@@ -7237,7 +8974,7 @@ int main() {
 
 ### 二分查找
 
-> 目标数组需要为非降序排列
+> 目标数组需要为有序排列
 
 ```cpp
 #include <iostream>
@@ -7507,7 +9244,7 @@ int main(){
 
 求一个子段，他的和最大，**长度不超过k**：[135. 最大子段和](https://www.acwing.com/problem/content/137/)
 
->   详见 [单调队列优化](#sub_max_queue)
+>   详见 [单调队列：最大子段和]
 
 
 
@@ -7522,8 +9259,11 @@ int main(){
 > \max_{i-j>=k}\{A_{j+1}+A_{j+2}+...+A_i\} = \max_{k<=i<=n}\{sum_i-\min_{0<=j<=i-k}\{sum_j\}\}
 > $$
 
+类似的例题：[P1419 寻找段落 - 洛谷](https://www.luogu.com.cn/problem/P1419)。求一个长度在 $[S, T]$ 之间的且平均值最大连续子段，使用二分+单调队列维护。
+
 ```cpp
 //最佳牛围栏：https://www.acwing.com/problem/content/104/
+// 求一个长度 >= f 的区间，最大化该区间的平均值
 #include <iostream>
 #include <vector>
 #include <algorithm>
@@ -7639,6 +9379,10 @@ while (r - l > 2) {
 
 ## 双指针
 
+通过维护两个指针在数据结构中移动，能将许多原本 $O(n^2)$ 的问题优化到 $O(N)$ 或 $O(N\log N)$，且通常只需要 $O(1)$ 的额外空间。
+
+使用的关键前提：问题具有 “单调性” 或 “二段性”，使得两个指针无需回退，只需同向或反向移动。
+
 > ```cpp
 > for(int i = 1,j = 1;i <= n;i++){
 > 	while(j < i && check(i,j)) {
@@ -7648,7 +9392,6 @@ while (r - l > 2) {
 > }
 > ```
 >
-> 一般可以将$O(n^2)$或$O(NlogN)$优化到$O(n)$;
 
 ```cpp
 //最长连续无重复子序列
@@ -7700,11 +9443,11 @@ bool check(int mid){
 
 ### sort
 
-> 需包含头文件<algorithm>
+> 需包含头文件 `<algorithm>`
 >
 > 平均复杂度为O(NlogN)，不保证稳定性
 >
-> 语法：sort(begin, end, cmp);
+> 语法：`sort(begin, end, cmp);`
 >
 > 其中begin为指向待sort()的数组的`第一个元素的指针`，end为指向待sort()的数组的`最后一个元素的下一个位置的指针`，cmp参数为排序准则(不写默认从小到大进行排序); 
 
@@ -7984,6 +9727,71 @@ int main(){
 
 
 
+### 根号分治
+
+根号分治，是一种对数据进行点分治的分治方式，它的作用是优化暴力算法，类似与分块，但应用范围比分块更广。
+
+具体来说，对于所进行的操作，按照某个点B划分，分为大于B以及小于B两个部分，两部分使用不同的方式处理。（一般以根号为分界$B = \sqrt{N}$，这样复杂度最平衡）。将两个暴力算法“拼接在一起”，实现优化复杂度的作用。
+
+
+
+[Colorful Graph（★6） - AtCoder typical90_ce - Virtual Judge (vjudge.net)](https://vjudge.net/problem/AtCoder-typical90_ce#author=GPT_zh)
+
+> 给定N个点M条边的无向图，初始时每个点颜色为1。再给定Q次查询，每次查询给定两个整数{x,c}，输出当前点x的颜色，然后将点x及其所有相邻的点颜色改为c。$1 \le N,M,Q \le 2e5$
+
+`ans[x]={time,color}`表示当前点最后被更新时的时间戳和颜色，`flag[x]={time,color}`flag状态标记，表示当前节点在time时更新应周围节点为color。
+以度数是否大于$\sqrt{N}$为分界，将点划分为重点和轻点。轻点直接枚举，重点打标记。
+查询当前点：对于轻点，直接枚举所有邻接点更新自身。对于重点，本身已经被其它点更新。
+更新邻接点：只需要更新周围的重点。
+
+```cpp
+#include <bits/stdc++.h>
+
+int main(){
+	int n,m;std::cin >> n >> m;
+	int sn = sqrt(m<<1);
+
+	std::vector<std::vector<int>>e(n+1);
+	std::vector<int>du(n+1);
+	for(int i = 1;i <= m;i++){
+		int x,y;std::cin >> x >> y;
+		e[x].emplace_back(y);
+		e[y].emplace_back(x);
+		du[x]++; du[y]++;
+	}
+
+	for(int i = 1;i <= n;i++){
+		std::sort(e[i].begin(),e[i].end(),[&](int x,int y){return du[x] > du[y];});
+	}
+
+	std::vector<std::pair<int,int>>ans(n+1,{0,1}),flag(n+1,{0,1});
+
+	int q;std::cin >> q;
+	for(int i = 1;i <= q;i++){
+		int x,c;std::cin >> x >> c;
+		if(du[x] <= sn){
+			for(auto& y:e[x]){
+				ans[x] = std::max(ans[x],flag[y]);
+			}
+		}
+		std::cout << ans[x].second << '\n';
+		ans[x] = flag[x] = {i,c};
+		for(auto& y:e[x]){
+			if(du[y] <= sn) break;
+			ans[y] = flag[x];
+		}
+	}
+}
+```
+
+
+
+
+
+
+
+
+
 ## 二进制
 
 **求 n 的二进制第 k 位**
@@ -8214,7 +10022,7 @@ int main(){
 
 
 
-### 枚举子掩码
+### 枚举子集
 
 枚举单个掩码 m 的所有子掩码时间复杂度 $O(2^k)$ ，其中k为掩码 m 中 1 的位数
 
@@ -9575,210 +11383,197 @@ remove、recover、dance操作略有不同。
 
 > 倍增法（英语：binary lifting），顾名思义就是翻倍。它能够使线性的处理转化为对数级的处理，大大地优化时间复杂度。
 >
-> 这个方法在很多算法中均有应用，其中最常用的是 RMQ 问题和求 LCA(最近公共祖先)。
+> 这个方法在很多算法中均有应用，其中最常用的是 RMQ 问题、求 LCA(最近公共祖先)。
 
 
 
 
 
-### ST表
+例题：给出一个长度为 $n$ 的环和一个常数 $k$，每次会从第 $i$ 个点跳到第 $(i+k)\bmod n+1$ 个点，总共跳了 $m$ 次．每个点都有一个权值，记为 $a_i$，求 $m$ 次跳跃的起点的权值之和对 $10^9+7$ 取模的结果．
 
-ST表(Sparse Table,稀疏表)基于倍增思想,用于解决[可重复贡献问题][区间重合区域不影响结果，如「RMQ 」、「区间按位与」、「区间按位或」、「区间 GCD」]的数据结构，**不支持修改**
-O($N\log N$)预处理  O(1)查询
-
-<img src="C:\Users\21003\AppData\Roaming\Typora\typora-user-images\image-20240814143114839.png" alt="image-20240814143114839" style="zoom:50%;" />  
-
-令$st(i,j)$表示区间$[i,i+2^j-1]$的最大值，显然$st(i,0)=a_i$
-根据定义式，第二维就相当于倍增的时候「跳了 $2^j-1$ 步」，依据倍增的思路，写出状态转移方程：$st(i,j)=\max(st(i,j-1),st(i+2^{j-1},j-1))$
-
-对于每个询问 $[l,r]$，我们把它分成两部分：$[l,l+2^s-1]$ 与 $[r-2^s+1,r]$，其中 $s=\left\lfloor\log_2(r-l+1)\right\rfloor$。两部分的结果的最大值就是回答。
+数据范围：$1\leq n\leq 10^6$，$1\leq m\leq 10^{18}$，$1\leq k\leq n$，$0\le a_i\le 10^9$．
 
 ```cpp
-//https://www.luogu.com.cn/problem/P2880
 #include <bits/stdc++.h>
 using namespace std;
 
-namespace S_T{ //1_idx
-	const int N = 1000006;
-	int lg2[N];
+const int mod = 1e9 + 7;
 
-	struct info{
-		int mx,mn; //mn,gcd,and,or;
+const int N = 1000006;
+long long a[N];
+long long n, m, k;
 
-		info(){}
-		info(const int &x) { //init_info
-			mx = mn = x;
-		}
+long long go[60][N], sum[60][N]; // 长度小的放在第一维, 缓存友好
 
-		info friend operator + (const info &e1,const info &e2) { //updaet_info
-			info ans;
-			ans.mx = std::max(e1.mx,e2.mx);
-			ans.mn = std::min(e1.mn,e2.mn);
-			return ans;
-		}
-	};
-
-	void init_lg2(){ //下取整
-		lg2[0] = -1;
-		for(int i = 1;i < N;i++){
-			lg2[i] = lg2[i>>1]+1;
-		}
-	}
-
-	template<typename T>
-	struct ST{
-		int n,m;
-		std::vector<std::vector<info>>st;
-
-		ST(){}
-		ST(const T &v) {//1_idx
-			if(~lg2[0]) init_lg2();
-			n = v.size()-1,m = lg2[v.size()];
-			st = std::vector<std::vector<info>>(n+1,std::vector<info>(m+1));
-
-			for(int i = 1;i < v.size();i++){ st[i][0] = v[i]; }
-			for(int j = 1;(1<<j) < v.size();j++){
-				int pj = 1 << (j-1);
-				for(int i = 1;i+(1<<j)-1 < v.size();i++){
-					st[i][j] = st[i][j-1] + st[i+pj][j-1];
-				}
-			}
-		}
-
-		info query(int l,int r) {
-			int x = lg2[r-l+1];
-			info ans = st[l][x] + st[r-(1<<x)+1][x];
-			return ans;
-		}
-	};
-}
-using S_T::ST,S_T::info;
-
-int main() {
-	int n,q; std::cin >> n >> q;
-	vector<int> a(n+1);
-	for(int i = 1;i <= n;i++){
+void soviet() {
+	std::cin >> n >> k;
+	for (int i = 1; i <= n; i++) {
 		std::cin >> a[i];
 	}
-	ST t(a);
-	while(q--){
-		int l,r; std::cin >> l >> r;
-		auto ans = t.query(l,r);
-		std::cout << ans.mx - ans.mn << '\n';
+	std::cin >> m;
+
+	for (int i = 1; i <= n; i++) {
+		go[0][i] = (i + k) % n + 1;
+		sum[0][i] = a[i];
 	}
+
+	for (int j = 1; j < 60; j++) { // 先从小到大枚举倍数
+		for (int i = 1; i <= n; i++) { // 再枚举点
+			go[j][i] = go[j - 1][go[j - 1][i]]; // 从当前点i跳2^j步到达的点,相当于从点i跳2^{j-1}步到达的点再跳2^{j-1}步
+			sum[j][i] = (sum[j - 1][i] + sum[j - 1][go[j - 1][i]]) % mod;
+		}
+	}
+
+	long long ans = 0;
+	int cur = 1;
+	for (int i = 0; i < 60; i++) {
+		if (m >> i & 1) {
+			ans = (ans + sum[i][cur]) % mod;
+			cur = go[i][cur];
+		}
+	}
+	std::cout << ans;
 }
+
+int main() {
+	int M_T = 1; std::ios::sync_with_stdio(false); std::cin.tie(nullptr);
+//	std::cin >> M_T;
+	while (M_T--) { soviet(); }
+	return 0;
+}
+
 ```
 
 
 
 
 
-**二维ST表**
+**倍增+ 最短路** [P1613 跑路 - 洛谷](https://www.luogu.com.cn/problem/P1613)
 
-[Check Corners - HDU 2888 - Virtual Judge](https://vjudge.net/problem/HDU-2888)
+> 给定一个 $n$ 个节点 $m$ 条边的有向图，每条边的长度为 1，小明每秒可以移动 2 的幂次的距离。求从点 1 到点 n 的最小花费时间。$2 \le n \le 50, m \le 10^4$。
 
-查询子矩阵RMQ
+用 `st[i][j][k]` 标记从点 `i` 到点 `j` 是否有一条长度为 $2^k$ 的路径，如果`st[i][t][k - 1]` 为真，且 `st[t][j][k - 1]` 为真，那么`st[i][j][k]` 也为真，从 `i` 到 `j` 的其最小花费为 `1`。最后跑 Flyod 最短路即可。
 
 ```cpp
-#include <iostream>
-#include <algorithm>
-#include <vector>
+#include <bits/stdc++.h>
+using namespace std;
 
-namespace S_T{ //1_idx
-	const int N = 355, M = 9;
-	int lg2[N];
+const int N = 55;
 
-	struct info{
-		int mx; //gcd,and,or;
+int n, m;
 
-		info(){}
-		info(const int &x) { //init_info
-			mx = x;
-		}
+int dist[N][N];
+bool st[N][N][30];
 
-		info friend operator + (const info &e1,const info &e2) { //update_info
-			info ans;
-			ans.mx = std::max(e1.mx,e2.mx);
-			return ans;
-		}
-	}st[N][N][M][M];//vector内存开销较大,尽量使用定长数组
-
-	void init_lg2(){
-		lg2[0] = -1;
-		for(int i = 1;i < N;i++){
-			lg2[i] = lg2[i>>1]+1;
-		}
+void soviet() {
+	std::memset(dist, 0x3f, sizeof(dist));
+	std::cin >> n >> m;
+	for (int i = 1; i <= m; i++) {
+		int x, y; std::cin >> x >> y;
+		dist[x][y] = 1;
+		st[x][y][0] = 1;
 	}
-	
-	template<typename T>
-	struct ST{
-		int n,m;
 
-		ST(){}
-		ST(const std::vector<std::vector<T>> &mat) {//1_idx
-			if(~lg2[0]) init_lg2();
-			n = mat.size()-1;
-			m = mat[0].size()-1;
-
-			for (int ni = 0; 1 << ni <= n; ni++) {
-				for (int nj = 0; 1 << nj <= m; nj++) {
-					for (int i = 1; i + (1 << ni) - 1 <= n; i++) {
-						for (int j = 1; j + (1 << nj) - 1 <= m; j++) {
-							if (!ni && !nj) st[i][j][0][0] = info(mat[i][j]);
-							if (ni) st[i][j][ni][nj] = st[i][j][ni - 1][nj] + st[i + (1 << ni - 1)][j][ni - 1][nj];
-							if (nj) st[i][j][ni][nj] = st[i][j][ni][nj - 1] + st[i][j + (1 << nj - 1)][ni][nj - 1];
-						}
+	for (int k = 1; k < 30; k++) {
+		for (int i = 1; i <= n; i++) {
+			for (int t = 1; t <= n; t++) {
+				for (int j = 1; j <= n; j++) {
+					if (st[i][t][k - 1] && st[t][j][k - 1]) {
+						st[i][j][k] = 1;
+						dist[i][j] = 1;
 					}
 				}
 			}
 		}
+	}
 
-		info query(int x1, int y1, int x2, int y2) {
-			int kx = lg2[x2 - x1 + 1];
-			int ky = lg2[y2 - y1 + 1];
-
-			int len_x = 1 << kx;
-			int len_y = 1 << ky;
-
-			info res1 = st[x1][y1][kx][ky];
-			info res2 = st[x2 - len_x + 1][y1][kx][ky];
-			info res3 = st[x1][y2 - len_y + 1][kx][ky];
-			info res4 = st[x2 - len_x + 1][y2 - len_y + 1][kx][ky];
-
-			return res1 + res2 + res3 + res4;
-		}
-	};
-}
-using S_T::ST, S_T::info;
-
-int n,m;
-
-void sol() {
-	std::vector<std::vector<int>> a(n + 1, std::vector<int>(m + 1));
-	for (int i = 1; i <= n; i++) {
-		for (int j = 1; j <= m; j++) {
-			std::cin >> a[i][j];
+	for (int k = 1; k <= n; k++) {
+		for (int i = 1; i <= n; i++) {
+			for (int j = 1; j <= n; j++) {
+				dist[i][j] = std::min(dist[i][j], dist[i][k] + dist[k][j]);
+			}
 		}
 	}
 
-	ST t(a);
-	int q; std::cin >> q;
-	while (q--) {
-		int x1, y1, x2, y2; std::cin >> x1 >> y1 >> x2 >> y2;
-		int mx = t.query(x1, y1, x2, y2).mx;
-		std::cout << mx << ' ';
-		if (mx == std::max({a[x1][y1], a[x1][y2], a[x2][y1], a[x2][y2]}))  std::cout << "yes\n";
-		else std::cout << "no\n";
-	}
+	std::cout << dist[1][n];
 }
 
 int main() {
-	std::ios::sync_with_stdio(false); std::cin.tie(0);
-	while (std::cin >> n >> m) sol();
+	int M_T = 1; std::ios::sync_with_stdio(false); std::cin.tie(nullptr);
+//	std::cin >> M_T;
+	while (M_T--) { soviet(); }
+	return 0;
 }
 ```
 
 
+
+**倍增 + 区间覆盖** https://codeforces.com/contest/1175/problem/E
+
+> 给定数轴上 $n$ 条线段 $[l_i, r_i]$ 和 $q$ 次询问。每次询问给定一个目标区间 $[x, y]$，问最少需要选择多少条给定的线段，才能覆盖整个目标区间，如果无法覆盖输出 $-1$。
+> 数据范围 $1 \le n, q \le 2 \times 10^5$，$0 \le l_i < r_i \le 5 \times 10^5$，$0 \le x_i < y_i \le 5 \times 10^5$，
+
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+struct node {
+	int l, r;
+	bool operator < (const node& e2) const {
+		return l < e2.l;
+	}
+};
+
+void soviet() {
+	int n, q; std::cin >> n >> q;
+	int m = 500000;
+	std::vector<node> a(n + 1);
+	for (int i = 1; i <= n; i++) {
+		std::cin >> a[i].l >> a[i].r;
+	}
+	std::sort(a.begin() + 1, a.end());
+
+	// 对值域坐标进行转移
+	std::vector go(m + 1, std::vector<int> (21));
+
+	for (int i = 0, j = 1, mx = 0; i <= m; i++) {
+		while (j <= n && a[j].l <= i) {
+			mx = std::max(mx, a[j].r);
+			j++;
+		}
+		go[i][0] = mx;
+	}
+
+	for (int j = 1; j <= 20; j++) {
+		for (int i = 0; i <= m; i++) {
+			go[i][j] = go[go[i][j - 1]][j - 1];
+		}
+	}
+
+	while (q--) {
+		int x, y; std::cin >> x >> y;
+		int ans = 0;
+		for (int j = 20; j >= 0; j--) {
+			int nx = go[x][j];
+			if (nx < y) {
+				ans += 1 << j;
+				x = nx;
+			}
+		}
+
+		if (go[x][0] >= y) std::cout << ans + 1 << '\n';
+		else std::cout << -1 << '\n';
+	}
+}
+
+int main() {
+	int M_T = 1; std::ios::sync_with_stdio(false); std::cin.tie(nullptr);
+//	std::cin >> M_T;
+	while (M_T--) { soviet(); }
+	return 0;
+}
+```
 
 
 
@@ -10484,65 +12279,6 @@ int main() {
 
 
 
-## 根号分治
-
-根号分治，是一种对数据进行点分治的分治方式，它的作用是优化暴力算法，类似与分块，但应用范围比分块更广。
-
-具体来说，对于所进行的操作，按照某个点B划分，分为大于B以及小于B两个部分，两部分使用不同的方式处理。（一般以根号为分界$B = \sqrt{N}$，这样复杂度最平衡）。将两个暴力算法“拼接在一起”，实现优化复杂度的作用。
-
-
-
-[Colorful Graph（★6） - AtCoder typical90_ce - Virtual Judge (vjudge.net)](https://vjudge.net/problem/AtCoder-typical90_ce#author=GPT_zh)
-
-> 给定N个点M条边的无向图，初始时每个点颜色为1。再给定Q次查询，每次查询给定两个整数{x,c}，输出当前点x的颜色，然后将点x及其所有相邻的点颜色改为c。$1 \le N,M,Q \le 2e5$
-
-`ans[x]={time,color}`表示当前点最后被更新时的时间戳和颜色，`flag[x]={time,color}`flag状态标记，表示当前节点在time时更新应周围节点为color。
-以度数是否大于$\sqrt{N}$为分界，将点划分为重点和轻点。轻点直接枚举，重点打标记。
-查询当前点：对于轻点，直接枚举所有邻接点更新自身。对于重点，本身已经被其它点更新。
-更新邻接点：只需要更新周围的重点。
-
-```cpp
-#include <bits/stdc++.h>
-
-int main(){
-	int n,m;std::cin >> n >> m;
-	int sn = sqrt(m<<1);
-
-	std::vector<std::vector<int>>e(n+1);
-	std::vector<int>du(n+1);
-	for(int i = 1;i <= m;i++){
-		int x,y;std::cin >> x >> y;
-		e[x].emplace_back(y);
-		e[y].emplace_back(x);
-		du[x]++; du[y]++;
-	}
-
-	for(int i = 1;i <= n;i++){
-		std::sort(e[i].begin(),e[i].end(),[&](int x,int y){return du[x] > du[y];});
-	}
-
-	std::vector<std::pair<int,int>>ans(n+1,{0,1}),flag(n+1,{0,1});
-
-	int q;std::cin >> q;
-	for(int i = 1;i <= q;i++){
-		int x,c;std::cin >> x >> c;
-		if(du[x] <= sn){
-			for(auto& y:e[x]){
-				ans[x] = std::max(ans[x],flag[y]);
-			}
-		}
-		std::cout << ans[x].second << '\n';
-		ans[x] = flag[x] = {i,c};
-		for(auto& y:e[x]){
-			if(du[y] <= sn) break;
-			ans[y] = flag[x];
-		}
-	}
-}
-```
-
-
-
 
 
 
@@ -10749,7 +12485,7 @@ int main() {
 
 
 
-单点修改，查询区间第k小：详见[值域分块](#值域分块)
+单点修改，查询区间第k小：详见值域分块。
 
 
 
@@ -11100,6 +12836,8 @@ int main() {
 
 
 
+
+
 #### 三维偏序
 
 [P3810 【模板】三维偏序 / 陌上花开 - 洛谷](https://www.luogu.com.cn/problem/P3810)
@@ -11156,8 +12894,8 @@ struct node {
 	int a, b, c;
 	int cnt = 0, res = 0;
 
-	bool operator < (const node& e2) const {
-		return std::tie(a, b, c) < std::tie(e2.a, e2.b, e2.c);
+	bool operator < (const node& e2) const { // 按第一维升序, 第二维降序排序
+		return std::tie(a, e2.b) < std::tie(e2.a, b);
 	}
 
 	bool operator != (const node& e2) const {
@@ -11173,8 +12911,8 @@ void cdq(int l, int r) {
 	cdq(l, mid);
 	cdq(mid + 1, r);
 
-	std::sort(e + l, e + mid + 1, [&](auto& e1, auto& e2) { return std::tie(e1.b, e1.c) < std::tie(e2.b, e2.c); });
-	std::sort(e + mid + 1, e + r + 1, [&](auto& e1, auto& e2) { return std::tie(e1.b, e1.c) < std::tie(e2.b, e2.c); });
+	std::sort(e + l, e + mid + 1, [&](auto& e1, auto& e2) { return e1.b < e2.b; });
+	std::sort(e + mid + 1, e + r + 1, [&](auto& e1, auto& e2) { return e1.b < e2.b; });
 
 	int i = l, j = mid + 1;
 	for (; j <= r; j++) {
@@ -11185,7 +12923,7 @@ void cdq(int l, int r) {
 		e[j].res += fw.query(1, e[j].c);
 	}
 
-	for (int t = l; t < i; t++) {
+	for (int t = l; t < i; t++) { // 不要memset整棵树, 否则会让整体复杂度退化为O(N^2)
 		fw.add(e[t].c, -e[t].cnt);
 	}
 }
@@ -11196,7 +12934,7 @@ void soviet() {
 		std::cin >> ue[i].a >> ue[i].b >> ue[i].c;
 	}
 
-	std::sort(ue + 1, ue + n + 1);
+	std::sort(ue + 1, ue + n + 1, [&](auto& e1, auto& e2) { return std::tie(e1.a, e1.b, e1.c) < std::tie(e2.a, e2.b, e2.c); }); // 去重时按(a, b, c)升序排序
 	int idx = 0;
 	for (int i = 1, t = 0; i <= n; i++) { // 合并一模一样的点
 		++t;
@@ -11232,11 +12970,275 @@ int main() {
 
 
 
+#### 1D/1D 动态规划优化
+
+
+
+例如给定一个序列，每个序列都有属性 `(a, b)`，求 $dp_i = 1 + max_{j = 1}^{i - 1} dp_j[a_j < a_i][b_j < b_i]$，直接转移是 $O(N^2)$ ，可以通过 CDQ 分治优化为 $O(N \log^2N)$
+
+
+
+[3084. 纸箱堆叠 - AcWing题库](https://www.acwing.com/problem/content/3087/)
+
+> 给定 $n$ 个纸箱，每个纸箱都有长宽高 $(x, y, z)$ 三维边长，一个纸箱可以套进另一个纸箱当且仅当它的最短边、次短边、最长边长度分别小于另一个纸箱的最短边、次短边、最长边。求套娃层数最多的一个子集，输出其层数。
+>
+> $1 \le n \le 50000$
+
+```cpp
+// O(N^2) 朴素转移
+std::sort(v.begin() + 1, v.end());
+std::vector<int> dp(n + 1, 1);
+for (int i = 1; i <= n; i++) {
+    auto &[x, y, z] = v[i];
+    for (int j = 1; j < i; j++) {
+        if (v[i].x > v[j].x && v[i].y > v[j].y && v[i].z > v[j].z) {
+            dp[i] = std::max(dp[i], dp[j] + 1);
+        }
+    }
+}
+```
+
+
+
+```cpp
+// CDQ 优化 O(Nlog^2N)
+#include <bits/stdc++.h>
+using namespace std;
+
+template<typename T>
+struct Fenwick { // 1_idx 求前缀最大值的树状数组, 常数比线段树小
+	int n;
+	std::vector<T> t;
+
+	explicit Fenwick(int _n = 0) : n(_n) {
+		t.assign(_n + 1, T{});
+	}
+
+	void update(int i, T x) { // 将数组第 i 个元素变为 x, 只能让其单调不减,不能改小
+		while (i <= n) {
+			t[i] = std::max(t[i], x);
+			i += i & -i;
+		}
+	}
+
+	T query(int i) { // 求前缀区间[1, i]的最大值
+		T ans = 0;
+		while (i) {
+			ans = std::max(ans, t[i]);
+			i -= i & -i;
+		}
+		return ans;
+	}
+
+	void clear(int i) { // 单点回滚, 一般需要整体回滚
+		while (i <= n) {
+			t[i] = 0;
+			i += i & -i;
+		}
+	}
+};
+
+struct node {
+	int x, y, z, dp;
+	bool operator < (const node& e2) const {
+		return std::tie(x, e2.y) < std::tie(e2.x, y); // 第一维升序, 第二维降序
+	}
+};
+
+void soviet() {
+	int a, p, n; std::cin >> a >> p >> n;
+	std::vector<node> v(n + 1);
+	std::vector<int> hs(1);
+	for (int i = 1, s = 1; i <= n; i++) {
+		auto& [x, y, z, dp] = v[i];
+		dp = 1;
+		std::vector<int> tmp;
+		for (int j = 0; j < 3; j++) {
+			tmp.emplace_back(s = 1LL * s * a % p);
+		}
+		std::sort(tmp.begin(), tmp.end());
+		std::tie(x, y, z) = std::tuple(tmp[0], tmp[1], tmp[2]);
+		hs.emplace_back(z);
+	}
+
+	std::sort(v.begin() + 1, v.end());
+	std::sort(hs.begin() + 1, hs.end());
+	hs.erase(std::unique(hs.begin() + 1, hs.end()), hs.end());
+	for (int i = 1; i <= n; i++) { // 对第三维z离散化
+		v[i].z = std::lower_bound(hs.begin() + 1, hs.end(), v[i].z) - hs.begin();
+	}
+
+	Fenwick<int> fw(hs.size());
+
+	auto cdq = [&](auto& cdq, int l, int r) -> void {
+		if (l == r) return ;
+		int mid = l + r >> 1;
+
+        // 处理左半内部的转移
+		cdq(cdq, l, mid); 
+        
+        // 处理左半对右半的转移(二维偏序处理)
+		std::sort(v.begin() + l, v.begin() + mid + 1, [&](auto& v1, auto& v2) { return v1.y < v2.y; });
+		std::sort(v.begin() + mid + 1, v.begin() + r + 1, [&](auto& v1, auto& v2) { return v1.y < v2.y; });
+
+		int i = l, j = mid + 1;
+		for (; j <= r; j++) {
+			while (i <= mid && v[i].y < v[j].y) {
+				fw.update(v[i].z, v[i].dp);
+				i++;
+			}
+			v[j].dp = std::max(v[j].dp, fw.query(v[j].z - 1) + 1);
+		}
+
+		for (int t = l; t < i; t++) {
+			fw.clear(v[t].z);
+		}
+
+        // 复原数组、处理右半内部的转移
+		sort(v.begin() + l, v.begin() + r + 1);
+		cdq(cdq, mid + 1, r);
+	};
+
+	cdq(cdq, 1, n);
+
+	int ans = 0;
+	for (int i = 1; i <= n; i++) {
+		ans = max(ans, v[i].dp);
+	}
+	std::cout << ans;
+}
+
+int main() {
+	int M_T = 1; std::ios::sync_with_stdio(false); std::cin.tie(nullptr);
+//	std::cin >> M_T;
+	while (M_T--) { soviet(); }
+	return 0;
+}
+```
 
 
 
 
 
+
+
+#### 斜率DP优化
+
+用于处理斜率和添加的决策点都不单调的情况。
+
+
+
+[P4027 [NOI2007\] 货币兑换 - 洛谷](https://www.luogu.com.cn/problem/P4027)
+
+> 已知接下来 $n$ 天的A股和B股行情，其价值为 $a_i$ 和 $b_i$，初始你有 $m$ 元，每天购买A股和B股比例需要为 $r_i$，每次可以以全部卖出。求最多能获得多少元钱。
+>
+> $n \le 10^5$，$a_i, b_i, k_i$ 均为正实数。
+
+第 $k$ 天能购买 A 股票的数量 $x_k = \frac{f_kr_k}{a_kr_k + b_k}$，B 股票数量 $y_k = \frac{f_k}{a_kr_k + b_k}$
+
+朴素转移方程为 $f_i = max_{j < i}\{ a_ix_j + b_iy_j \}$
+
+将其化为斜截式：$y_j = -\frac{a_i}{b_i}x_j + \frac{f_i}{b_i}$
+
+- 这里决策点横坐标无单调性：$x_j$ 随 $j$ 无规律变化。
+
+- 查询斜率 $k_i = -\frac{a_i}{b_i}$ 也无单调性
+
+所以不能在线维护凸包，也不能单调扫指针。CDQ 分治把动态决策拆成静态子问题，每一层只处理（左半决策点 -> 右半查询），此时左半点集固定，可以排序建凸包、排序查询，只需要考虑左半区间对右半区间的贡献。时间复杂度 $O(N \log^2N)$
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+const double eps = 1e-9;
+
+struct node {
+	double a, b, rt, k;
+	int id;
+	double x, y;
+	double dp;
+	bool operator < (const node& e2) const {
+		return k > e2.k;
+	}
+};
+
+double slope(node& e1, node& e2) {
+	if (std::abs(e1.x - e2.x) < eps) return 1e18;
+	return (e1.y - e2.y) / (e1.x - e2.x);
+}
+
+void soviet() {
+	int n, m; std::cin >> n >> m;
+	std::vector<node> v(n + 1);
+	for (int i = 1; i <= n; i++) {
+		std::cin >> v[i].a >> v[i].b >> v[i].rt;
+		v[i].k = -v[i].a / v[i].b;
+		v[i].id = i;
+		v[i].dp = m;
+	}
+
+	auto cdq = [&](auto&& cdq, int l, int r) -> void {
+		if (l == r) {
+			v[l].dp = std::max(v[l].dp, v[l - 1].dp);
+			v[l].x = v[l].dp * v[l].rt / (v[l].a * v[l].rt + v[l].b);
+			v[l].y = v[l].dp / (v[l].a * v[l].rt + v[l].b);
+			return;
+		}
+
+		int mid = l + r >> 1;
+        // 先处理左半内部
+		cdq(cdq, l, mid);
+
+		std::vector<node> left, right;
+		for (int i = l; i <= mid; i++) left.emplace_back(v[i]);
+		for (int i = mid + 1; i <= r; i++) right.emplace_back(v[i]);
+
+		// 收集左半决策点, 按横坐标 x 升序, 构建上凸包
+        std::sort(left.begin(), left.end(), [&](auto& e1, auto& e2) {
+			if (std::abs(e1.x - e2.x) > eps) return e1.x < e2.x;
+			return e1.y > e2.y;
+		});
+        
+		std::vector<node> hull;
+		for (auto& p: left) {
+			if (hull.size() && std::abs(hull.back().x - p.x) < eps) continue;
+			while(hull.size() >= 2 && slope(hull[hull.size() - 2], hull.back()) <= slope(hull.back(), p)) {
+				hull.pop_back();
+			}
+			hull.emplace_back(p);
+		}
+
+
+		// 处理左半部分对右半部分的贡献, 右半部分按斜率 k 降序, 单调指针在左半部分构建的凸包上扫, 更新右半的答案
+		std::sort(right.begin(), right.end(), [&](auto& e1, auto& e2) {
+			return e1.k > e2.k;
+		});
+
+		int ptr = 0;
+		for (auto& p : right) {
+			while (ptr + 1 < hull.size() && slope(hull[ptr], hull[ptr + 1]) >= p.k - eps) {
+				ptr++;
+			}
+			v[p.id].dp = std::max(v[p.id].dp, hull[ptr].x * p.a + hull[ptr].y * p.b);
+		}
+
+        // 处理右半内部
+		cdq(cdq, mid + 1, r);
+	};
+
+	cdq(cdq, 1, n);
+
+	std::cout << std::fixed << std::setprecision(10) << v[n].dp;
+}
+
+int main() {
+	int M_T = 1; std::ios::sync_with_stdio(false); std::cin.tie(nullptr);
+//	std::cin >> M_T;
+	while (M_T--) { soviet(); }
+	return 0;
+}
+
+```
 
 
 
@@ -11909,7 +13911,7 @@ int main(){
 using namespace std;
 const int N = 300005;
 int n,m,a[N];
-int q[N],hh,tt;//tt = -1；q[++tt] = 0;
+int q[N],hh,tt;//tt = -1；q[++tt] = 0; 队列初始含有一个元素0
 
 int main(){
 	cin >> n >> m;
@@ -13517,8 +15519,12 @@ int main(){
 
 ### 二维树状数组
 
-- 子矩阵加上一个数
-- 求子矩阵的和
+> 给定 $n \times m$ 的矩阵，维护以下 $q$ 次操作。 $1\le n, m \le 2048, 1\le q \le 2\times 10^5$。
+>
+> - 子矩阵加上一个数
+> - 求子矩阵的和
+
+空间复杂度 $O(nm)$，时间复杂度 $O(q\log (nm))$
 
 ```cpp
 //https://www.luogu.com.cn/problem/P4514
@@ -15064,6 +17070,218 @@ int main() {
 
 
 
+## ST表
+
+
+
+ST表(Sparse Table,稀疏表)基于倍增思想,用于解决[可重复贡献问题][区间重合区域不影响结果，如「RMQ 」、「区间按位与」、「区间按位或」、「区间 GCD」]的数据结构，**不支持修改**。
+
+O($N\log N$)预处理  O(1)查询
+
+<img src="C:\Users\21003\AppData\Roaming\Typora\typora-user-images\image-20240814143114839.png" alt="image-20240814143114839" style="zoom:50%;" />  
+
+令$st(i,j)$表示区间$[i,i+2^j-1]$的最大值，显然$st(i,0)=a_i$
+根据定义式，第二维就相当于倍增的时候「跳了 $2^j-1$ 步」，依据倍增的思路，写出状态转移方程：$st(i,j)=\max(st(i,j-1),st(i+2^{j-1},j-1))$
+
+对于每个询问 $[l,r]$，我们把它分成两部分：$[l,l+2^s-1]$ 与 $[r-2^s+1,r]$，其中 $s=\left\lfloor\log_2(r-l+1)\right\rfloor$。两部分的结果的最大值就是回答。
+
+```cpp
+//https://www.luogu.com.cn/problem/P2880
+#include <bits/stdc++.h>
+using namespace std;
+
+namespace S_T{ //1_idx
+	const int N = 1000006;
+	int lg2[N];
+
+	struct info{
+		int mx,mn; //mn,gcd,and,or;
+
+		info(){}
+		info(const int &x) { //init_info
+			mx = mn = x;
+		}
+
+		info friend operator + (const info &e1,const info &e2) { //updaet_info
+			info ans;
+			ans.mx = std::max(e1.mx,e2.mx);
+			ans.mn = std::min(e1.mn,e2.mn);
+			return ans;
+		}
+	};
+
+	void init_lg2(){ //下取整
+		lg2[0] = -1;
+		for(int i = 1;i < N;i++){
+			lg2[i] = lg2[i>>1]+1;
+		}
+	}
+
+	template<typename T>
+	struct ST{
+		int n,m;
+		std::vector<std::vector<info>>st;
+
+		ST(){}
+		ST(const T &v) {//1_idx
+			if(~lg2[0]) init_lg2();
+			n = v.size()-1,m = lg2[v.size()];
+			st = std::vector<std::vector<info>>(n+1,std::vector<info>(m+1));
+
+			for(int i = 1;i < v.size();i++){ st[i][0] = v[i]; }
+			for(int j = 1;(1<<j) < v.size();j++){
+				int pj = 1 << (j-1);
+				for(int i = 1;i+(1<<j)-1 < v.size();i++){
+					st[i][j] = st[i][j-1] + st[i+pj][j-1];
+				}
+			}
+		}
+
+		info query(int l,int r) {
+			int x = lg2[r-l+1];
+			info ans = st[l][x] + st[r-(1<<x)+1][x];
+			return ans;
+		}
+	};
+}
+using S_T::ST,S_T::info;
+
+int main() {
+	int n,q; std::cin >> n >> q;
+	vector<int> a(n+1);
+	for(int i = 1;i <= n;i++){
+		std::cin >> a[i];
+	}
+	ST t(a);
+	while(q--){
+		int l,r; std::cin >> l >> r;
+		auto ans = t.query(l,r);
+		std::cout << ans.mx - ans.mn << '\n';
+	}
+}
+```
+
+
+
+
+
+**二维ST表**
+
+[Check Corners - HDU 2888 - Virtual Judge](https://vjudge.net/problem/HDU-2888)
+
+查询子矩阵RMQ
+
+```cpp
+#include <iostream>
+#include <algorithm>
+#include <vector>
+
+namespace S_T{ //1_idx
+	const int N = 355, M = 9;
+	int lg2[N];
+
+	struct info{
+		int mx; //gcd,and,or;
+
+		info(){}
+		info(const int &x) { //init_info
+			mx = x;
+		}
+
+		info friend operator + (const info &e1,const info &e2) { //update_info
+			info ans;
+			ans.mx = std::max(e1.mx,e2.mx);
+			return ans;
+		}
+	}st[N][N][M][M];//vector内存开销较大,尽量使用定长数组
+
+	void init_lg2(){
+		lg2[0] = -1;
+		for(int i = 1;i < N;i++){
+			lg2[i] = lg2[i>>1]+1;
+		}
+	}
+	
+	template<typename T>
+	struct ST{
+		int n,m;
+
+		ST(){}
+		ST(const std::vector<std::vector<T>> &mat) {//1_idx
+			if(~lg2[0]) init_lg2();
+			n = mat.size()-1;
+			m = mat[0].size()-1;
+
+			for (int ni = 0; 1 << ni <= n; ni++) {
+				for (int nj = 0; 1 << nj <= m; nj++) {
+					for (int i = 1; i + (1 << ni) - 1 <= n; i++) {
+						for (int j = 1; j + (1 << nj) - 1 <= m; j++) {
+							if (!ni && !nj) st[i][j][0][0] = info(mat[i][j]);
+							if (ni) st[i][j][ni][nj] = st[i][j][ni - 1][nj] + st[i + (1 << ni - 1)][j][ni - 1][nj];
+							if (nj) st[i][j][ni][nj] = st[i][j][ni][nj - 1] + st[i][j + (1 << nj - 1)][ni][nj - 1];
+						}
+					}
+				}
+			}
+		}
+
+		info query(int x1, int y1, int x2, int y2) {
+			int kx = lg2[x2 - x1 + 1];
+			int ky = lg2[y2 - y1 + 1];
+
+			int len_x = 1 << kx;
+			int len_y = 1 << ky;
+
+			info res1 = st[x1][y1][kx][ky];
+			info res2 = st[x2 - len_x + 1][y1][kx][ky];
+			info res3 = st[x1][y2 - len_y + 1][kx][ky];
+			info res4 = st[x2 - len_x + 1][y2 - len_y + 1][kx][ky];
+
+			return res1 + res2 + res3 + res4;
+		}
+	};
+}
+using S_T::ST, S_T::info;
+
+int n,m;
+
+void sol() {
+	std::vector<std::vector<int>> a(n + 1, std::vector<int>(m + 1));
+	for (int i = 1; i <= n; i++) {
+		for (int j = 1; j <= m; j++) {
+			std::cin >> a[i][j];
+		}
+	}
+
+	ST t(a);
+	int q; std::cin >> q;
+	while (q--) {
+		int x1, y1, x2, y2; std::cin >> x1 >> y1 >> x2 >> y2;
+		int mx = t.query(x1, y1, x2, y2).mx;
+		std::cout << mx << ' ';
+		if (mx == std::max({a[x1][y1], a[x1][y2], a[x2][y1], a[x2][y2]}))  std::cout << "yes\n";
+		else std::cout << "no\n";
+	}
+}
+
+int main() {
+	std::ios::sync_with_stdio(false); std::cin.tie(0);
+	while (std::cin >> n >> m) sol();
+}
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## 霍夫曼树
 
@@ -15605,6 +17823,159 @@ int main () {
 
 
 
+## 珂朵莉树
+
+使用平衡树或链表，将值相同的一段区间合并成一个结点处理。对于含有区间覆盖的操作的问题，珂朵莉树可以更加方便地维护每个被覆盖区间的值。
+
+[CF896 C. Willem, Chtholly and Seniorious](https://codeforces.com/problemset/problem/896/C)
+
+> 给定长度为 $n$ 的数组 `a[]`，维护 $m$ 次操作。输入通过随机数种子 `seed`和 `vmax` 给出。$1\le n, m \le 10^5$
+>
+> - `1 l r x`：区间每个`a[i]` 赋值为 `a[i]+x`
+>
+> - `2 l r x`：区间每个`a[i]` 赋值为 `x`
+> - `3 l r x`：求区间第 `x` 小的数字，保证 $1 \le x \le r - l + 1$
+> - `4 l r x y`：输出区间内所有`a[i]` 的 `x` 次幂之和，对 `y` 取模。即$(\sum_{i = l}^{r}{a_i^x})mod\  y$
+
+在随机数据下效率较高，但是可以构造特定数据，将时间复杂度卡到平方级别。
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+struct Node {
+	int l, r;
+	mutable long long v;
+
+	Node(int _l, int _r = 0, long long _v = 0) : l(_l), r(_r), v(_v) { }
+
+	bool operator < (const Node& o) const {
+		return l < o.l;
+	}
+};
+
+std::set<Node> se;
+
+// 核心操作: 将原本包含 pos 的区间 [l,r] 分裂为 [l, pos) 和 [pos, r], 返回指向后者的迭代器
+std::set<Node>::iterator split(int pos) { 
+	auto it = se.lower_bound(Node(pos));
+	if (it != se.end() && it->l == pos) return it;
+	it--;
+	if (it->r < pos) return se.end();
+	auto [l, r, v] = *it;
+	se.erase(it);
+	se.insert(Node(l, pos - 1, v));
+	return se.insert(Node(pos, r, v)).first; // first 返回迭代器
+}
+
+// 先 split(r+1), 再 split(l)
+void add(int l, int r, long long x) {
+	auto itr = split(r + 1), itl = split(l);
+	for (auto it = itl; it != itr; it++) {
+		it->v += x;
+	}
+}
+
+void assign(int l, int r, long long x) {
+	auto itr = split(r + 1), itl = split(l);
+	se.erase(itl, itr);
+	se.insert(Node(l, r, x));
+}
+
+long long rnk(int l, int r, long long x) {
+	auto itr = split(r + 1), itl = split(l);
+	std::vector<Node> v;
+	for (auto it = itl; it != itr; it++) {
+		v.push_back(*it);
+	}
+	std::sort(v.begin(), v.end(), [&](auto& e1, auto& e2) { return e1.v < e2.v; });
+	for (int i = 0; i < v.size(); i++) {
+		int len = v[i].r - v[i].l + 1;
+		if (len < x) {
+			x -= len;
+		}
+		else return v[i].v;
+	}
+	return -1;
+}
+
+long long qmi(long long a,long long b,long long p) {
+	a %= p; //
+	long long ans = 1;
+	while (b) {
+		if (b & 1) ans = ans * a % p;
+		b >>= 1;
+		a = a * a % p;
+	}
+	return ans % p;
+}
+
+long long calc(int l, int r, long long x, long long y) {
+	auto itr = split(r + 1), itl = split(l);
+	long long ans = 0;
+	for (auto it = itl; it != itr; it++) {
+		ans = (ans + qmi(it->v, x, y) * (it->r - it->l + 1) % y) % y;
+	}
+	return ans;
+}
+
+long long seed, vmax;
+int rng() {
+	int ret = seed;
+	seed = (seed * 7 + 13) % 1000000007;
+	return ret;
+}
+
+void soviet() {
+	int n, m; std::cin >> n >> m >> seed >> vmax;
+	vector<int> a(n + 1);
+	for (int i = 1; i <= n; i++) {
+		a[i] = (rng() % vmax) + 1;
+		se.insert(Node(i, i, a[i]));
+	}
+
+	for (int i = 1; i <= m; i++) {
+		int op = (rng() % 4) + 1;
+		int l = (rng() % n) + 1;
+		int r = (rng() % n) + 1;
+		if (l > r) std::swap(l, r);
+
+		if (op == 1) { // 区间加 x
+			int x = (rng() % vmax) + 1;
+			add(l, r, x);
+		}
+		if (op == 2) { // 区间推平为 x
+			int x = (rng() % vmax) + 1;
+			assign(l, r, x);
+		}
+		if (op == 3) { // 区间第 x 小
+			int x = (rng() % (r - l + 1)) + 1;
+			std::cout << rnk(l, r, x) << '\n';
+		}
+		if (op == 4) { // 区间所有 a[i] 的 x 次幂之和 (mod y)
+			int x = (rng() % vmax) + 1;
+			int y = (rng() % vmax) + 1;
+			std::cout << calc(l, r, x, y) << '\n';
+		}
+	}
+}
+
+int main() {
+	int M_T = 1; std::ios::sync_with_stdio(false); std::cin.tie(nullptr);
+//	std::cin >> M_T;
+	while (M_T--) { soviet(); }
+	return 0;
+}
+```
+
+
+
+
+
+
+
+
+
 ------
 
 
@@ -15840,9 +18211,9 @@ using Hash::hx,Hash::hx2;
 
 一个模式串匹配一个/多个文本串
 
-能够在线性时间内判定字符串 A[1~N] 是否为字符串 B[1~M] 的子串，并求出字符串A在字符串B中各次出现的位置。能比字符串哈希更高效准确地处理这个问题，并且能提供一些额外的信息
+能够在线性时间内判定字符串 `A[1~N]` 是否为字符串 `B[1~M]` 的子串，并求出字符串 `A` 在字符串 `B` 中各次出现的位置。能比字符串哈希更高效准确地处理这个问题，并且能提供一些额外的信息
 
-next[i]数组求的是子串s[1~i]的最长border(真前缀==真后缀)
+`next[i]` 数组求的是子串 `s[1~i]` 的最长 `border`(真前缀==真后缀)
 
 ```cpp
 //下标从1开始
@@ -16439,86 +18810,13 @@ int main(){
 
 ### 最大异或对
 
-> 在给定的 𝑁 个整数 𝐴1，𝐴2……𝐴𝑁 中选出两个进行 𝑥𝑜𝑟（异或）运算，得到的结果最大是多少？
+> 在给定的 𝑁 个整数中选出两个进行 𝑥𝑜𝑟（异或）运算，得到的结果最大是多少？
 
 ```cpp
 //https://www.luogu.com.cn/problem/P10471
-#include <iostream>
-#include <cstring>
+#include <bits/stdc++.h>
+using namespace std;
 
-namespace TRIE{//0_idx
-	const int N = 100005*32;
-	int son[N][2],cnt[N],idx;
-
-	struct Trie{
-
-		Trie(){init();}
-
-		void init(){
-			idx = cnt[0] = 0;
-			memset(son[0], 0, sizeof(son[0]));
-		}
-
-		int get(char x){
-			if(x >= 'a' && x <= 'z') return x - 'a';
-			if(x >= 'A' && x <= 'Z') return x - 'A' + 26;
-			if(x >= '0' && x <= '9') return x - '0' + 52;
-			return 0;
-		}
-
-		void insert(const int &x){
-			int p = 0;
-			for(int i = 30;i >= 0;i--){
-				bool u = x >> i & 1;
-				if(!son[p][u]) {
-					son[p][u] = ++idx;
-					cnt[idx] = 0;
-					std::memset(son[idx],0,sizeof son[idx]);
-				}
-				p = son[p][u];
-			}
-			cnt[p]++;
-		}
-
-		int query(const int &x){
-			int ans = 0;
-			int p = 0;
-			for(int i = 30;i >= 0;i--){
-				bool u = x >> i & 1;
-				if(son[p][!u]) {//高位开始，每次找与当前位相反的
-					ans = ans<<1|1;
-					p = son[p][!u];
-				}
-				else{
-					ans = ans<<1;
-					p = son[p][u];
-				}
-			}
-			return ans;
-		}
-	};
-};
-using TRIE::Trie;
-
-int main(){
-	Trie t;
-	int n; std::cin >> n;
-	int ans = 0;
-	while(n--){
-		int x; std::cin >> x;
-		ans = std::max(ans,t.query(x));
-		t.insert(x);
-	}
-	std::cout << ans;
-}
-```
-
-
-
-```cpp
-//xor_Trie 封装
-//插入/删除一个数
-//求x与另一个数异或的最大/最小值
 namespace TRIE{//0_idx  x<(2^31)
 	const int SIZ = 100005*32;
 	int son[SIZ][2],cnt[SIZ],idx;
@@ -16591,6 +18889,18 @@ namespace TRIE{//0_idx  x<(2^31)
 	};
 };
 using TRIE::xor_Trie;
+
+int main() {
+	xor_Trie t;
+	int n; std::cin >> n;
+	int ans = 0;
+	for (int i = 1; i <= n; i++) {
+		int x; std::cin >> x;
+		ans = std::max(ans, t.findMaxXor(x));
+		t.insert(x);
+	}
+	std::cout << ans;
+}
 ```
 
 
@@ -16933,14 +19243,41 @@ int main(){
 
 ## 回文串
 
+对于一个字符串 $s$，它的本质不同回文子串个数最多只有 $\left | s\right |$ 个
+
+
+
+
+
 ### Manacher
 
-O(N)求得对于每个i的最长回文长度，这里下标从0开始
+可以 O(N) 求得以 `i` 为中心的最长回文长度。通过在每个字符中间插入一个不存在的特殊字符，可以同时处理奇偶回文串，而不必分开讨论。
 
-`t = "abbba"` 则对应`s =  " #a#b#b#b#a#"`，可以同时处理奇偶回文串，而不必分开讨论，对s求得d1[ ]
-`d1[i]`为以`s[i]`为中心的最长回文串长度。
-对于`t[i]`来说,`d1[i*2]-1` 即为以`i`为中心，最长的奇数长度回文串
-`d1[i*2+1]-1`即为以`(i,i+1)`中点为中心最长的偶数长度回文串
+`t = "abbba"` 则对应`s =  " #a#b#b#b#a#"`
+
+对于 `s[i]` 来说 `d1[i]` 表示以 `i` 为中心的最长回文串长度。
+
+对于 `t[i]` 来说，`d1[i*2]-1` 即为以 `i` 为中心，最长的奇数长度回文串
+`d1[i*2+1]-1` 即为以 `(i,i+1)` 中点为中心最长的偶数长度回文串
+
+
+
+
+
+
+**构建过程**
+
+在线逐字符插入。维护一个 `last` 指针，表示当前串的最长回文后缀。
+
+插入字符 `s[i]` 时：
+
+1. 从 `last` 开始沿 `fail` 指针向上找，直到找到一个回文串，使得它的前一个字符等于 `s[i]`（即可以在两端扩展）
+2. 如果该回文串已经存在对应的 `next[s[i]]`，直接转移，`last` 更新为它
+3. 否则新建节点，长度为找到的回文串长度`+2`。
+4. 为新节点设置 `fail`：从找到的回文串的 `fail` 开始，继续向上找，找到第一个能扩展的回文串，将其 `next[s[i]]` 作为新节点的 `fail`。
+5. 更新 `last` 为新节点。
+
+
 
 ```cpp
 //https://www.luogu.com.cn/problem/P3805
@@ -16948,7 +19285,7 @@ O(N)求得对于每个i的最长回文长度，这里下标从0开始
 #include <bits/stdc++.h>
 using namespace std;
 
-template<typename T>
+template<typename T = std::string>
 struct Manacher{ //1_idx
 	int n,ans;
 	T s;
@@ -16978,7 +19315,7 @@ struct Manacher{ //1_idx
 		}
 	}
 
-	bool query(int l,int r){ // 查询区间是否为回文串
+	bool query(int l,int r){ // 查询原串区间[l,r]是否为回文串
 		l <<= 1,r <<= 1;
 		int mid = l + r >> 1;
 		return d[mid]-1 >= r-mid;
@@ -16994,6 +19331,155 @@ int main() {
 ```
 
 
+
+
+
+
+
+
+
+
+
+### 回文树
+
+回文树（Palindromic Tree），又叫 Eertree，是一种专门处理回文子串的数据结构。它能在线性时间内建出所有本质不同的回文子串，并维护每个回文子串的出现次数、长度、最长回文后缀等信息。
+
+
+
+它有两个根：
+
+- 奇根：长度 $len = -1$，代表长度为奇数的回文串的“虚拟父亲”。
+- 偶根：长度 $len = 0$，代表长度为偶数的回文串的“虚拟父亲”。
+
+每个节点包含字段：
+
+| 字段      | 含义                                        |
+| --------- | ------------------------------------------- |
+| `len`     | 该节点代表的回文串长度                      |
+| `fail`    | 指向该回文串的最长回文后缀对应的节点        |
+| `next[c]` | 在回文串两端加上字符`c`后形成的新回文串节点 |
+| `cnt`     | 该回文串出现的次数（构建后单独计算）        |
+
+边表示“在两端同时加一个字符”。例如节点 `aba` 通过边 `c` 可以转移到 `cabac`。
+
+
+
+
+
+[P3649 [APIO2014\] 回文串 - 洛谷](https://www.luogu.com.cn/problem/P3649)
+
+> 给定字符串 $s$，定义 $s$ 的一个子串的存在值为这个子串的出现此处乘以这个子串的长度，求所有回文子串中的最大存在值。
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+namespace PAM { // 0_idx
+	const int N = 300005, M = 26;
+	int son[N][M], len[N], fail[N], cnt[N], idx, last;
+	char str[N]; // 字符串从 1 开始, str[0] 为哨兵
+
+
+	struct Trie {
+		Trie() {
+			last = idx = 1;
+			init(0);
+			init(1);
+			len[0] = -1; // 奇根
+			len[1] = 0;  // 偶根
+			str[0] = -1; // 哨兵, 保证 while 一定终止
+		}
+
+		void init(int p) {
+			len[p] = fail[p] = cnt[p] = 0;
+			std::memset(son[p], 0, sizeof(son[p]));
+		}
+
+		int get(char x) {
+			if (x >= 'a' && x <= 'z') return x - 'a';
+			if (x >= 'A' && x <= 'Z') return x - 'A' + 26;
+			if (x >= '0' && x <= '9') return x - '0' + 52;
+			return -1;
+		}
+
+		// 从节点 p 出发, 找到能扩展 str[i] 的最长回文后缀节点
+		int get_fail(int p, int i) {
+			while (str[i - len[p]- 1] != str[i]) p = fail[p];
+			return p;
+		}
+
+		void insert(const std::string& s) {
+			int n = s.size();
+			for (int i = 1; i <= n; i++) str[i] = s[i - 1];
+			for (int i = 1; i <= n; i++) {
+				int u = get(str[i]);
+				int p = get_fail(last, i);
+				if (!son[p][u]) {
+					son[p][u] = ++idx;
+					init(idx);
+					len[idx] = len[p] + 2;
+					if (len[idx] == 1) {
+						fail[idx] = 1;
+					} else {
+						int q = get_fail(fail[p], i);
+						fail[idx] = son[q][u];
+					}
+				}
+				last = son[p][u];
+				cnt[last]++;
+			}
+		}
+
+		// 计算cnt, 得到每个回文串的出现次数
+		void calc() {
+			for (int i = idx; i >= 2; i--) {
+				cnt[fail[i]] += cnt[i];
+			}
+		}
+
+		// 本质不同的回文子串个数, 2~idx
+		int count() {
+			return idx - 1;
+		}
+
+		// 最长回文子串长度
+		int longest() {
+			int res = 0;
+			for (int i = 2; i <= idx; i++) res = std::max(res, len[i]);
+			return res;
+		}
+
+		// 所有回文子串总数 (按出现次数计)
+		long long total() {
+			long long res = 0;
+			for (int i = 2; i <= idx; i++) res += 1LL * cnt[i] * len[i];
+			return res;
+		}
+	};
+}
+using PAM::Trie; // Trie t
+
+void soviet() {
+	std::string s; std::cin >> s;
+	Trie t;
+	t.insert(s);
+
+	t.calc();
+
+	long long ans = 0;
+	for (int i = 2; i <= PAM::idx; i++) {
+		ans = std::max(ans, 1LL * PAM::cnt[i] * PAM::len[i]);
+	}
+	std::cout << ans;
+}
+
+int main() {
+	int M_T = 1; std::ios::sync_with_stdio(false); std::cin.tie(nullptr);
+//	std::cin >> M_T;
+	while (M_T--) { soviet(); }
+	return 0;
+}
+```
 
 
 
@@ -17248,7 +19734,7 @@ int main () {
 > [P4051 [JSOI2007\] 字符加密 - 洛谷 (luogu.com.cn)](https://www.luogu.com.cn/problem/P4051)
 > 将s复制一遍后，求sa[ ]
 
-> **求不同子串的数目**  
+> **求本质不同子串的数目**  
 > [P2408 不同子串个数 - 洛谷 (luogu.com.cn)](https://www.luogu.com.cn/problem/P2408)
 > 每个子串一定是某个后缀的前缀，所以可以计算子串总数，枚举每个后缀，减掉重复。
 > $$
@@ -18551,7 +21037,8 @@ int main(){
 
 ### 树的中心
 
-在树中，如果节点 $x$ 作为根节点时，从 $x$ 出发的最长链最短，那么称 $x$ 为这棵树的中心。
+> 在树中，如果节点 $x$ 作为根节点时，从 $x$ 出发的最长链最短，那么称 $x$ 为这棵树的中心。
+>
 
 性质：
 
@@ -23073,7 +25560,7 @@ $\sum_{(S,v)\in E} f(S,v)$，为整个网络的流量(其中S表示源点)
 
 时间复杂度$O(NM^2)$，实际效率较高，一般能处理10^3 ~ 10^4 规模的网络
 
-每次bfs遍历整个[残量网络](网络中所有节点以及剩余容量大于0的边构成的子图)，找出任意一条增广路，同时计算路径上各边剩余流量的最小值minf，显然可以让一股流沿着增广路从S流向T，网络的流量就可以增加minf。直到网络上不存在增广路为止。
+每次bfs遍历整个 残量网络(网络中所有节点以及剩余容量大于0的边构成的子图)，找出任意一条增广路，同时计算路径上各边剩余流量的最小值minf，显然可以让一股流沿着增广路从S流向T，网络的流量就可以增加minf。直到网络上不存在增广路为止。
 
 
 
@@ -25685,7 +28172,7 @@ int dfs(int u){
 
  [洛谷 P1352 没有上司的舞会](https://www.luogu.com.cn/problem/P1352)
 
-​    求解一颗有向树的[最大权独立集](所选的顶点之间没有两边，且点权和最大)，每条边最多选一个点
+​    求解一颗有向树的 最大权独立集(所选的顶点之间没有两边，且点权和最大)，每条边最多选一个点
 
 > 我们设 $f(i,0/1)$ 代表以 $i$ 为根的子树的最优解（第二维的值为 0 代表 $i$ 不参加舞会的情况，1 代表 $i$ 参加舞会的情况）。
 >
@@ -26430,16 +28917,21 @@ int main(){
 
 [【学习笔记】动态规划—斜率优化DP（超详细）——辰星凌的博客QAQ](https://www.cnblogs.com/Xing-Ling/p/11210179.html)
 
-先写出DP方程，例如:$dp[i] = min\{dp[j] + (s[i]-s[j])^2 + m\}$
-去掉$min$，对齐进行移项变换为$y = kx+b$的点斜式。
-把含有$function(i)*funciton(j)$的表达式看做斜率$k$乘以未知数$x$，含有$dp[i]$或常数项在$b$的表达式中，含有$function(j)$的项在$y$的表达式中。
+先写出DP方程，例如：$dp[i] = min\{dp[j] + (s[i]-s[j])^2 + m\}$
+
+去掉 $min$，对齐进行移项变换为 $y = kx+b$的点斜式。
+
+把含有 $function(i)*funciton(j)$ 的表达式看做斜率$k$乘以未知数 $x$，含有 $dp[i]$ 或常数项在$b$的表达式中，含有 $function(j)$ 的项在$y$的表达式中。
+
 $dp[j] + s[j]^2 = 2*s[i]*s[j] + dp[i]-s[i]^2-m$。
+
 此处 $y = dp[j] +s[j]^2$，$k = 2*s[i]$，$x = s[j]$，$b = dp[i]-s[i]^2 - m$。
-即找出一个点$(s[j],dp[j]+s[j]^2)$，使得$b$也即$dp[i]$最大
+
+即找出一个点 $(s[j],dp[j]+s[j]^2)$，使得 $b$ 也即 $dp[i]$ 最大
 
 写出DP方程后，判断能否使用斜率优化，即是否存在 $function(i) * function(j)$ 的项，或者 $\frac{Y(j)-Y(j')}{X(j) - X(j')}$
 
-通过大小于符号或者换$b$中$dp[i]$的符号结合题目要求$(min/max)$判断是上凸包还是下凸包。
+通过大小于符号或者换 $b$ 中 $dp[i]$ 的符号结合题目要求 $(min/max)$ 判断是上凸包还是下凸包。
 
 
 
@@ -26498,7 +28990,21 @@ int main(){
 
 [P5785 [SDOI2012\] 任务安排 - 洛谷 (luogu.com.cn)](https://www.luogu.com.cn/problem/P5785)
 
-本题，诺k不满足单调性，则需要维护整个凸包，每次决策时只需要在队列中用`二分/CDQ/平衡树`找到点 j 满足：点j左边的斜率都小于k，右边的斜率都大于k。
+> 给定 $n$ 个任务，完成每个任务所需要的时间为 $t_i$，需要的费用为它完成的时刻乘以一个费用系数 $C_i$，任务执行顺序不可改变。你需要将其分成若干批，每批任务开始前，机器需要花费启动时间 $s$，同一批任务将在同一时刻完成。确定一个分组方案，使得总费用最小。
+>
+> $1 \le n \le 3 \times 10^5, 1\le s \le 2^8, -2^8 \le t_i \le 2^8, 0\le C_i \le 2^8$
+
+
+
+朴素枚举 $O(N^2)$：$f_i = min_{j < i}\{ f_j + S*c(j, n) + t_i * c(j, i) \}$，其中 $c(l, r) = \sum_{i=l}^{r}c_i$。
+
+查询斜率 $k$ 不满足单调性，则需要维护整个凸包，每次决策时只需要在队列中用`二分/CDQ/平衡树`找到点  $j$ 满足：点 $j$ 左边的斜率都小于 $k$，右边的斜率都大于 $k$ 。本题 $k$ 不单调，但是加入决策点的横坐标是单调的，可以在凸包上二分。如果二者都不单调可以考虑CDQ或平衡树。
+
+$f_i = min\{ f_j + S*(sc_n - sc_j) + st_i * (sc_i - sc_j) \}$
+
+$f_j = (S + sc_i)sc_j + f_i - S*sc_n - st_i * sc_i$
+
+<img src="https://cdn.luogu.com.cn/upload/image_hosting/t9v5i4sj.png" alt="img" style="zoom:50%;" /> 
 
 ```cpp
 #include <iostream>
@@ -26539,7 +29045,7 @@ int main(){
 	for(int i = 1;i <= n;i++){
 		int j = lb(st[i]+s,hh,tt);
 		dp[i] = dp[j] - (s+st[i])*sc[j] + st[i]*sc[i] + s*sc[n];
-		while(hh <= tt - 1){
+		while(hh <= tt - 1){ // 维护下凸包
 			node p1 = {sc[q[tt-1]],dp[q[tt-1]]},p2 = {sc[q[tt]],dp[q[tt]]},p3 = {sc[i],dp[i]};
 			if(__int128(p3.y-p2.y)*(p2.x-p1.x) <= __int128(p2.y-p1.y)*(p3.x-p2.x)) tt--;
 			else break;
@@ -26549,6 +29055,12 @@ int main(){
 	cout << dp[n];
 }
 ```
+
+
+
+
+
+
 
 
 
@@ -26661,12 +29173,13 @@ for(int i = 1;i <= n+1;i++){//dp[N][M]
         }
     }
 }
+
 //可以优化为
 for(int i = 1;i <= n+1;i++){//dp[2][M]
     for(auto s1:st[i-1]){
         for(auto s2:st[i]){
 			if(s1&s2) continue;
-             dp[i&1][s2] = 0;
+             dp[i&1][s2] = 0; // 先清空
         }
     }
     for(auto s1:st[i-1]){
@@ -27124,8 +29637,7 @@ int n = atoi(a.c_str());//从第一位开始，遇到非数字停止，诺第一
 
 ### memset
 
-> #include <cstring>
->
+> `#include <cstring>`
 > 按字节初始化
 
 ```cpp
@@ -27134,6 +29646,8 @@ char arr[100];
 memset(arr,'a',sizeof arr);//可以初始化为任意字符
 for (int i = 0;i < 100;i++) cout << arr[i];
 ```
+
+
 
 ```cpp
 //非字符型数组
@@ -28071,7 +30585,7 @@ int main() {
 
 ### unordered_map
 
-> #include <unordered_map> 
+>` #include <unordered_map> `
 >
 > unordered_map 容器等价为无序的 map 容器。
 >
@@ -28124,11 +30638,12 @@ unordered_map<int,int,hh>mp;
 
 > 使用STL向函数传递容器时使用&引用传递或者*指针传递，否则会发生拷贝构造，与数组不同
 >
-> ```cpp
+```cpp
 > void function1(vector<int> vec)//传值		//值传递，会发拷贝构造，与数组不同
 > void function2(vector<int>& vec)//传引用	//引用传递，不会发生拷贝构造
 > void function3(vector<int>* vec)//传指针	//指针传递，不会发生拷贝构造
 > ```
+
 
 ### 常用函数
 
@@ -28285,7 +30800,7 @@ else {
 
 ### 遍历元素
 
-vector<int> v = { 100,200,300,400,500,600 };
+`vector<int> v = { 100,200,300,400,500,600 };`
 
 ```cpp
 //通过迭代器
@@ -28467,10 +30982,14 @@ for (int i = 0; i < 5;i++) {
 
 
 
-> priority_queue<结构类型> 队列名;
-> priority_queue<double>q0;
-> priority_queue<int,vector<int>,less<int> >q1;  			//大根堆，父节点>子节点
-> priority_queue<int, vector<int>, greater<int>> q2;  	//小根堆 ，父节点<子节点
+> `priority_queue<结构类型> 队列名;`
+
+```cpp
+priority_queue<double>q0;
+priority_queue<int,vector<int>,less<int> >q1;  			//大根堆，父节点>子节点
+priority_queue<int, vector<int>, greater<int>> q2;  	//小根堆 ，父节点<子节点
+```
+
 
 ```cpp
 //例	利用大根堆实现元素自动从大到小排列
@@ -28597,7 +31116,7 @@ deque<int> d4(d1);
 
 ### 遍历链表
 
-> queue<int>q;
+> `queue<int>q;`
 
 ```cpp
 //利用迭代器
@@ -28660,7 +31179,7 @@ dfs(q,1);
 
 ### 清空
 
-由于stack没有clear()函数，可以手动清空，或者sk = stack<int>();
+由于stack没有clear()函数，可以手动清空，或者`sk = stack<int>();`
 
 
 
@@ -28793,7 +31312,7 @@ multiset.erase(x);会把所有的x删除，诺只想要删一个，则应删除�
 
 ### unordered_set
 
-> #include <unordered_set>
+> `#include <unordered_set>`
 >
 > 与set唯一的区别就在于 unordered_set 容器不会自行对存储的数据进行排序 
 
@@ -29138,7 +31657,7 @@ int main(){
 
 ## tuple
 
-#include <tuple>
+`#include <tuple>`
 
 tuple（元组）在c++11开始引用，是一个固定大小的不**同类型值的集合**，是**泛化的std::pair**。我们也可以把他当做一个通用的结构体来用，不需要创建结构体又获取结构体的特征，在某些情况下可以取代结构体使程序更简洁，直观。std::tuple理论上可以有无数个任意类型的成员变量，而std::pair只能是2个成员，因此在需要保存3个及以上的数据时就需要使用tuple元组了。
 
@@ -29232,46 +31751,28 @@ int main(){
 ### clock_t
 
 ```cpp
-//计算程序运行某一段的耗时(ms)
-//例1
-#include <iostream>
-#include <ctime>
+// 例如, 计算程序运行某一段的耗时(ms)
+#include <bits/stdc++.h>
 using namespace std;
-clock_t start1, end1, start2, end2;
-int main() {	
-	start1 = clock();
-	for (int i = 0; i < 5e8; i++){
-		int b; b = i;
-	}
-	end1 = clock() - start1;
-	cout << end1 << "ms" << endl;
 
-	start2 = clock();
-	for (int i = 0; i < 1e9; i++){
-		int b; b = i;
-	}
-	end2 = clock();
-	cout << end2 - start2 << "ms" << endl;
+void test(function<void(void)> f) {
+	auto t1 = clock();
+	f();
+	auto t2 = clock();
+	cout << t2 - t1 << " ms\n";
 }
-```
 
-```cpp
-//例2
-#include <iostream>
-using namespace std;
 int main() {
-	int start1 = clock();
-	for (int i = 0; i < 1e7; i++);
-	int end1 = clock();
-	cout << end1 - start1 << "ms" << endl;
-
-	int start2 = clock();
-	for (int i = 0; i < 1e9; i++);
-	int end2 = clock();
-	cout << end2 - start2 << "ms" << endl;
-
-	return 0;
+	test([&]() {
+		long long ans = 0;
+		const int mod = 1e9 + 7;
+		for (long long i = 1; i <= 100000008; i++) {
+			ans = (i + ans * (i + ans) / i) % mod;
+		}
+		cout << ans << '\n';
+	});
 }
+
 ```
 
 
@@ -29309,10 +31810,6 @@ pb\_ds 库封装了很多数据结构，比如哈希（Hash）表，平衡二叉
 pb\_ds 只在使用 libstdc++ 为标准库的编译器下可以用。
 可以使用 `begin()` 和 `end()` 来获取 `iterator` 从而遍历
 可以 `increase_key`,`decrease_key` 以及删除单个元素
-
-
-
-
 
 
 
@@ -29707,8 +32204,6 @@ int main(){
 
 
 
-/
-
 
 
 ### rope
@@ -29843,37 +32338,6 @@ int main(){
 	}
 }
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -30099,7 +32563,7 @@ int ans1 =int(ans + eps);//对于负数的情况，只需要把ans + eps改为an
 cout << ans1 << endl;//正确输出8
 ```
 
-现在考虑一种情况,题目要求输出保留两位小数。有个case的正确答案的精确值是0.005,按理应该输出0.01,但你的结果可能是0.005000000001(恭喜)，也有可能是0.004999999999(悲剧),如果按照printf(“%.2lf”, a)输出，那你的遭遇将和括号里的字相同。
+现在考虑一种情况,题目要求输出保留两位小数。有个 case 的正确答案的精确值是 `0.005` ,按理应该输出 `0.01` ,但你的结果可能是 `0.005000000001` (恭喜)，也有可能是 `0.004999999999` (悲剧),如果按照 `printf("%.2lf", a)` 输出，那你的遭遇将和括号里的字相同。
 
 解决办法是，如果a为正，则输出a+eps, 否则输出a-eps
 
@@ -30107,7 +32571,7 @@ cout << ans1 << endl;//正确输出8
 
 两个浮点数之间的比较，eps缩写自epsilon，表示一个小量，但这个小量又要确保远大于浮点运算结果的不确定量。eps最常见的取值是1e-8左右。引入eps后，我们判断两浮点数a、b相等的方式如下:
 
-定义三出口函数如下: int sgn(double a){return a < -eps ? -1 : a < eps ? 0 : 1;}
+定义三出口函数如下：` int sgn(double a){return a < -eps ? -1 : a < eps ? 0 : 1;}`
 
 则各种判断大小的运算都应做如下修正:
 
@@ -30123,6 +32587,8 @@ cout << ans1 << endl;//正确输出8
 
 
 
+
+**分式比较**
 
 > 除法之间比较尽量转换为乘法之间比较，如$\frac{a}{b} < \frac{c}{d}$判断改为$a*d < b*c$
 >
@@ -30178,24 +32644,34 @@ void sol(){
 
 
 
-> sqrt
+**数学运算**
+
+> `sqrt`/`sqrtl`
+
+`sqrtl` 返回值为 `long double` 类型，精度更高。[Yet Another Simple Math Problem - Problem - QOJ.ac](https://qoj.ac/contest/1499/problem/8167)
 
 ```cpp
 int ans1 = 0,ans2 = 0,ans3 = 0;
 for(int i = 1;i <= 100;i++){
-    if(i == sqrt(i)*sqrt(i)) ans1++;//53
-    if(i - sqrt(i)*sqrt(i) < 1e-9) ans2++;//100
-    if(i == (int)sqrt(i)*sqrt(i)) ans3++;//10
+    if(i == sqrt(i)*sqrt(i)) ans1++;//49 错误
+    if(i - sqrt(i)*sqrt(i) < 1e-9) ans2++;//100 错误
+    if(i == (int)sqrt(i)*sqrt(i)) ans3++;//10 正确
+}
+
+// 建议手写 sqrt (向下取整)
+long long qsqrt(long long n) { 
+    long long s = std::sqrt(n);
+    while (s*s > n) { s--; }
+    while ((s+1)*(s+1) <= n) { s++; }
+    return s;
 }
 ```
 
-sqrtl返回值为long double类型，精度更高。[Yet Another Simple Math Problem - Problem - QOJ.ac](https://qoj.ac/contest/1499/problem/8167)
 
 
 
 
-
-> pow/ceil/floor/round参数类型和返回值类型均为浮点型，可能会导致输出与预期不符而wrong answer
+> `pow`/`ceil`/`floor`/`round`参数类型和返回值类型均为浮点型，可能会导致输出与预期不符而 `wrong answer`
 
 ```cpp
 int a = 1234;
@@ -30204,6 +32680,10 @@ cout << pow(a, 2) << endl;//1.52276e+06        可以用int n = pow(a,2)类型�
 ```
 
 
+
+
+
+**无符号整型溢出**
 
 > 有符号整型 - 无符号整型
 
@@ -30219,9 +32699,52 @@ while(n - v.size() > 0){
 
 
 
+
+
+**python 高精度库**
+
+精度可以任意调整，设置越高性能开销越大。
+
+```python
+from decimal import Decimal, getcontext
+getcontext().prec = 100  # 设置100位十进制精度
+
+a, b = input().split()
+
+a = Decimal(a)
+b = Decimal(b)
+
+print(a / b)
+```
+
+
+
+**python 分数库**
+
+用于表示精确的分数，避免浮点数的舍入误差。但分数非常复杂（分子分母极大）时，运算会变慢。通常建议在中间比较时使用分数，最终输出再转换为 `float` 或 `Decimal` 格式化。
+
+```python
+from fractions import Fraction
+
+x = Fraction(1, 6) + Fraction(1, 12)
+
+x /= 3
+x += 1
+
+print(x)  # 输出 13/12
+```
+
+
+
+
+
+
+
+
+
 ## 输入输出优化
 
-使用cin/cout会比scanf/printf慢
+关闭同步流
 
 ```cpp
 //关闭cstdio和iostream的同步后,cin/cout不要与printf/scanf/puts混用,也不要再使用endl,否则会造成输入输出混乱
@@ -30658,6 +33181,16 @@ g++ 1.cpp -O2 -o -1.exe
 
  `__int128` 仅仅是 GCC 编译器内的东西，不在 C++标准内，且仅 **GCC4.6** 以上**64位**版本支持
 
+```cpp
+// 检测宏
+#if defined(__SIZEOF_INT128__)
+using i128 = __int128;
+using u128 = unsigned __int128;
+#endif
+```
+
+
+
 **数据范围**
 
 > `__int128`数据范围 ： $-2^{127} \sim 2^{127}-1$   大于1.7e38
@@ -30741,6 +33274,27 @@ int main() {
 
 
 
+
+
+#### __float128
+
+`__float80` 和 `__float128` 是 GCC 编译器提供的扩展浮点数据类型，并非 C/C++ 标准的一部分，其可用性完全取决于目标平台和编译器。性能较差，比 `double` 慢几十倍，慎用。
+
+`long double` 和 `__float80` 精度（十进制）大概为18-19位。而`__float128` 为33-34位。
+
+```cpp
+// 检测宏
+#if defined(__SIZEOF_FLOAT128__)
+using lf128 = __float128;
+#endif
+```
+
+
+
+
+
+
+
 #### __cplusplus
 
 ```cpp
@@ -30756,6 +33310,7 @@ cout << __cplusplus << endl; // 可以直接输出预处理器宏参数
 | 201703L                   | C++17         |
 | 202002L                   | C++20         |
 | 202302L                   | C++23         |
+| 202603L                   | C++26         |
 
 
 
@@ -30772,7 +33327,7 @@ cout << __cplusplus << endl; // 可以直接输出预处理器宏参数
 ### 文件读写
 
 ```cpp
-//正式提交时请务必注释掉
+// 正式提交时请务必注释掉
 int main() {
 	freopen("in.txt","r",stdin);
 //	freopen("out.txt","w",stdout);
@@ -30782,10 +33337,10 @@ int main() {
 ```
 
 ```bash
-#windows cmd控制台读写方式
+# windows cmd
 a.exe < in.txt > out.txt
 
-#linux 控制台
+# linux bash
 ./a.out < in.txt > out.txt
 ```
 
@@ -30811,7 +33366,7 @@ void f(Args... args) {
 
 ## 时间复杂度
 
-仅供参考
+仅供参考，安全线一般取每秒 $10^8$ 次运算，浮点数或部分容器/函数运行更慢。
 
 | 数据范围 |                                     |                                                              |
 | -------- | ----------------------------------- | ------------------------------------------------------------ |
@@ -31052,65 +33607,147 @@ shuffle(v.begin(), v.end(), rng); // 需要配合随机数生成器使用
 写一个对拍程序`dp.exe`，不断调用数据生成器`data.exe`生成随机数据，通过将自己的程序`sol.exe` 和标准程序（或保证正确的暴力解）`std.exe` 运行结果进行比对，一旦结果不一致立即终止程序。利用问题样例调试程序。
 
 ```cpp
-//dp.cpp   windows
+// dp.cpp  (Windows)
 #include <bits/stdc++.h>
 using namespace std;
 
+auto SEED = chrono::steady_clock::now().time_since_epoch().count();
+mt19937_64 rng(SEED);
+
+template<typename T = long long>
+T rnd(const T &l, const T &r) { return rng() % (r - l + 1) + l; }
+
+vector<int> random_permutation(int n) {
+	vector<int> a(n);
+	iota(a.begin(), a.end(), 1);
+	shuffle(a.begin(), a.end(), rng);
+	return a;
+}
+
+void compile(string a, string an) {
+	if (system(("g++ " + a + " -o " + an + ".exe -O2 -std=c++17").c_str())) {
+		cout << "compile " << a << " failed" << endl;
+		exit(1);
+	}
+}
+
+// --------- 数据生成 ---------
+void create_data() {
+	ofstream fout("data.in"); // fout
+
+	int a = rnd(0, 10), b = rnd(0, 50);
+	fout << a << ' ' << b << '\n';
+}
+
 int main() {
-    int t = 0;
-    string sol = "sol";
-	cout << "filename(without .exe):";
-	cin >> sol;
+	string a = "a.cpp", b = "std.cpp";
+	cout << "input: <sol.cpp> : ";
+	cin >> a;
 
-    while (1) {
-        system("data.exe > data.in");
-        system("std.exe < data.in > std.out");
-        system((sol + ".exe < data.in > sol.out").c_str());
+	string an = a.substr(0, a.size() - 4);
+	string bn = b.substr(0, b.size() - 4);
 
-        if (system("fc std.out sol.out > nul")) {
-            cout << "\nWA on test " << ++t << "\n\nInput:\n";
-            system("type data.in");
-            cout << "\nYour output:\n";
-            system("type sol.out");
-            cout << "\nCorrect output:\n";
-            system("type std.out");
-            system("pause");
-            break;
-        }
-        cout << "Test " << ++t << " OK" << endl;
-    }
+	puts("Compiling...");
+	compile(a, an);
+	compile(b, bn);
+
+	for (int t = 1; t <= 100000; t++) {
+		create_data();
+
+		system((bn + ".exe < data.in > std.out").c_str());
+
+		clock_t c1 = clock();
+		system((an + ".exe < data.in > sol.out").c_str());
+		clock_t c2 = clock();
+
+		printf("Test:%4d : %ld ms ", t, c2 - c1);
+
+		if (system("fc std.out sol.out > nul")) {
+			puts("WA");
+			system("type data.in");
+			puts("\nyou:");
+			system("type sol.out");
+			puts("\nstd:");
+			system("type std.out");
+			puts("");
+			system("pause");
+			break;
+		}
+		printf("OK\n");
+	}
 }
 ```
 
 ```cpp
-//dp.cpp   linux
+// dp.cpp  (Linux)
 #include <bits/stdc++.h>
 using namespace std;
+using namespace chrono;
+
+auto SEED = steady_clock::now().time_since_epoch().count();
+mt19937_64 rng(SEED);
+
+template<typename T = long long>
+T rnd(const T &l, const T &r) { return rng() % (r - l + 1) + l; }
+
+vector<int> random_permutation(int n) {
+	vector<int> a(n);
+	iota(a.begin(), a.end(), 1);
+	shuffle(a.begin(), a.end(), rng);
+	return a;
+}
+
+void compile(const string &src, const string &out) {
+	if (system(("g++ " + src + " -o " + out + " -O2 -std=c++17").c_str())) {
+		cout << "compile " << src << " failed" << endl;
+		exit(1);
+	}
+}
+
+// --------- 数据生成 ---------
+void create_data() {
+	ofstream fout("data.in"); // fout
+
+	int a = rnd(0, 10), b = rnd(0, 20);
+	fout << a << ' ' << b << '\n';
+}
 
 int main() {
-    int t = 0;
-    string sol;
-    cout << "filename(without .out):";
-    cin >> sol;
+	string a = "a.cpp", b = "std.cpp";
+	cout << "input: <sol.cpp> : ";
+	cin >> a;
 
-    while (1) {
-        system("./data > data.in");
-        system("./std < data.in > std.txt");
-        system(("./" + sol + " < data.in > sol.txt").c_str());
+	string an = a.substr(0, a.size() - 4);
+	string bn = b.substr(0, b.size() - 4);
 
-        if (system("diff -q std.txt sol.txt > /dev/null")) {
-            cout << "\nWA on test " << ++t << "\n\nInput:\n";
-            system("cat data.in");
-            cout << "\nYour output:\n";
-            system("cat sol.txt");
-            cout << "\nCorrect output:\n";
-            system("cat std.txt");
-            cin.ignore();
-            break;
-        }
-        cout << "Test " << ++t << " OK" << endl;
-    }
-}  
+	puts("Compiling...");
+	compile(a, an);
+	compile(b, bn);
+
+	for (int t = 1; t <= 100000; t++) {
+		create_data();
+
+		system(("./" + bn + " < data.in > std.out").c_str());
+
+		auto c1 = steady_clock::now();
+		system(("./" + an + " < data.in > sol.out").c_str());
+		auto c2 = steady_clock::now();
+
+		long ms = duration_cast<milliseconds>(c2 - c1).count();
+		printf("Test:%4d : %ld ms ", t, ms);
+
+		if (system("diff -qZ std.out sol.out > /dev/null")) {
+			puts("WA");
+			system("cat data.in");
+			puts("\nyou:");
+			system("cat sol.out");
+			puts("\nstd:");
+			system("cat std.out");
+			break;
+		}
+		puts("OK");
+	}
+}
 ```
 
 
@@ -31146,71 +33783,6 @@ int main() { //例如生成数组a[n]
 
 
 
-```cpp
-//dp.cpp windows(太长,仅日常使用)
-#include <bits/stdc++.h>
-using namespace std;
-
-int main() {
-	int t = 0;
-	std::cout << "sol filename:";
-	std::string sol = "1.cpp"; std::cin >> sol;
-	std::cout << std::endl;
-
-	int suf_pos = sol.find_last_of(std::string("."));
-	std::string suf = ".cpp";
-	if (suf_pos != -1) {
-		suf = sol.substr(suf_pos);
-	}
-
-	if (sol.size() >= 4 && sol.substr(sol.size() - 4) == ".cpp") {
-		sol.pop_back(); sol.pop_back(); sol.pop_back(); sol.pop_back();
-	}
-
-	while (1) {
-
-		system("data.exe > data.in");
-
-		std::cout <<  "Test:" << std::left << std::setw(4) << ++t;
-
-		system("std.exe < data.in > std.out");
-
-		std::cout << "->";
-
-		clock_t c1 = clock();
-		if (suf.empty() || suf == ".exe" || suf == ".cpp") system((sol + " < data.in > sol.out").c_str());
-		else if (suf == ".py") system(("python " + sol + " <data.in > sol.out").c_str()); 
-		clock_t c2 = clock();
-
-		std::cout << std::right << " " << std::setw(4) << c2 - c1 << "ms ";
-
-		if (system("fc std.out sol.out > diff.log")) { // linux下为diff命令对比文件
-			system("cls");
-			printf("\a");
-
-			std::cout << "WA on Test " << t << ":" << std::endl;
-			system("type data.in");
-			std::cout << std::endl;
-
-			std::cout << "Your Answer:" << std::endl;
-			system("type sol.out");
-			std::cout << std::endl;
-
-			std::cout << "Std Answer:" << std::endl;
-			system("type std.out");
-			std::cout << std::endl;
-
-			system("pause");
-			break;
-		}
-		std::cout << "OK ";
-		std::cout << std::endl;
-	}
-
-	return 0;
-}
-```
-
 
 
 ## 外部链接
@@ -31229,6 +33801,8 @@ int main() {
 
 [Graph Editor：https://csacademy.com/app/graph_editor/](https://csacademy.com/app/graph_editor/) ：简易的图论作图工具
 
+[Another Graph Editor：https://anacc22.github.io/another_graph_editor/](https://anacc22.github.io/another_graph_editor/)：图论编辑工具
+
 [ACMer.info：https://acmer.info/](https://acmer.info/) ：整理和分享算法竞赛相关的群组、博客、比赛平台等资源
 
 [AlgoWiki：https://www.algowiki.cn/](https://www.algowiki.cn/)：竞赛wiki信息平台
@@ -31239,6 +33813,7 @@ int main() {
 
 [cppreference：https://en.cppreference.com/](https://en.cppreference.com/) ：c++参考手册
 
+[AWESOME XCPC：https://xcpc.link/](https://xcpc.link/)：XCPC实用小工具/网站集合
 
 
 
