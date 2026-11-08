@@ -8,13 +8,13 @@
 
 **数学**：多项式、~~Polya计数~~、
 
-**基础算法**：分治、整体二分、树上莫队、
+**基础算法**：整体二分、树上莫队、
 
-**字符串**：后缀自动机、
+**字符串**：
 
-**图论**：树分治(点分治)、基环树、括号序、~~圆方树~~、~~可行流~~、
+**图论**：基环树、括号序、~~圆方树~~、~~可行流~~、
 
-**数据结构**：平衡树(Treap、~~Splay~~)、线段树分治、可持久化(Trie)、~~动态树~~、树套树、
+**数据结构**：平衡树(Treap、~~Splay~~)、线段树分治、~~动态树~~、树套树、
 
 **动态规划**：回滚背包、插头DP、
 
@@ -27,7 +27,8 @@
 
 2025.10.20 update：退役归档，不再更新、
 
-2026.11.07：分层图最短路、对拍、KMP修正、01Trie修正、调和级数、线性递推求逆元、添加了一些好van的网站、平面几何（多边形面积、求凸包）、笛卡尔树、类欧几里得算法、最小瓶颈路、子集枚举、并查集（可撤销，可删点、可持久化）、k-Dyck路、HLPP、极角排序、幂次哈希、回文树、珂朵莉树、多项式基础、CDQ 分治、倍增、反悔贪心、后缀自动机、树上启发式合并、
+2026.11.09：分层图最短路、对拍、KMP修正、01Trie修正、调和级数、线性递推求逆元、添加了一些好van的网站、平面几何（多边形面积、求凸包）、笛卡尔树、类欧几里得算法、最小瓶颈路、子集枚举、并查集（可撤销，可删点、可持久化）、k-Dyck路、HLPP、极角排序、幂次哈希、回文树、珂朵莉树、多项式基础、CDQ 分治、倍增、反悔贪心、后缀自动机、树上启发式合并、可持久化Trie、树分治、
+
 
 # 数学
 
@@ -248,7 +249,7 @@ int main() {
 
 
 
-##### **约数分解**
+##### 约数分解
 
 求一个数的所有约数
 
@@ -3350,7 +3351,11 @@ $$
 |A\cup B\cup C|=|A|+|B|+|C|-|A\cap B|-|B\cap C|-|C\cap A|+|A\cap B\cap C|
 $$
 
-![容斥原理 - venn 图示例](https://oi-wiki.org/math/combinatorics/images/incexcp.png)  把上述问题推广到一般情况，就是我们熟知的容斥原理
+
+
+<img src="https://oi-wiki.org/math/combinatorics/images/incexcp.svg" alt="img" style="zoom:100%;" />
+
+把上述问题推广到一般情况，就是我们熟知的容斥原理。
 
 把包含于某内容中的所有对象的数目先计算出来，然后再把计数时重复计算的数目排斥出去，使得计算的结果既无遗漏又无重复
 
@@ -7164,7 +7169,7 @@ n堆物品，每堆有$a_i$个，两个玩家轮流取走任意一堆的任意�
 如果将每个状态视为一个节点，再从每个状态向它的后继状态连边，我们就可以得到一个博弈状态图。
 例如，如果节点 $(i, j, k)$ 表示局面为 $i, j, k$ 时的状态，则我们可以画出下面的博弈图
 
-![博弈图的例子](https://oi-wiki.org/math/game-theory/images/nim.svg)
+<img src="https://oi-wiki.org/math/game-theory/images/nim.svg" alt="博弈图的例子" style="zoom: 67%;" />
 
 定义 必胜状态 为 先手必胜的状态，必败状态 为 先手必败的状态。
 通过推理，我们可以得出下面三条定理：
@@ -8488,7 +8493,7 @@ void add(int x){//插入元素
 	balance();
 }
 
-void del(int x){//删除元素
+void del(int x){//删除元素(只删除一个)
 	if(x <= *se1.rbegin()) se1.erase(se1.find(x));
 	else se2.erase(se2.find(x));
 	balance();
@@ -8503,9 +8508,9 @@ int query(){//查找中位数
 
 例题：[Problem - K - Rainbow Subarray - Codeforces](https://codeforces.com/gym/104901/problem/K)
 
-> 题意：定义一个数组的连续子数组(a[l] ~ a[r])每一项满足 $a_{i+1} =a_i + 1$ 为一个彩虹子数组，可以至多进行 k 次操作使任意 $a_i+1$ 或 $a_i-1$ ，求能构造出的最长彩虹子数组
+> 题意：定义一个数组的连续子数组`(a[l] ~ a[r])`每一项满足 $a_{i+1} =a_i + 1$ 为一个彩虹子数组，可以至多进行 k 次操作使任意 $a_i+1$ 或 $a_i-1$ ，求能构造出的最长彩虹子数组
 >
-> 思路：考虑 $a_{i+1} =a_i + 1$ 可以转化为 $a_{i+1} - (i + 1) = a_i - i$ ，所以先预处理把所有的$a_i$减去自己下标，问题就变成了：把一个区间的所有数字全部变成一个相同的数字，很容易知道，最小代价就是把所有数变成中位数即可，所以接下来就用一个双指针滑动窗口来维护，求最大的区间长度，这里动态维护滑动窗口的中位数用两个multiset
+> 思路：考虑 $a_{i+1} =a_i + 1$ 可以转化为 $a_{i+1} - (i + 1) = a_i - i$ ，所以先预处理把所有的$a_i$减去自己下标，问题就变成了：把一个区间的所有数字全部变成一个相同的数字，很容易知道，最小代价就是把所有数变成中位数即可，所以接下来就用一个双指针滑动窗口来维护，求最大的区间长度，这里用两个multiset动态维护滑动窗口的中位数
 
 ```cpp
 #include <iostream>
@@ -14375,7 +14380,7 @@ void up(int u) {
 很明显，我们一共可以得到 n^m 个这种序列，然后我们可以计算每个序列中的数字之和，并得到 n^m 个值。
 求出这些序列和之中最小的 n 个值。
 
-> 思路：第一个数组a[]依次与其他数组合并，每次将a[]更新最小的n个数
+> 思路：第一个数组`a[]`依次与其他数组合并，每次将`a[]`更新最小的n个数
 
 ```cpp
 #include <iostream>
@@ -14434,7 +14439,7 @@ int main(){
 
 
 
-#### ~~左偏树~~
+#### 左偏树
 
 左偏树(leftist tree)是一种可并堆，具有堆的性质，可以快速合并，支持可持久化。
 
@@ -14443,7 +14448,143 @@ int main(){
 | O(logN) | O(1)       | O(logN)    | O(logN) |
 
 
+[P3377 【模板】可并堆 1 - 洛谷](https://www.luogu.com.cn/problem/P3377)
 
+> 初始有 `n` 个小根堆，每个堆包含一个数。维护 `m` 次操作，每次操作为以下两种之一：
+> - `1 x y`：将第 `x` 个数和第 `y` 个数所在的小根堆合并，如果第 `x` 或第 `y` 个数已被删除或已经在同一个堆内，跳过操作）。
+> - `2 x`：输出第 `x` 个数所在的堆最小数，并将这个最小数删除（诺有多个最小数，优先删除先输入的；诺第 `x` 个数已被删除，则输出 `-1`，并无视删除操作）。
+> $1 \le n, m\le 10^5$。
+
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+template<typename type>
+class LeftistHeap {
+    struct node {
+        type val;
+        int dist;
+        node *l, *r;
+        node(const type &v) : val(v), dist(1), l(nullptr), r(nullptr) {}
+    };
+    
+    node *root;
+    size_t heap_size;
+
+    // 核心合并操作，返回合并后的根
+    static node* merge(node *p, node *q) {
+        if (!p) return q;
+        if (!q) return p;
+        if (p->val > q->val) swap(p, q); // 小根堆
+        
+        p->r = merge(p->r, q);
+        
+        // 维护左偏性质：左儿子的 dist 不小于右儿子的 dist
+        if (!p->l || (p->r && p->l->dist < p->r->dist)) {
+            swap(p->l, p->r);
+        }
+        p->dist = (p->r ? p->r->dist : 0) + 1;
+        return p;
+    }
+
+    // 递归释放整棵树
+    static void clear_node(node *p) {
+        if (!p) return;
+        clear_node(p->l);
+        clear_node(p->r);
+        delete p;
+    }
+
+public:
+    LeftistHeap() : root(nullptr), heap_size(0) {}
+    
+    // 禁用拷贝，防止 double free
+    LeftistHeap(const LeftistHeap&) = delete;
+    LeftistHeap& operator=(const LeftistHeap&) = delete;
+
+    ~LeftistHeap() { clear_node(root); }
+
+    // 插入元素
+    inline void push(const type &x) {
+        node *p = new node(x);
+        root = merge(root, p);
+        heap_size++;
+    }
+
+    // 弹出堆顶
+    inline void pop() {
+        if (!root) return;
+        node *T = root;
+        root = merge(root->l, root->r);
+        delete T;
+        heap_size--;
+    }
+
+    // 获取堆顶
+    inline type top() const { return root->val; }
+    inline bool empty() const { return heap_size == 0; }
+    inline size_t size() const { return heap_size; }
+
+    // 合并另一个堆（会清空另一个堆 x）
+    inline void merge(LeftistHeap &x) {
+        if (this == &x) return;
+        root = merge(root, x.root);
+        heap_size += x.heap_size;
+        x.root = nullptr;
+        x.heap_size = 0;
+    }
+
+    // 清空当前堆
+    inline void clear() {
+        clear_node(root);
+        root = nullptr;
+        heap_size = 0;
+    }
+};
+
+const int N = 100005;
+int p[N];
+bool del[N];
+
+int find(int x) {
+	if (p[x] != x) p[x] = find(p[x]);
+	return p[x];
+}
+
+int main() {
+	int n, q; cin >> n >> q;
+	vector<LeftistHeap<pair<int, int>>> pq(n + 1);
+	for (int i = 1; i <= n; i++) {
+		int x; cin >> x;
+		p[i] = i;
+		pq[i].push({x, i});
+	}
+
+	while (q--) {
+		int op; cin >> op;
+		if (op == 1) {
+			int x, y; cin >> x >> y;
+			int px = find(x), py = find(y);
+			if (del[x] || del[y] || px == py) continue;
+			pq[px].merge(pq[py]);
+			p[py] = px;
+		}
+		else {
+			int x; cin >> x;
+			if (del[x]) {
+				cout << -1 << '\n';
+				continue;
+			}
+			int px = find(x);
+			auto [val, id] = pq[px].top();
+			del[id] = 1;
+			cout <<val << '\n';
+			pq[px].pop();
+		}
+	}
+}
+```
 
 
 
@@ -14458,7 +14599,7 @@ int main(){
 
 配对堆是一棵满足堆性质的带权多叉树，即每个节点的权值都小于或等于他的所有儿子。每个节点储存第一个儿子的指针，即链表的头节点；和他的右兄弟的指针。
 
-<img src="https://oi-wiki.org/ds/images/pairingheap2.jpg" alt="img" style="zoom: 50%;" /> 
+<img src="https://oi-wiki.org/ds/images/pairing-heap-2.svg" alt="img" style="zoom: 50%;" /> 
 
 **查询最小值**：根节点即为最小值。
 
@@ -14470,76 +14611,176 @@ int main(){
 
 4. 把儿子们两两配成一对，在把配成一对的儿子合并到一起。
 5. 将新产生的堆从右往左（即老儿子到新儿子的方向）挨个合并到一起。
-   <img src="https://oi-wiki.org/ds/images/pairingheap4.jpg" alt="img" style="zoom:33%;" /> <img src="https://oi-wiki.org/ds/images/pairingheap5.jpg" alt="img" style="zoom: 25%;" /> 
+   <img src="https://oi-wiki.org/ds/images/pairing-heap-4.svg" alt="img" style="zoom:33%;" /> <img src="https://oi-wiki.org/ds/images/pairing-heap-5.svg" alt="img" style="zoom: 25%;" /> 
 
 ```cpp
-//封装实现,堆顶为最小值,未经过严谨测试
+#include <bits/stdc++.h>
+using namespace std;
+
 template<typename type>
-class heap{
-	size_t heap_size;
-	struct node{
-		node *s,*t;//s指向该节点的第一个儿子,t指向该节点的下一个兄弟
-		type val;
-	}*root;
-
-	node *merge_bros(node *p){//辅助函数,合并一个节点的所有兄弟
-		if(p==nullptr || p->t==nullptr) return p;//如果该节点为空或它没有下一个兄弟,就不需要合并了
-		node *q=p->t;node *d=q->t;p->t=q->t=nullptr;
-		return merge(merge_bros(d),merge(p,q));
-	}
-
-	inline node *merge(node *p,node *q){//合并两个节点
-		if(p==nullptr) return q;
-		if(q==nullptr) return p;
-		if(p->val > q->val) swap(p,q);
-		q->t=p->s,p->s=q;
-		return p;
-	}
+class heap {
+    struct node {
+        node *s, *t;           // s: 第一个儿子, t: 下一个兄弟
+        type val;
+        node(const type &v) : s(nullptr), t(nullptr), val(v) {}
+    };
     
-	public:
-	inline heap<type>(){root=nullptr;}
+    node *root;
+    size_t heap_size;
 
-	inline void merge(node *p){
-		if(root==nullptr){root=p;return;}
-		if(p==nullptr) return;
-		if(root->val > p->val) swap(p,root);
-		p->t=root->s,root->s=p;
-	}
+    // 合并两个「根」，返回新根（小根堆）
+    // 调用约定：p、q 的 t 指针必须是 nullptr
+    static node* merge_nodes(node *p, node *q) {
+        if (!p) return q;
+        if (!q) return p;
+        if (p->val > q->val) swap(p, q);
+        q->t = p->s;
+        p->s = q;
+        return p;
+    }
 
-	inline void merge(heap x){//合并两个堆,将堆x并入当前堆(不会清空x)
-		node *p=x.root;
-		heap_size += x.size();
-		if(root==nullptr){root=p;return;}
-		if(p==nullptr) return;
-		if(root->val > p->val) swap(p,root);
-		p->t=root->s,root->s=p;
-	}
+    // 迭代式「两趟合并」兄弟链表，避免递归爆栈
+    static node* merge_bros(node *p) {
+        if (!p || !p->t) return p;
 
-	inline void push(type x){
-		heap_size++;
-		node *p=new node;
-		p->val=x;p->s=nullptr,p->t=nullptr;
-		merge(p);
-	}
+        // 第一趟：两两配对
+        vector<node*> buf;
+        buf.reserve(64);
+        while (p) {
+            node *a = p;
+            node *b = p->t;
+            if (b) {
+                p = b->t;
+                a->t = b->t = nullptr;
+                buf.push_back(merge_nodes(a, b));
+            } else {
+                a->t = nullptr;
+                buf.push_back(a);
+                p = nullptr;
+            }
+        }
 
-	inline void pop(){
-		heap_size--;
-		node *T=root;
-		root=merge_bros(root->s);
-		delete T;
-	}
+        // 第二趟：从右往左依次合并
+        node *res = buf.back();
+        for (int i = (int)buf.size() - 2; i >= 0; i--) {
+            res = merge_nodes(buf[i], res);
+        }
+        return res;
+    }
 
-	inline type top(){return root->val;}
-	inline bool empty(){return !heap_size;}
-	inline size_t size(){return heap_size;}
-	inline void clear(){root=nullptr;}
+    // 显式栈释放，避免深递归
+    static void destroy(node *p) {
+        if (!p) return;
+        vector<node*> stk;
+        stk.push_back(p);
+        while (!stk.empty()) {
+            node *u = stk.back();
+            stk.pop_back();
+            if (u->s) stk.push_back(u->s);
+            if (u->t) stk.push_back(u->t);
+            delete u;
+        }
+    }
+
+public:
+    heap() : root(nullptr), heap_size(0) {}          // 初始化 heap_size
+
+    // 禁用拷贝，防止 double free
+    heap(const heap&) = delete;
+    heap& operator=(const heap&) = delete;
+
+    heap(heap &&other) noexcept
+        : root(other.root), heap_size(other.heap_size) {
+        other.root = nullptr;
+        other.heap_size = 0;
+    }
+    heap& operator=(heap &&other) noexcept {
+        if (this != &other) {
+            destroy(root);
+            root = other.root;
+            heap_size = other.heap_size;
+            other.root = nullptr;
+            other.heap_size = 0;
+        }
+        return *this;
+    }
+
+    ~heap() { destroy(root); }
+
+    void push(const type &x) {
+        node *p = new node(x);
+        root = merge_nodes(root, p);
+        heap_size++;
+    }
+
+    void pop() {
+        if (!root) return;
+        node *T = root;
+        root = merge_bros(root->s);
+        delete T;
+        heap_size--;
+    }
+
+    const type& top() const { return root->val; }
+    bool empty() const { return heap_size == 0; }
+    size_t size() const { return heap_size; }
+
+    // 引用传参，合并后清空 other，避免共享结构
+    void merge(heap &other) {
+        if (this == &other) return;
+        root = merge_nodes(root, other.root);
+        heap_size += other.heap_size;
+        other.root = nullptr;
+        other.heap_size = 0;
+    }
+
+    void clear() {
+        destroy(root);
+        root = nullptr;
+        heap_size = 0;
+    }
 };
 
-int main(){
-    heap<int> pq1,pq2;
-    pq1.push(2);pq2.push(1);
-    pq1.merge(pq2);
-    std::cout << pq1.top() << ' ' << pq1.size() << '\n';
+const int N = 100005;
+int p[N];
+bool del[N];
+
+int find(int x) {
+	if (p[x] != x) p[x] = find(p[x]);
+	return p[x];
+}
+
+int main() {
+	int n, q; cin >> n >> q;
+	vector<heap<pair<int, int>>> pq(n + 1);
+	for (int i = 1; i <= n; i++) {
+		int x; cin >> x;
+		p[i] = i;
+		pq[i].push({x, i});
+	}
+
+	while (q--) {
+		int op; cin >> op;
+		if (op == 1) {
+			int x, y; cin >> x >> y;
+			int px = find(x), py = find(y);
+			if (del[x] || del[y] || px == py) continue;
+			pq[px].merge(pq[py]);
+			p[py] = px;
+		}
+		else {
+			int x; cin >> x;
+			if (del[x]) {
+				cout << -1 << '\n';
+				continue;
+			}
+			int px = find(x);
+			auto [val, id] = pq[px].top();
+			del[id] = 1;
+			cout <<val << '\n';
+			pq[px].pop();
+		}
+	}
 }
 ```
 
@@ -18143,7 +18384,7 @@ int main() {
 
 笛卡尔树(cartesian-tree)是一种二叉树，每一个节点由一个键值二元组 $(k,w)$ 构成．要求 $k$ 满足二叉搜索树（BST）的性质，而 $w$ 满足堆的性质．如果笛卡尔树的 $k,w$ 键值确定，且 $k$ 互不相同，$w$ 也互不相同，那么这棵笛卡尔树的结构是唯一的．如下图：
 
-<img src="https://oi-wiki.org/ds/images/cartesian-tree1.png" alt="eg" style="zoom:50%;" /> 
+<img src="https://oi-wiki.org/ds/images/cartesian-tree-1.svg" alt="eg" style="zoom:50%;" /> 
 
 **构建过程**
 
@@ -18155,7 +18396,7 @@ int main() {
 
 图中红框部分就是我们始终维护的右链：
 
-<img src="https://oi-wiki.org/ds/images/cartesian-tree2.png" alt="build" style="zoom: 33%;" /> 
+<img src="https://oi-wiki.org/ds/images/cartesian-tree-2.svg" alt="build" style="zoom: 33%;" /> 
 
 
 
@@ -18961,7 +19202,7 @@ struct EXKMP{ //1_idx
 
 > 高效地存储和查找字符串集合的数据结构
 
-<img src="https://oi-wiki.org/string/images/trie1.png" alt="trie1" style="zoom:33%;" /> 
+<img src="https://oi-wiki.org/string/images/trie1.svg" alt="trie1" style="zoom:50%;" /> 
 
 ### 字符串统计
 
@@ -19371,12 +19612,110 @@ int main(){
 
 
 
+### 可持久化 Trie
+
+
+核心思想：每次修改不破坏旧版本，而是创建新节点，通过共享未修改的部分来节省空间。
+
+
+**区间最大异或对**
+
+> 给定数组 `a[N]`，下标从 1 开始。`M` 次询问，选择数组区间 `[l, r]` 中一个数 ，其与给定的 `x` 异或值最大，输出该异或值。
+
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+namespace PTRIE { // Persistent 01-Trie
+	const int N = 200005 * 31 + 10; // max_n * 位数 + 10
+	const int M = 2;                // 01-Trie，两个儿子
+
+	int son[N][M], cnt[N], root[N], idx;
+
+	struct Trie {
+		int BITS; // 值域位数，按需传入
+
+		Trie(int bits = 30) : BITS(bits) {
+			idx = 0;
+			init(idx);          // 0 号节点为空节点
+			root[0] = 0;
+		}
+
+		void init(int p) {
+			cnt[p] = 0;
+			son[p][0] = son[p][1] = 0;
+		}
+
+		// 插入 x 到版本 pre，返回新版本根；bit 从 BITS 递归到 0
+		int insert(int pre, int x, int bit) {
+			int cur = ++idx;
+			son[cur][0] = son[pre][0];
+			son[cur][1] = son[pre][1];
+			cnt[cur] = cnt[pre] + 1;
+
+			if (bit < 0) return cur;
+
+			int b = (x >> bit) & 1;
+			son[cur][b] = insert(son[pre][b], x, bit - 1);
+			return cur;
+		}
+
+		// 插入: 把 x 接到 root[i-1] 上，生成 root[i]
+		int insert(int i, int x) {
+			root[i] = insert(root[i - 1], x, BITS);
+			return root[i];
+		}
+
+		// 查询:「版本 R 减版本 L-1」中与 x 异或最大的值
+		int query(int rootR, int rootL, int x, int bit) { // O(log)
+			if (bit < 0) return 0;
+			int b = (x >> bit) & 1;
+			int want = b ^ 1;
+
+			int cntR = son[rootR][want] ? cnt[son[rootR][want]] : 0;
+			int cntL = son[rootL][want] ? cnt[son[rootL][want]] : 0;
+
+			if (cntR - cntL > 0) {
+				return (1 << bit) + query(son[rootR][want], son[rootL][want], x, bit - 1);
+			} else {
+				return query(son[rootR][b], son[rootL][b], x, bit - 1);
+			}
+		}
+
+		// 查询：区间 [l, r] 找一个数 y, 与 x 异或最大, 返回 x^y 的值
+		int query(int l, int r, int x) { // O(log)
+			return query(root[r], root[l - 1], x, BITS);
+		}
+	};
+};
+using PTRIE::Trie; // Trie t(31);
+
+int main() {
+	int n, m;
+	cin >> n >> m;
+	Trie t(30);
+
+	for (int i = 1; i <= n; i++) {
+		int x; std::cin >> x;
+		t.insert(i, x);
+	}
+
+	for (int i = 1; i <= m; i++) {
+		int l, r, x; std::cin >> l >> r >> x;
+		cout << t.query(l, r, x) << '\n';
+	}
+}
+```
+
+
 
 ## AC自动机
 
 多个模式串匹配一个/多个文本串
 
-<img src="C:\Users\21003\AppData\Roaming\Typora\typora-user-images\image-20250809122848561.png" alt="image-20250809122848561" style="zoom:50%;" /> 
+<img src="https://oi-wiki.org/string/images/ac-automaton4.svg" alt="img" style="zoom: 33%;" />
+
 
 - 构建Trie前缀树
 
@@ -19649,11 +19988,11 @@ int main(){
 
 插入字符 `s[i]` 时：
 
-6. 从 `last` 开始沿 `fail` 指针向上找，直到找到一个回文串，使得它的前一个字符等于 `s[i]`（即可以在两端扩展）
-7. 如果该回文串已经存在对应的 `next[s[i]]`，直接转移，`last` 更新为它
-8. 否则新建节点，长度为找到的回文串长度`+2`。
-9. 为新节点设置 `fail`：从找到的回文串的 `fail` 开始，继续向上找，找到第一个能扩展的回文串，将其 `next[s[i]]` 作为新节点的 `fail`。
-10. 更新 `last` 为新节点。
+- 从 `last` 开始沿 `fail` 指针向上找，直到找到一个回文串，使得它的前一个字符等于 `s[i]`（即可以在两端扩展）
+- 如果该回文串已经存在对应的 `next[s[i]]`，直接转移，`last` 更新为它
+- 否则新建节点，长度为找到的回文串长度`+2`。
+- 为新节点设置 `fail`：从找到的回文串的 `fail` 开始，继续向上找，找到第一个能扩展的回文串，将其 `next[s[i]]` 作为新节点的 `fail`。
+- 更新 `last` 为新节点。
 
 
 
@@ -19932,7 +20271,7 @@ int main(){
 这两个数组满足性质：`sa[rk[i]] = rk[sa[i]] = i`。
 height数组`height[i]`，即`lcp(sa[i],sa[i-1])`
 
-<img src="https://oi-wiki.org/string/images/sa1.png" alt="img" style="zoom:50%;" />  后缀数组示例
+<img src="https://oi-wiki.org/string/images/sa1.svg" alt="img" style="zoom:50%;" />  后缀数组示例
 
 
 
@@ -20658,8 +20997,8 @@ int main() {
 
 在图论中，拓扑排序（Topological Sorting）是一个**有向无环图**（DAG, Directed Acyclic Graph）的所有顶点的线性序列。且该序列必须满足下面两个条件：
 
-11. 每个顶点出现且只出现一次。
-12. 若存在一条从顶点 A 到顶点 B 的路径，那么在序列中顶点 A 出现在顶点 B 的前面。
+- 每个顶点出现且只出现一次。
+- 若存在一条从顶点 A 到顶点 B 的路径，那么在序列中顶点 A 出现在顶点 B 的前面。
 
 ​	<img src="C:\Users\21003\AppData\Roaming\Typora\typora-user-images\image-20240116000247366.png" alt="image-20240116000247366" style="zoom:33%;" />
 
@@ -21271,8 +21610,9 @@ int main(){
 
 O(NlogN)预处理，O(logN)查询
 
-设两个节点分别为x,y，dist[i]为根节点到点i的距离，lca(x,y)表示两点的最近公共祖先。
-则 ans = dist[x] + dist[y] - 2*dist[lca(x,y)]
+设两个节点分别为 `x,y`，`dist[i]` 为根节点到点i的距离，`lca(x,y)`表示两点的最近公共祖先。
+则 `ans = dist[x] + dist[y] - 2*dist[lca(x,y)]`。
+此类将简单路径转换为两条链合并/差分，要求重叠部分的影响可以消去，如求和、异或。
 
 ```cpp
 //例题:How far away? https://vjudge.net/problem/HDU-2586#author=GPT_zh
@@ -21444,13 +21784,13 @@ int main() {
 ### 树的重心
 
 > 重心是指树中的一个结点，如果将这个点删除后，剩余各个连通块中点数的最大值最小，那么这个节点被称为树的重心。
->
 
-13. 树的重心如果不唯一，则**至多有两个且相邻**
-14. 以树的重心为根时，所有子树的大小都不超过整棵树大小的一半。
-15. 树中所有点到某个点的距离和中，**到重心的距离和最小**；如果有两个重心，那么到它们的距离和一样。
-16. 把两棵树通过一条边相连得到一棵新的树，那么新的树的重心在连接原来两棵树的重心的路径上。
-17. 在一棵树上添加或删除一个叶子，那么它的重心最多只移动一条边的距离。
+
+1. 树的重心如果不唯一，则**至多有两个且相邻**
+2. 以树的重心为根时，所有子树的大小都不超过整棵树大小的一半。
+3. 树中所有点到某个点的距离和中，**到重心的距离和最小**；如果有两个重心，那么到它们的距离和一样。
+4. 把两棵树通过一条边相连得到一棵新的树，那么新的树的重心在连接原来两棵树的重心的路径上。
+5. 在一棵树上添加或删除一个叶子，那么它的重心最多只移动一条边的距离。
 
 ```cpp
 #include <iostream>
@@ -21572,7 +21912,7 @@ int main(){
 ### 树的中心
 
 > 在树中，如果节点 $x$ 作为根节点时，从 $x$ 出发的最长链最短，那么称 $x$ 为这棵树的中心。
->
+
 
 性质：
 
@@ -21787,13 +22127,13 @@ void bfs(int u){
 
 **性质**
 
-18.  $\text{LCA}(\{u\})=u$；
-19.  $u$ 是 $v$ 的祖先，当且仅当 $\text{LCA}(u,v)=u$；
-20.  如果 $u$ 不为 $v$ 的祖先并且 $v$ 不为 $u$ 的祖先，那么 $u,v$ 分别处于 $\text{LCA}(u,v)$ 的两棵不同子树中；
-21.  前序遍历中，$\text{LCA}(S)$ 出现在所有 $S$ 中元素之前，后序遍历中 $\text{LCA}(S)$ 则出现在所有 $S$ 中元素之后；
-22.  两点集并的最近公共祖先为两点集分别的最近公共祖先的最近公共祖先，即 $\text{LCA}(A\cup B)=\text{LCA}(\text{LCA}(A), \text{LCA}(B))$；
-23.  两点的最近公共祖先必定处在树上两点间的最短路上；
-24.  $d(u,v)=h(u)+h(v)-2h(\text{LCA}(u,v))$，其中 $d$ 是树上两点间的距离，$h$ 代表某点到树根的距离。
+1.  $\text{LCA}(\{u\})=u$；
+2.  $u$ 是 $v$ 的祖先，当且仅当 $\text{LCA}(u,v)=u$；
+3.  如果 $u$ 不为 $v$ 的祖先并且 $v$ 不为 $u$ 的祖先，那么 $u,v$ 分别处于 $\text{LCA}(u,v)$ 的两棵不同子树中；
+4.  前序遍历中，$\text{LCA}(S)$ 出现在所有 $S$ 中元素之前，后序遍历中 $\text{LCA}(S)$ 则出现在所有 $S$ 中元素之后；
+5.  两点集并的最近公共祖先为两点集分别的最近公共祖先的最近公共祖先，即 $\text{LCA}(A\cup B)=\text{LCA}(\text{LCA}(A), \text{LCA}(B))$；
+6.  两点的最近公共祖先必定处在树上两点间的最短路上；
+7.  $d(u,v)=h(u)+h(v)-2h(\text{LCA}(u,v))$，其中 $d$ 是树上两点间的距离，$h$ 代表某点到树根的距离。
 
 
 
@@ -22198,7 +22538,7 @@ int main(){
 若干条首尾衔接的重边构成 **重链**。
 把落单的结点也当作重链，那么整棵树就被剖分成若干条重链。
 
-<img src="https://oi-wiki.org/graph/images/hld.png" alt="HLD" style="zoom: 33%;" /> 
+<img src="https://oi-wiki.org/graph/images/hld-1.svg" alt="HLD" style="zoom: 50%;" /> 
 
 
 
@@ -22591,11 +22931,11 @@ int main(){
 **核心思想**
 
 对于一个节点 `u`，处理其子树的步骤如下：
-1. 递归处理轻儿子：计算每个轻儿子的答案，但不保留它们对全局信息数组（如 `cnt` 桶）的修改。
-2. 递归处理重儿子：计算重儿子的答案，并保留它对全局信息数组的修改。
-3. 合并轻儿子：再次遍历所有轻儿子的子树，将它们的节点信息暴力加入到当前已保留的重儿子信息中。
-4. 加入自身：将节点 `u` 自身的信息也加入，此时便得到了 `u` 子树的完整信息，可以回答关于 `u` 的查询。
-5. 决定去留：如果 `u` 是其父节点的轻儿子，则清空它对全局信息数组的修改；如果是重儿子，则保留。这个“去留”标志就是算法中关键的 `keep` 参数。
+8. 递归处理轻儿子：计算每个轻儿子的答案，但不保留它们对全局信息数组（如 `cnt` 桶）的修改。
+9. 递归处理重儿子：计算重儿子的答案，并保留它对全局信息数组的修改。
+10. 合并轻儿子：再次遍历所有轻儿子的子树，将它们的节点信息暴力加入到当前已保留的重儿子信息中。
+11. 加入自身：将节点 `u` 自身的信息也加入，此时便得到了 `u` 子树的完整信息，可以回答关于 `u` 的查询。
+12. 决定去留：如果 `u` 是其父节点的轻儿子，则清空它对全局信息数组的修改；如果是重儿子，则保留。这个“去留”标志就是算法中关键的 `keep` 参数。
 
 
 - 适用场景：离线、无修改的子树信息查询问题。
@@ -22709,7 +23049,7 @@ int main() {
 
 https://codeforces.com/problemset/problem/246/E
 
-> 给定多颗树组成的森林，节点总数为 `N`，每个节点都有一个名字。 回答 `M` 次询问，每次询问给出 `[v, k]`，求节点 `v` 的所有 `k` 级儿子中有多少个不同的名字。
+> 给定多颗有根树组成的森林，节点总数为 `N`，每个节点都有一个名字。 回答 `M` 次询问，每次询问给出 `[v, k]`，求节点 `v` 的所有 `k` 级儿子中有多少个不同的名字。
 > $1 \le N \le 10^5$，$1 \le M \le 10^5$。
 
 
@@ -22831,6 +23171,181 @@ int main() {
 	return 0;
 }
 ```
+
+
+
+### 树分治
+
+
+树分治是分治思想在树形结构上的应用，专门用于处理大规模的树上路径统计问题。主要包含点分治、边分治以及由点分治衍生出的点分树（动态点分治）。
+
+
+#### 点分治
+
+点分治是树分治中最常用、最通用的形式，适合处理各种**静态**的树上路径问题。
+
+**核心思想**：在树上选择一个点，只统计所有“经过该点”的路径，然后删掉该点，对剩下的联通块递归进进行同样的操作。
+这样，树上的每一条路径都恰好会在其路径上某个点最为分治中心时被统计到。
+
+为了保证效率，“分治中心”往往选择当前树的重心，保证递归深度为 $O(\log n)$。
+
+
+任意两点路径问题 -> 点分治；某颗子树问题 -> 树上启发式合并。
+
+
+**标准流程**
+
+1. 找重心：通过 DFS 计算子树大小，找到当前树的重心 `rt`。
+2. 统计贡献：计算所有经过重心 `rt` 的路径对答案的贡献。通常分为两步：
+	- 先统计整棵树中，以 `rt` 为根的所有节点到 `rt` 的距离。
+	- 再利用容斥原理，减去那些两个端点都在同一颗子树的路径的贡献（因为这些路径并不经过 `rt`，会在后续递归中被统计）。
+3. 递归处理：将 `rt` 标记为“已删除”，然后对 `rt` 的每个子树递归。
+
+
+
+[P3806 【模板】点分治 - 洛谷](https://www.luogu.com.cn/problem/P3806)
+
+> 给定一颗有 `n` 个节点的带权无向树，回答 `m` 次询问，每次询问是否存在树上距离为 `k` 的点对。
+> $1\le n \le 10^4$, $1 \le m \le 100$，$1 \le k \le 10^7$，$1\le w \le 10^4$
+
+
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+const int N = 10004;
+int n, m;
+std::vector<std::pair<int, int>> e[N];
+int q[N], ans[N];
+
+// del[]: 标记某个重心节点是否被删除
+// rt: 重心节点
+// weight[]: 节点 x 的最大子树大小
+bool del[N];
+int rt, siz[N], weight[N], sum;
+void getrt(int x, int fa) {
+	siz[x] = 1;
+	weight[x] = 0;
+	for (auto [y, w] : e[x]) {
+		if (y == fa || del[y]) continue; // 跳过删除的重心节点
+		getrt(y, x);
+		siz[x] += siz[y];
+		weight[x] = std::max(weight[x], siz[y]);
+	}
+	weight[x] = std::max(weight[x], sum - siz[x]);
+	if (weight[x] <= sum / 2) {
+		rt = x;
+	}
+}
+
+int dfs_size(int x, int fa) {
+	int sz = 1;
+	for (auto [y, w] : e[x]) {
+		if (y == fa || del[y]) continue;
+		sz += dfs_size(y, x);
+	}
+	return sz;
+}
+
+std::vector<int> dislist;
+void getdis(int x, int fa, int d) {
+	if(d > 10000000) return; // 剪枝
+	dislist.emplace_back(d);
+	for (auto [y, w] : e[x]) {
+		if (y == fa || del[y]) continue;
+		getdis(y, x, d + w);
+	}
+}
+
+void sol(int x) {
+	del[x] = true;
+	// exist 存已经已经处理过的子树中(以及 x 自身)，所有点到 x 的距离
+	std::unordered_set<int> exist; // uset 常数如果过大, 可考虑区局bool数组 + 栈清空
+	exist.insert(0); // 重心自己
+
+	for (auto [y, w] : e[x]) {
+		if (del[y]) continue;
+		dislist.clear();
+		getdis(y, x, w); //收集: dfs 求出该子树中所有点到 rt 的距离
+		
+		// 先查询
+		// 哈希表查询, 一端在 x 的某颗子树、另一端在 x 的另一颗子树, 且路径之和刚好等于某个询问
+		// 处理当前子树记录的距离集合与前面子树的距离总集合对答案贡献
+		for (int i = 0; i < dislist.size(); i++) {
+			for (int j = 1; j <= m; j++) {
+				if (q[j] >= dislist[i] && exist.count(q[j] - dislist[i])) {
+					ans[j] = true;
+				}
+			}
+		}
+		// 再加入, 把当前子树的距离集合合并到总集合中
+		for (int i = 0; i < dislist.size(); i++) {
+			exist.insert(dislist[i]);
+		}
+	}
+	// exist.clear();
+
+	// 递归子树
+	for (auto [y, w] : e[x]) {
+		if (del[y]) continue;
+		sum = dfs_size(y, x);
+		getrt(y, x);
+		sol(rt);
+	}
+}
+
+void soviet() {
+	std::cin >> n >> m;
+	for (int i = 1; i < n; i++) {
+		int x, y, w; std::cin >> x >> y >> w;
+		e[x].emplace_back(y, w);
+		e[y].emplace_back(x, w);
+	}
+
+	for (int i = 1; i <= m; i++) {
+		std::cin >> q[i];
+	}
+	sum = n;
+	getrt(1, 0);
+	sol(rt);
+
+	for (int i = 1; i <= m; i++) {
+		if (ans[i]) std::cout << "AYE\n";
+		else std::cout << "NAY\n";
+	}
+}
+
+int main() {
+	int M_T = 1; std::ios::sync_with_stdio(false); std::cin.tie(nullptr);
+//	std::cin >> M_T;
+	while (M_T--) { soviet(); }
+	return 0;
+}
+```
+
+
+
+
+
+#### 边分治
+
+与点分治类似，我们选择一条边，把树尽量均匀地分成两部分，然后递归处理左右子树，统计信息。
+每次分治恰好产生两个连通块，路径要么完全在左边，要么完全在右边，要么跨过这条边。跨边的两个端点必然分属两侧，统计时不需要像点分治那样做同一子树内部的容斥。
+
+关键问题：遇到菊花图会退化
+
+解决方案：三度化（也叫虚树化或二叉树化），对每个度数 > 3 的节点，添加虚点将其改造为二叉树，保证每个点的度数不超过 3，虚边的权值设为 0（对距离问题），虚点的颜色设为不影响答案的值（或特殊处理）。
+处理后，总存在一条边，使两侧大小都不超过 2n/3，保证递归深度 $O(\log n)$。最多增加 $O(n)$ 个点，总复杂度为 $O(n \log n)$。
+
+
+一般边分治能做的，点分治都能做。
+边分治优势：恰好两侧 -> 直接配对，不需要容斥
+
+
+
+
+
 
 
 ### 树哈希
@@ -24338,8 +24853,8 @@ int main(){
 
 二分图匹配的模型有两个要素：
 
-2. 节点能分成独立的两个集合，每个集合内部有0条边。
-3. 每个节点只能与1条匹配边相连。
+4. 节点能分成独立的两个集合，每个集合内部有0条边。
+5. 每个节点只能与1条匹配边相连。
 
 
 
@@ -25543,16 +26058,16 @@ n个点n条边组成的无向连通图。若不保证连通，也有可能是内
 
 直径有两种情况，二者取最大值即为答案：
 
-4. 直径处于以环上某一点为根节点，且不经过环边的子树中。对每一颗子树进行树形DP求直径，取最大值。
-5. 经过环边，链接两个根节点x,y的子树。ans = max{d1[x]+d1[y]+dis(x,y)}。d1[i]表式以i为根节点向下能达到的最大距离，dis(i,j)表示环上两点之间的最远距离，断链成环，复制拼接，再用前缀和+单调队列优化即可O(N)求得答案。
+6. 直径处于以环上某一点为根节点，且不经过环边的子树中。对每一颗子树进行树形DP求直径，取最大值。
+7. 经过环边，链接两个根节点x,y的子树。ans = max{d1[x]+d1[y]+dis(x,y)}。d1[i]表式以i为根节点向下能达到的最大距离，dis(i,j)表示环上两点之间的最远距离，断链成环，复制拼接，再用前缀和+单调队列优化即可O(N)求得答案。
 
 
 
 **一般处理方法**
 
-6. 找到唯一的环；
-7. 对环之外的部分按照若干棵树处理；
-8. 考虑与环一起计算。
+8. 找到唯一的环；
+9. 对环之外的部分按照若干棵树处理；
+10. 考虑与环一起计算。
 
 
 
@@ -26030,8 +26545,8 @@ int main(){
 
 一张**无向图**是点双连通图，当且仅当满足下列**两个条件之一**：
 
-9. 图的顶点数不超过 2。
-10. 图中任意两点都同时包含在**至少一个**简单环中。其中“简单环”指的是不自交的环，也就是我们通常画出的环。
+11. 图的顶点数不超过 2。
+12. 图中任意两点都同时包含在**至少一个**简单环中。其中“简单环”指的是不自交的环，也就是我们通常画出的环。
 
 ```cpp
 //【模板】点双连通分量 https://www.luogu.com.cn/problem/P8435
@@ -26212,13 +26727,13 @@ int main(){
 
 2-SAT问题的判断方法如下（时间复杂度O(N+M)）：
 
-11. 建立2N个节点的有向图，每个变量$A_i$对应两个节点`i`和`i+n`。
+13. 建立2N个节点的有向图，每个变量$A_i$对应两个节点`i`和`i+n`。
 
-12. 考虑每个条件，形如“诺$A_i$的赋值为$A_{i,p}$，则$A_j$的赋值必须为$A_{j,q}$”，$p,q\in\{0,1\}$，从`i+p*n`到`j+q*n`连一条有向边。
+14. 考虑每个条件，形如“诺$A_i$的赋值为$A_{i,p}$，则$A_j$的赋值必须为$A_{j,q}$”，$p,q\in\{0,1\}$，从`i+p*n`到`j+q*n`连一条有向边。
    注意上述条件蕴含着它的逆否命题“诺$A_j$的赋值为$A_{j,1-q}$，则$A_i$的赋值必须为 $A_{i,1-p}$”。如果在给点的M个限制条件中，原命题和逆否命题不一定成对出现，应该从`j+(1-q)*n`到`i+(1-p)*n`也连一条有向边。
-13. 用 **Tarjan** 算法求出有向图中所有的强连通分量。
-14. 诺存在 $i\in [1,n]$满足`i`和`i+n`属于同一个强连通分量，则出现了矛盾：诺变量$A_i$赋值为$A_{i,p}$，则变量$A_i$必须赋值为  $A_{i,1-p}$，说明问题无解。
-15. 诺问题还要求具体解，Tarjan后同一元素拆点强连通分量编号小的点即为合法点，如果一个元素拆成的两个点之间没有任何路径相连，即使是有向路径，那么这两点都可以成为合法点，这两点的分量编号不同，选小的即可
+15. 用 **Tarjan** 算法求出有向图中所有的强连通分量。
+16. 诺存在 $i\in [1,n]$满足`i`和`i+n`属于同一个强连通分量，则出现了矛盾：诺变量$A_i$赋值为$A_{i,p}$，则变量$A_i$必须赋值为  $A_{i,1-p}$，说明问题无解。
+17. 诺问题还要求具体解，Tarjan后同一元素拆点强连通分量编号小的点即为合法点，如果一个元素拆成的两个点之间没有任何路径相连，即使是有向路径，那么这两点都可以成为合法点，这两点的分量编号不同，选小的即可
 
 
 
@@ -26318,9 +26833,9 @@ int main(){
 
 设`f(x,y)` 是定义在节点二元组$(x\in V,y \in V)$三的实数函数，且满足：
 
-16. 容量限制：`f(x,y) <= c(x,y)` 
-17. 斜对称：`f(x,y) = -f(y,x)`  
-18. 流量守恒：c  
+18. 容量限制：`f(x,y) <= c(x,y)` 
+19. 斜对称：`f(x,y) = -f(y,x)`  
+20. 流量守恒：c  
 
 `f()`称为网络的流量函数，对于$(x,y)\in E$，`f(x,y)`称为边的**流量**，`c(x,y) - f(x,y)`称为边的剩余容量
 
@@ -26417,8 +26932,8 @@ int main(){
 
 EK算法每次只找出一条增广路，而Dinic可以一次找出多条。
 
-19. 在[残量网络]上bfs求出节点的层次，构造[分层图]。
-20. 在分层图上dfs寻找增广路，回溯时更新边权。
+21. 在[残量网络]上bfs求出节点的层次，构造[分层图]。
+22. 在分层图上dfs寻找增广路，回溯时更新边权。
 
 `w[i]`表示残量网络中边i的剩余容量：
 正向边(`idx`为偶)：`w[i]` = 原边容量 - 已流过的流量
@@ -27265,11 +27780,11 @@ int main(){
 
 
 
-21. 构造问题
-22. 拆解子问题
-23. 求解最简单子问题
-24. 通过子问题推当前问题，构建状态转移方程
-25. 判断复杂度
+23. 构造问题
+24. 拆解子问题
+25. 求解最简单子问题
+26. 通过子问题推当前问题，构建状态转移方程
+27. 判断复杂度
 
 
 
@@ -28129,9 +28644,9 @@ int main(){
 
 将字符串a通过以下操作变为字符串b的最小操作次数
 
-26. 删除一个字符
-27. 插入一个字符
-28. 修改一个字符
+28. 删除一个字符
+29. 插入一个字符
+30. 修改一个字符
 
 > ```cpp
 > if (a[i] == b[j]) dp[i][j] = dp[i-1][j-1];   //无需修改
@@ -29270,10 +29785,10 @@ int main(){
 设 $f_{i,j}$ 为轮到公主时袋子里有 $i$ 只白鼠，$j$ 只黑鼠，公主赢的概率。初始化边界，$f_{0,j}=0$ 因为没有白鼠了算龙赢，$f_{i,0}=1$ 因为抓一只就是白鼠，公主赢。
 考虑 $f_{i,j}$ 的转移：
 
-29.   公主抓到一只白鼠，公主赢了。概率为 $\frac{i}{i+j}$；
-30.  公主抓到一只黑鼠，龙抓到一只白鼠，龙赢了。概率为 $\frac{j}{i+j}\cdot \frac{i}{i+j-1}$；
-31.  公主抓到一只黑鼠，龙抓到一只黑鼠，跑出来一只黑鼠，转移到 $f_{i,j-3}$。概率为 $\frac{j}{i+j}\cdot\frac{j-1}{i+j-1}\cdot\frac{j-2}{i+j-2}$；
-32.  公主抓到一只黑鼠，龙抓到一只黑鼠，跑出来一只白鼠，转移到 $f_{i-1,j-2}$。概率为 $\frac{j}{i+j}\cdot\frac{j-1}{i+j-1}\cdot\frac{i}{i+j-2}$；
+- 公主抓到一只白鼠，公主赢了。概率为 $\frac{i}{i+j}$；
+- 公主抓到一只黑鼠，龙抓到一只白鼠，龙赢了。概率为 $\frac{j}{i+j}\cdot \frac{i}{i+j-1}$；
+- 公主抓到一只黑鼠，龙抓到一只黑鼠，跑出来一只黑鼠，转移到 $f_{i,j-3}$。概率为 $\frac{j}{i+j}\cdot\frac{j-1}{i+j-1}\cdot\frac{j-2}{i+j-2}$；
+- 公主抓到一只黑鼠，龙抓到一只黑鼠，跑出来一只白鼠，转移到 $f_{i-1,j-2}$。概率为 $\frac{j}{i+j}\cdot\frac{j-1}{i+j-1}\cdot\frac{i}{i+j-2}$；
 
 考虑公主赢的概率，第二种情况不参与计算。并且要保证后两种情况合法，所以还要判断 $i,j$ 的大小，满足第三种情况至少要有 3 只黑鼠，满足第四种情况要有 1 只白鼠和 2 只黑鼠。
 
@@ -34620,7 +35135,4 @@ map <C-F6> :!clear & ./%:r < in <cr>
 
 
 
-## OI
-
-![OIer](C:\Users\21003\Pictures\Camera Roll\OIer.png)  
 
